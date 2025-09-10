@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layouts/dashboard}">
+
+<body>
+    <div layout:fragment="content">
+        <div class="page-inner">
+            <div class="page-header">
+                <h4 class="page-title" th:text="${title}"></h4>
+                <ul class="breadcrumbs">
+                    <li class="nav-home">
+                        <a>
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </a>
+                    </li>
+                    <li class="separator">
+                        <i class="flaticon-right-arrow"></i>
+                    </li>
+                    <li class="nav-item">
+                        <a>Menu</a>
+                    </li>
+                    <li class="separator">
+                        <i class="flaticon-right-arrow"></i>
+                    </li>
+                    <li class="nav-item">
+                        <a th:text="${title}"></a>
+                    </li>
+                </ul>
+
+                <div class="header-action-group d-flex align-items-center ml-auto">
+                    <button class="btn btn-primary mt-2 mr-2" data-toggle="modal" data-target="#importModal">
+                        <i class="fa fa-download mr-1"></i> Import
+                    </button>
+                    <button class="btn btn-primary dropdown-toggle mt-2 mr-2" type="button" id="exportDropdown"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-upload mr-1"></i> Export
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="exportDropdown">
+                        <a class="dropdown-item" href="#" id="exportExcel">
+                            <i class="fa fa-file-excel mr-2 text-success"></i> Excel
+                        </a>
+                        <a class="dropdown-item" href="#" id="exportPdf">
+                            <i class="fa fa-file-pdf mr-2 text-danger"></i> PDF
+                        </a>
+                    </div>
+                    <div th:replace="~{complaint/import-modal :: import-modal}"></div>
+                    <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal">
+                        <i class="fa fa-plus-circle mr-2"></i> Add
+                    </button>
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center">
+                                <h4 class="card-title" th:text="${title}"></h4>
+                                <form class="form-inline ml-auto" th:action="@{/complaints}" method="get"
+                                    id="complaintsForm">
+
+                                    <div class="dropdown mr-2">
+                                        <button class="btn btn-primary dropdown-toggle" type="button"
+                                            id="filterDropdownBtn" data-toggle="dropdown" aria-haspopup="true"
+                                            aria-expanded="false" style="padding: 0.375rem 0.75rem;">
+                                            <i class="fa fa-filter"></i> Filter
+                                        </button>
+                                        <div class="dropdown-menu p-3" aria-labelledby="filterDropdownBtn"
+                                            style="min-width: 350px; max-width: 400px; width: 100%;">
+
+                                            <div class="form-group pb-0">
+                                                <label class="form-label small d-block">Search</label>
+                                                <div class="input-icon w-100">
+                                                    <input type="text" name="keyword" th:value="${keyword}"
+                                                        class="form-control form-control-sm w-100"
+                                                        placeholder="ID, Subject, Reporter, Assignee...">
+                                                    <span class="input-icon-addon"><i class="fa fa-search"></i></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group pb-0">
+                                                <label class="form-label small d-block">Report Date</label>
+                                                <div class="input-group input-daterange w-100">
+                                                    <input type="date" name="reportDateFrom"
+                                                        th:value="${reportDateFrom}"
+                                                        class="form-control form-control-sm" placeholder="From">
+                                                    <div class="input-group-prepend input-group-append">
+                                                        <span class="input-group-text">to</span>
+                                                    </div>
+                                                    <input type="date" name="reportDateTo" th:value="${reportDateTo}"
+                                                        class="form-control form-control-sm" placeholder="To">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group pb-0">
+                                                <label class="form-label small d-block">Assignee</label>
+                                                <input type="text" class="form-control form-control-sm w-100"
+                                                    list="filter-userOptions" id="filter-assigneeInput"
+                                                    placeholder="Search by name or ID" autocomplete="off" />
+
+                                                <datalist id="filter-userOptions">
+                                                    <option th:each="user : ${users}"
+                                                        th:value="${user.name} + ' (' + ${user.employeeId} + ')'"
+                                                        th:data-employee-id="${user.employeeId}">
+                                                    </option>
+                                                </datalist>
+
+                                                <select class="d-none" name="assigneeEmpId" id="filter-assigneeSelect">
+                                                    <option value=""></option>
+                                                    <option th:each="user : ${users}" th:value="${user.employeeId}">
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="form-label small d-block">Equipment</label>
+                                                <input type="text" class="form-control form-control-sm w-100"
+                                                    list="filter-equipmentOptions" id="filter-equipmentInput"
+                                                    placeholder="Search by name or code" autocomplete="off" />
+
+                                                <datalist id="filter-equipmentOptions">
+                                                    <option th:each="equip : ${equipments}"
+                                                        th:value="${equip.name} + ' (' + ${equip.code} + ')'"
+                                                        th:data-code="${equip.code}">
+                                                    </option>
+                                                </datalist>
+
+                                                <select class="d-none" name="equipmentCode" id="filter-equipmentSelect">
+                                                    <option value=""></option>
+                                                    <option th:each="equip : ${equipments}" th:value="${equip.code}">
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary btn-sm btn-block mt-2">
+                                                <i class="fas fa-check"></i> Apply Filters
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="dropdown mr-2">
+                                        <button class="btn btn-primary dropdown-toggle" type="button"
+                                            id="columnToggleDropdown" data-toggle="dropdown" aria-haspopup="true"
+                                            aria-expanded="false" style="padding: 0.375rem 0.5rem;">
+                                            <i class="fas fa-th-list"></i>
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right"
+                                            aria-labelledby="columnToggleDropdown"
+                                            style="min-width: 250px; max-height: 300px; overflow-y: auto; padding: 0.5rem 0;">
+                                            <h6 class="dropdown-header px-3 py-2">Show / Hide Columns</h6>
+                                            <div id="column-toggle-list"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="dropdown">
+                                        <button class="btn btn-primary dropdown-toggle" type="button" id="sortDropdown"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                            style="padding: 0.375rem 0.5rem;">
+                                            <i class="fa fa-sort"></i>
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="sortDropdown"
+                                            style="min-width: 200px;">
+                                            <input type="hidden" name="sortBy" id="sortByInput" th:value="${sortBy}" />
+                                            <input type="hidden" name="asc" id="ascInput" th:value="${asc}" />
+                                            <h6 class="dropdown-header">Sort Column</h6>
+                                            <div id="sort-column-container"></div>
+                                            <div class="dropdown-divider"></div>
+                                            <h6 class="dropdown-header">Sort Order</h6>
+                                            <a class="dropdown-item" href="#" data-asc="true"
+                                                th:classappend="${asc == true} ? 'active' : ''">Ascending</a>
+                                            <a class="dropdown-item" href="#" data-asc="false"
+                                                th:classappend="${asc == false} ? 'active' : ''">Descending</a>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="pageSizeSelect" class="sr-only">Items per page:</label>
+                                        <select name="size" id="pageSizeSelect" class="form-control form-control"
+                                            onchange="this.form.submit()">
+                                            <option value="10" th:selected="${pageSize == '10'}">10</option>
+                                            <option value="30" th:selected="${pageSize == '30'}">30</option>
+                                            <option value="50" th:selected="${pageSize == '50'}">50</option>
+                                            <option value="100" th:selected="${pageSize == '100'}">100</option>
+                                            <option value="300" th:selected="${pageSize == '300'}">300</option>
+                                            <option value="500" th:selected="${pageSize == '500'}">500</option>
+                                            <option value="All" th:selected="${pageSize == 'All'}">All</option>
+                                        </select>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+
+                            <div th:replace="~{complaint/modal :: modal}"></div>
+
+                            <div class="table-responsive">
+                                <table id="document-table" class="display table table-striped table-hover">
+                                    <thead class="bg-primary text-white">
+                                        <tr>
+                                            <th style="min-width: 50px;">Code</th>
+                                            <th style="min-width: 125px;">Report Date</th>
+                                            <th style="min-width: 125px;">Last Update</th>
+                                            <th style="min-width: 50px;">Reporter</th>
+                                            <th style="min-width: 100px;">Area</th>
+                                            <th style="min-width: 100px;">Equipment</th>
+                                            <th style="min-width: 100px;">Subject</th>
+                                            <th style="min-width: 175px;">Description</th>
+                                            <th style="min-width: 175px;">Action Taken</th>
+                                            <th style="min-width: 50px;">Assignee</th>
+                                            <th style="min-width: 50px;">Priority</th>
+                                            <th style="min-width: 50px;">Category</th>
+                                            <th style="min-width: 50px;">Status</th>
+                                            <th style="min-width: 130px;">Close Time</th>
+                                            <th style="min-width: 100px;">Total Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="complaint : ${complaints.content}" th:data-id="${complaint.id}">
+                                            <td data-field="code">
+                                                <a th:href="@{/complaints/{id}(id=${complaint.id})}"
+                                                    class="font-weight-bold text-dark"
+                                                    th:text="${complaint.code ?: '-'}">-</a>
+                                            </td>
+                                            <td data-field="reportDate"
+                                                th:text="${complaint.reportDate != null ? #temporals.format(complaint.reportDate, 'MMM d, yyyy') : '-'}">
+                                                -
+                                            </td>
+                                            <td data-field="updatedAt"
+                                                th:text="${complaint.updatedAt != null ? #temporals.format(complaint.updatedAt, 'MMM d, yyyy HH:mm') : '-'}">
+                                                -
+                                            </td>
+                                            <td data-field="reporter" th:text="${complaint.reporter?.name ?: '-'}">
+                                                -
+                                            </td>
+                                            <td data-field="area" th:text="${complaint.area?.name ?: '-'}">
+                                                -
+                                            </td>
+                                            <td data-field="equipment" th:text="${complaint.equipment?.name ?: '-'}">
+                                                -
+                                            </td>
+                                            <td data-field="subject" th:text="${complaint.subject ?: '-'}">-</td>
+                                            <td data-field="description" th:text="${complaint.description ?: '-'}">-
+                                            </td>
+                                            <td data-field="actionTaken" th:text="${complaint.actionTaken ?: '-'}">-
+                                            </td>
+                                            <td data-field="assignee" th:text="${complaint.assignee?.name ?: '-'}">-
+                                            </td>
+                                            <td data-field="priority">
+                                                <span class="badge badge-pill px-3 py-2" th:classappend="${
+                                                        complaint.priority == complaint.priority.HIGH ? 'badge-danger' :
+                                                        complaint.priority == complaint.priority.MEDIUM ? 'badge-warning' :
+                                                        'badge-success'
+                                                    }" th:text="${complaint.priority ?: '-'}"></span>
+                                            </td>
+                                            <td data-field="category">
+                                                <span class="badge badge-pill px-3 py-2" th:classappend="${
+                                                        complaint.category == complaint.category.MECHANICAL ? 'badge-info' :
+                                                        complaint.category == complaint.category.ELECTRICAL ? 'badge-danger' :
+                                                        complaint.category == complaint.category.IT ? 'badge-success' :
+                                                        'badge-dark'
+                                                    }" th:text="${complaint.category ?: '-'}"></span>
+                                            </td>
+                                            <td data-field="status">
+                                                <span class="badge badge-pill px-3 py-2" th:classappend="${
+                                                        complaint.status == complaint.status.OPEN ? 'badge-warning' :
+                                                        complaint.status == complaint.status.PENDING ? 'badge-danger' :
+                                                        'badge-success'
+                                                    }" th:text="${complaint.status ?: '-'}"></span>
+                                            </td>
+                                            <td data-field="closeTime"
+                                                th:text="${complaint.closeTime != null ? #temporals.format(complaint.closeTime, 'MMM d, yyyy HH:mm') : '-'}">
+                                                -
+                                            </td>
+                                            <td data-field="totalTimeMinutes"
+                                                th:text="${complaint.totalTimeDisplay ?: '-'}">-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="row mt-3 align-items-center">
+                                <div class="col-md-6 col-sm-12">
+                                    <p class="text-muted mb-0">
+                                        Showing
+                                        <span th:text="${complaints.number * complaints.size + 1} ?: 0"></span>
+                                        -
+                                        <span
+                                            th:text="${complaints.number * complaints.size + complaints.numberOfElements} ?: 0"></span>
+                                        of <span th:text="${complaints.totalElements} ?: 0"></span> entries
+                                    </p>
+                                </div>
+                                <div class="col-md-6 col-sm-12">
+                                    <nav class="d-flex justify-content-end">
+                                        <ul class="pagination mb-0">
+                                            <li class="page-item"
+                                                th:classappend="${!complaints.hasPrevious} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/complaints(keyword=${keyword}, page=${complaints.number}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:if="${complaints.hasPrevious}">Prev</a>
+                                                <span class="page-link" th:if="${!complaints.hasPrevious}">Prev</span>
+                                            </li>
+
+                                            <li class="page-item" th:if="${complaints.number > 0}"
+                                                th:classappend="${!complaints.hasPrevious} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/complaints(keyword=${keyword}, page=1, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">1</a>
+                                            </li>
+
+                                            <li class="page-item active">
+                                                <span class="page-link" th:text="${complaints.number + 1}">1</span>
+                                            </li>
+
+                                            <li class="page-item"
+                                                th:if="${complaints.number + 1 < complaints.totalPages}"
+                                                th:classappend="${!complaints.hasNext} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/complaints(keyword=${keyword}, page=${complaints.totalPages}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">
+                                                    <span th:text="${complaints.totalPages}">20</span>
+                                                </a>
+                                            </li>
+
+                                            <li class="page-item" th:classappend="${!complaints.hasNext} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/complaints(keyword=${keyword}, page=${complaints.number + 2}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:if="${complaints.hasNext}">Next</a>
+                                                <span class="page-link" th:if="${!complaints.hasNext}">Next</span>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Fragment -->
+    <th:block layout:fragment="scripts">
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+
+                // Column Visibility Toggle
+                const table = document.getElementById("document-table");
+                const headerRow = table.querySelector("thead tr");
+                const dataRows = table.querySelectorAll("tbody tr");
+                const container = document.getElementById("column-toggle-list");
+
+                const columnSettings = [
+                    { key: "code", label: "Code", visible: true },
+                    { key: "reportDate", label: "Report Date", visible: true },
+                    { key: "updatedAt", label: "Last Update", visible: false },
+                    { key: "reporter", label: "Reporter", visible: false },
+                    { key: "area", label: "Area", visible: false },
+                    { key: "equipment", label: "Equipment", visible: true },
+                    { key: "subject", label: "Subject", visible: false },
+                    { key: "description", label: "Description", visible: true },
+                    { key: "actionTaken", label: "Action Taken", visible: true },
+                    { key: "assignee", label: "Assignee", visible: true },
+                    { key: "priority", label: "Priority", visible: false },
+                    { key: "category", label: "Category", visible: false },
+                    { key: "status", label: "Status", visible: true },
+                    { key: "closeTime", label: "Close Time", visible: true },
+                    { key: "totalTimeMinutes", label: "Total Time", visible: true }
+                ];
+
+                columnSettings.forEach((col, index) => {
+                    const div = document.createElement("div");
+                    div.className = "px-3 py-1";
+                    div.style.cursor = "pointer";
+                    div.style.userSelect = "none";
+
+                    div.innerHTML = `
+            <div class="d-flex align-items-center">
+                <span class="column-checkbox" data-index="${index}" 
+                    style="display: inline-block; width: 18px; height: 18px; border: 2px solid #adb5bd; border-radius: 4px; margin-right: 8px; text-align: center; line-height: 16px; font-size: 12px; transition: 0.2s background; 
+                    ${col.visible ? 'background-color: #007bff; border-color: #007bff;' : ''}">
+                    ${col.visible ? '<i class="fas fa-check" style="color: white;"></i>' : ''}
+                </span>
+                <span style="font-size: 0.95rem; color: #212529;">${col.label}</span>
+            </div>`;
+
+                    const checkboxSpan = div.querySelector(".column-checkbox");
+                    const th = headerRow.children[index];
+                    const tds = Array.from(dataRows).map(row => row.children[index]);
+
+                    if (!col.visible) {
+                        th.style.display = "none";
+                        tds.forEach(td => td.style.display = "none");
+                    }
+
+                    div.addEventListener("click", function (e) {
+                        e.stopPropagation();
+                        const isChecked = checkboxSpan.innerHTML.trim() !== "";
+                        if (isChecked) {
+                            checkboxSpan.style.backgroundColor = "";
+                            checkboxSpan.innerHTML = "";
+                            th.style.display = "none";
+                            tds.forEach(td => td.style.display = "none");
+                        } else {
+                            checkboxSpan.style.backgroundColor = "#007bff";
+                            checkboxSpan.style.borderColor = "#007bff";
+                            checkboxSpan.innerHTML = '<i class="fas fa-check" style="color: white;"></i>';
+                            th.style.display = "";
+                            tds.forEach(td => td.style.display = "");
+                        }
+                    });
+                    container.appendChild(div);
+                });
+
+                // Sorting Setup
+                const sortFieldLabels = {
+                    'code': 'Code',
+                    'reportDate': 'Report Date',
+                    'updatedAt': 'Last Update',
+                    'reporter': 'Reporter',
+                    'area': 'Area',
+                    'equipment': 'Equipment',
+                    'subject': 'Subject',
+                    'assignee': 'Assignee',
+                    'priority': 'Priority',
+                    'category': 'Category',
+                    'status': 'Status',
+                    'closeTime': 'Close Time',
+                    'totalTimeMinutes': 'Total Time'
+                };
+
+                const form = document.getElementById('complaintsForm');
+                const sortByInput = document.getElementById('sortByInput');
+                const ascInput = document.getElementById('ascInput');
+
+                // Initialize sort column display text and active state
+                document.querySelectorAll('.sort-column').forEach(item => {
+                    const field = item.getAttribute('data-column');
+                    const displayText = sortFieldLabels[field] || field;
+                    item.textContent = displayText;
+
+                    if (sortByInput.value === field) {
+                        item.classList.add('active');
+                    }
+                });
+
+                // Generate dynamic sort column links
+                const sortContainer = document.getElementById('sort-column-container');
+                const currentSortBy = sortByInput.value;
+
+                for (const [field, label] of Object.entries(sortFieldLabels)) {
+                    const link = document.createElement('a');
+                    link.href = '#';
+                    link.className = 'dropdown-item sort-column';
+                    link.setAttribute('data-column', field);
+                    link.textContent = label;
+
+                    if (field === currentSortBy) {
+                        link.classList.add('active');
+                    }
+
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        const column = this.getAttribute('data-column');
+                        sortByInput.value = column;
+
+                        document.querySelectorAll('.sort-column').forEach(el => {
+                            el.classList.remove('active');
+                        });
+                        this.classList.add('active');
+
+                        form.submit();
+                    });
+
+                    sortContainer.appendChild(link);
+                }
+
+                // Handle sort direction (ASC/DESC)
+                document.querySelectorAll('[data-asc]').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const ascValue = this.getAttribute('data-asc') === 'true';
+                        ascInput.value = ascValue;
+
+                        document.querySelectorAll('[data-asc]').forEach(el => {
+                            el.classList.remove('active');
+                        });
+                        this.classList.add('active');
+
+                        form.submit();
+                    });
+                });
+
+                // Flash Message Modal
+                const modalContainer = document.getElementById('flashMessageModalContainer');
+                if (modalContainer) {
+                    console.log("modal");
+                    const modal = new bootstrap.Modal(document.getElementById('flashMessageModal'));
+                    modal.show();
+                }
+
+                // Filter Autocomplete Sync
+                function syncSelect(inputId, selectId) {
+                    const input = document.getElementById(inputId);
+                    const select = document.getElementById(selectId);
+
+                    if (!input || !select) {
+                        console.warn(`Missing input or select: ${inputId}, ${selectId}`);
+                        return;
+                    }
+
+                    input.addEventListener('input', () => {
+                        let options;
+                        if (selectId === 'filter-assigneeSelect') {
+                            options = document.querySelectorAll('#filter-userOptions option');
+                        } else if (selectId === 'filter-equipmentSelect') {
+                            options = document.querySelectorAll('#filter-equipmentOptions option');
+                        } else {
+                            return;
+                        }
+
+                        const inputValue = input.value.trim();
+                        if (inputValue === '') {
+                            select.value = '';
+                            return;
+                        }
+
+                        const opt = [...options].find(o => o.value === input.value);
+                        select.value = opt ? (opt.dataset.employeeId || opt.dataset.code) : '';
+                    });
+                }
+
+                syncSelect('filter-assigneeInput', 'filter-assigneeSelect');
+                syncSelect('filter-equipmentInput', 'filter-equipmentSelect');
+
+                // Keep filter dropdown open until Apply clicked
+                const filterDropdown = document.getElementById('filterDropdownBtn');
+                const dropdownMenu = filterDropdown.nextElementSibling;
+                const applyButton = dropdownMenu.querySelector('button[type="submit"]');
+
+                dropdownMenu.addEventListener('click', e => e.stopPropagation());
+                applyButton.addEventListener('click', () => $(filterDropdown).dropdown('toggle'));
+            });
+        </script>
+    </th:block>
+
+</body>
+
+</html>

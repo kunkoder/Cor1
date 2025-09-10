@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layouts/dashboard}">
+
+<body>
+    <div layout:fragment="content">
+        <div class="page-inner">
+            <div class="page-header">
+                <h4 class="page-title" th:text="${title}"></h4>
+                <ul class="breadcrumbs">
+                    <li class="nav-home">
+                        <a>
+                            <i class="fas fa-cogs"></i>
+                        </a>
+                    </li>
+                    <li class="separator">
+                        <i class="flaticon-right-arrow"></i>
+                    </li>
+                    <li class="nav-item">
+                        <a>Menu</a>
+                    </li>
+                    <li class="separator">
+                        <i class="flaticon-right-arrow"></i>
+                    </li>
+                    <li class="nav-item">
+                        <a th:text="${title}"></a>
+                    </li>
+                </ul>
+                <div class="header-action-group d-flex align-items-center ml-auto">
+                    <button class="btn btn-primary mt-2 mr-2" data-toggle="modal" data-target="#importModal">
+                        <i class="fa fa-download mr-1"></i> Import
+                    </button>
+                    <button class="btn btn-primary dropdown-toggle mt-2 mr-2" type="button" id="exportDropdown"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-upload mr-1"></i> Export
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="exportDropdown">
+                        <a class="dropdown-item" href="#" id="exportExcel">
+                            <i class="fa fa-file-excel mr-2 text-success"></i> Excel
+                        </a>
+                        <a class="dropdown-item" href="#" id="exportPdf">
+                            <i class="fa fa-file-pdf mr-2 text-danger"></i> PDF
+                        </a>
+                    </div>
+                    <!-- Include Modals -->
+
+                    <div th:replace="~{equipment/import-modal :: import-modal}"></div>
+                    <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal">
+                        <i class="fa fa-plus-circle mr-2"></i> Add
+                    </button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center">
+                                <h4 class="card-title" th:text="${title}"></h4>
+                                <form class="form-inline ml-auto" th:action="@{/equipments}" method="get"
+                                    id="equipmentsForm">
+                                    <div class="input-icon">
+                                        <input type="text" name="keyword" th:value="${keyword}" id="userSearchInput"
+                                            class="form-control" placeholder="Search...">
+                                        <span class="input-icon-addon"><i class="fa fa-search"></i></span>
+                                    </div>
+
+                                    <!-- Size Dropdown -->
+                                    <div class="form-group">
+                                        <label for="pageSizeSelect" class="sr-only">Items per page:</label>
+                                        <select name="size" id="pageSizeSelect" class="form-control"
+                                            onchange="this.form.submit()">
+                                            <option value="10" th:selected="${pageSize == 10}">10</option>
+                                            <option value="30" th:selected="${pageSize == 30}">30</option>
+                                            <option value="50" th:selected="${pageSize == 50}">50</option>
+                                            <option value="100" th:selected="${pageSize == 100}">100</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Filter Dropdown -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-primary dropdown-toggle" type="button"
+                                            id="filterDropdown" data-toggle="dropdown" aria-haspopup="true"
+                                            aria-expanded="false" style="padding: 0.375rem 0.5rem;">
+                                            <i class="fa fa-filter"></i>
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="filterDropdown"
+                                            style="min-width: 200px;">
+                                            <!-- Hidden inputs for sort state -->
+                                            <input type="hidden" name="sortBy" id="sortByInput" th:value="${sortBy}" />
+                                            <input type="hidden" name="asc" id="ascInput" th:value="${asc}" />
+
+                                            <!-- Sort Column -->
+                                            <h6 class="dropdown-header">Sort Column</h6>
+                                            <th:block th:each="field : ${sortFields}">
+                                                <a class="dropdown-item sort-column" href="#" th:text="${field}"
+                                                    th:data-column="${field}"
+                                                    th:classappend="${sortBy == field} ? 'active' : ''">
+                                                </a>
+                                            </th:block>
+
+                                            <div class="dropdown-divider"></div>
+
+                                            <!-- Sort Order -->
+                                            <h6 class="dropdown-header">Sort Order</h6>
+                                            <a class="dropdown-item" href="#" data-asc="true"
+                                                th:classappend="${asc == true} ? 'active' : ''">Ascending</a>
+                                            <a class="dropdown-item" href="#" data-asc="false"
+                                                th:classappend="${asc == false} ? 'active' : ''">Descending</a>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Include Modals -->
+                            <div th:replace="~{equipment/modal :: modal}"></div>
+
+                            <!-- Table -->
+                            <div class="table-responsive">
+                                <table id="item-table" class="display table table-striped table-hover">
+                                    <thead class="bg-primary text-white">
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Name</th>
+                                            <th>Model</th>
+                                            <th>Unit</th>
+                                            <th>Qty</th>
+                                            <th>Manufacturer</th>
+                                            <th>Serial No.</th>
+                                            <th>Manufactured Date</th>
+                                            <th>Commissioned Date</th>
+                                            <th>Capacity</th>
+                                            <th>Image</th>
+                                            <th>Remarks</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="equipment : ${equipments.content}" class="table-row-hover">
+                                            <td data-field="code" th:text="${equipment.code}"></td>
+                                            <td data-field="name" th:text="${equipment.name}"></td>
+                                            <td data-field="model" th:text="${equipment.model}"></td>
+                                            <td data-field="unit" th:text="${equipment.unit}"></td>
+                                            <td data-field="qty" class="text-center" th:text="${equipment.qty}"></td>
+                                            <td data-field="manufacturer" th:text="${equipment.manufacturer}"></td>
+                                            <td data-field="serialNo" th:text="${equipment.serialNo}"></td>
+                                            <td data-field="manufacturedDate"
+                                                th:text="${#temporals.format(equipment.manufacturedDate, 'yyyy-MM-dd')} ?: '-'">
+                                            </td>
+                                            <td data-field="commissionedDate"
+                                                th:text="${#temporals.format(equipment.commissionedDate, 'yyyy-MM-dd')} ?: '-'">
+                                            </td>
+                                            <td data-field="capacity" th:text="${equipment.capacity}"></td>
+                                            <td data-field="image">
+                                                <div class="avatar-lg my-2" th:if="${equipment.image}">
+                                                    <img th:src="@{/upload/equipment/image/__${equipment.image}__}"
+                                                        class="rounded avatar-img" alt="Equipment Image" />
+                                                </div>
+                                            </td>
+                                            <td data-field="remarks" th:text="${equipment.remarks}"></td>
+                                            <td>
+                                                <div class="form-button-action">
+                                                    <button type="button"
+                                                        class="btn btn-link btn-primary btn-lg edit-row"
+                                                        th:data-id="${equipment.id}" th:data-name="${equipment.name}">
+                                                        <i class="fa fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-link btn-danger delete-row"
+                                                        th:data-id="${equipment.id}" th:data-name="${equipment.name}">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${equipments.totalElements == 0}">
+                                            <td colspan="13" class="text-center">No equipment found</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination & Info -->
+                            <div class="row mt-3 align-items-center">
+                                <div class="col-md-6 col-sm-12">
+                                    <p class="text-muted mb-0">
+                                        Showing
+                                        <span th:text="${equipments.number * equipments.size + 1} ?: 0"></span>
+                                        -
+                                        <span
+                                            th:text="${equipments.number * equipments.size + equipments.numberOfElements} ?: 0"></span>
+                                        of <span th:text="${equipments.totalElements} ?: 0"></span> entries
+                                    </p>
+                                </div>
+                                <div class="col-md-6 col-sm-12">
+                                    <nav class="d-flex justify-content-end">
+                                        <ul class="pagination mb-0">
+
+                                            <!-- Previous Button -->
+                                            <li class="page-item"
+                                                th:classappend="${!equipments.hasPrevious} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/equipments(keyword=${keyword}, page=${equipments.number}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:if="${equipments.hasPrevious}">Prev</a>
+                                                <span class="page-link" th:if="${!equipments.hasPrevious}">Prev</span>
+                                            </li>
+
+                                            <!-- Current Page (1-based display) -->
+                                            <li class="page-item active">
+                                                <span class="page-link" th:text="${equipments.number + 1}">1</span>
+                                            </li>
+
+                                            <!-- Next Button -->
+                                            <li class="page-item" th:classappend="${!equipments.hasNext} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/equipments(keyword=${keyword}, page=${(equipments.number + 1) + 1}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:if="${equipments.hasNext}">Next</a>
+                                                <span class="page-link" th:if="${!equipments.hasNext}">Next</span>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Fragment -->
+    <!-- Required for PDF Export -->
+    <th:block layout:fragment="scripts">
+        <script>
+            const sortFieldLabels = {
+                'code': 'Code',
+                'name': 'Name',
+                'model': 'Model',
+                'unit': 'Unit',
+                'qty': 'Qty',
+                'manufacturer': 'Manufacturer',
+                'serialNo': 'Serial No.',
+                'manufacturedDate': 'Manufactured Date',
+                'commissionedDate': 'Commissioned Date',
+                'capacity': 'Capacity',
+                'remarks': 'Remarks'
+                // Add more if needed
+            };
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const form = document.getElementById('equipmentsForm');
+                const sortByInput = document.getElementById('sortByInput');
+                const ascInput = document.getElementById('ascInput');
+
+                // Update dropdown items with friendly names
+                document.querySelectorAll('.sort-column').forEach(item => {
+                    const field = item.getAttribute('data-column');
+                    const displayText = sortFieldLabels[field] || field; // Fallback to raw field
+                    item.textContent = displayText;
+
+                    // Highlight active sort column
+                    if (sortByInput.value === field) {
+                        item.classList.add('active');
+                    }
+                });
+
+                // Handle column click
+                document.querySelectorAll('.sort-column').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const column = this.getAttribute('data-column');
+                        sortByInput.value = column;
+
+                        // Update active class
+                        document.querySelectorAll('.sort-column').forEach(el => {
+                            el.classList.remove('active');
+                        });
+                        this.classList.add('active');
+
+                        // Submit form
+                        form.submit();
+                    });
+                });
+
+                // Handle sort order (asc=true/false)
+                document.querySelectorAll('[data-asc]').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const ascValue = this.getAttribute('data-asc') === 'true'; // convert to boolean
+                        ascInput.value = ascValue;
+
+                        // Update active class
+                        document.querySelectorAll('[data-asc]').forEach(el => {
+                            el.classList.remove('active');
+                        });
+                        this.classList.add('active');
+
+                        // Submit form
+                        form.submit();
+                    });
+                });
+            });
+
+            $(document).ready(function () {
+                // --- Edit Modal Trigger ---
+                $('.edit-row').on('click', function () {
+                    const row = $(this).closest('tr');
+                    const currentId = $(this).data('id');
+
+                    // Populate fields
+                    $('#editId').val(currentId);
+                    $('#editCode').val(row.find('[data-field="code"]').text().trim());
+                    $('#editName').val(row.find('[data-field="name"]').text().trim());
+                    $('#editModel').val(row.find('[data-field="model"]').text().trim());
+                    $('#editUnit').val(row.find('[data-field="unit"]').text().trim());
+                    $('#editQty').val(row.find('[data-field="qty"]').text().trim() || '');
+                    $('#editManufacturer').val(row.find('[data-field="manufacturer"]').text().trim());
+                    $('#editSerialNo').val(row.find('[data-field="serialNo"]').text().trim());
+                    $('#editManufacturedDate').val(row.find('[data-field="manufacturedDate"]').text().trim());
+                    $('#editCommissionedDate').val(row.find('[data-field="commissionedDate"]').text().trim());
+                    $('#editCapacity').val(row.find('[data-field="capacity"]').text().trim());
+                    $('#editRemarks').val(row.find('[data-field="remarks"]').text().trim());
+
+                    // Set image preview if exists
+                    const imgSrc = row.find('[data-field="image"] img').attr('src');
+                    if (imgSrc) {
+                        $('#editImagePreview').attr('src', imgSrc).show();
+                    } else {
+                        $('#editImagePreview').hide();
+                    }
+
+                    // Show modal
+                    $('#editRowModal').modal('show');
+                });
+
+                // --- Delete Modal Trigger ---
+                $('.delete-row').on('click', function () {
+                    const name = $(this).data('name');
+                    const id = $(this).data('id');
+
+                    $('#deleteDocName').text(name);
+                    $('#confirmDeleteButton').attr('href', '/equipments/delete/' + encodeURIComponent(id));
+                    $('#deleteRowModal').modal('show');
+                });
+            });
+
+            // Auto-show Flash Modal
+            $(document).ready(function () {
+                if ($('#flashMessageModalContainer').length) {
+                    console.log("modal");
+                    $('#flashMessageModal').modal('show');
+                }
+            });
+        </script>
+    </th:block>
+
+</body>
+
+</html>

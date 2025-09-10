@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layouts/dashboard}">
+
+<body>
+    <div layout:fragment="content">
+        <div class="page-inner">
+            <div class="page-header">
+                <h4 class="page-title" th:text="${title}">Inspection Reports</h4>
+                <ul class="breadcrumbs">
+                    <li class="nav-home">
+                        <a><i class="fas fa-clipboard-check"></i></a>
+                    </li>
+                    <li class="separator"><i class="flaticon-right-arrow"></i></li>
+                    <li class="nav-item"><a>Menu</a></li>
+                    <li class="separator"><i class="flaticon-right-arrow"></i></li>
+                    <li class="nav-item"><a th:text="${title}">Inspection Reports</a></li>
+                </ul>
+
+
+                <div class="header-action-group d-flex align-items-center ml-auto">
+                    <button class="btn btn-primary mt-2 mr-2" data-toggle="modal" data-target="#importModal">
+                        <i class="fa fa-download mr-1"></i> Import
+                    </button>
+                    <button class="btn btn-primary dropdown-toggle mt-2 mr-2" type="button" id="exportDropdown"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-upload mr-1"></i> Export
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="exportDropdown">
+                        <a class="dropdown-item" href="#" id="exportExcel">
+                            <i class="fa fa-file-excel mr-2 text-success"></i> Excel
+                        </a>
+                        <a class="dropdown-item" href="#" id="exportPdf">
+                            <i class="fa fa-file-pdf mr-2 text-danger"></i> PDF
+                        </a>
+                    </div>
+                    <div th:replace="~{work-report/import-modal :: import-modal}"></div>
+                    <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal">
+                        <i class="fa fa-plus-circle mr-2"></i> Add
+                    </button>
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center">
+                                <h4 class="card-title" th:text="${title}"></h4>
+                                <form class="form-inline ml-auto" th:action="@{/work-reports}" method="get"
+                                    id="workReportsForm">
+                                    <div class="input-icon">
+                                        <input type="text" name="keyword" th:value="${keyword}" id="userSearchInput"
+                                            class="form-control" placeholder="Search...">
+                                        <span class="input-icon-addon"><i class="fa fa-search"></i></span>
+                                    </div>
+
+                                    <!-- Size Dropdown -->
+                                    <div class="form-group">
+                                        <label for="pageSizeSelect" class="sr-only">Items per page:</label>
+                                        <select name="size" id="pageSizeSelect" class="form-control"
+                                            onchange="this.form.submit()">
+                                            <option value="10" th:selected="${pageSize == 10}">10</option>
+                                            <option value="30" th:selected="${pageSize == 30}">30</option>
+                                            <option value="50" th:selected="${pageSize == 50}">50</option>
+                                            <option value="100" th:selected="${pageSize == 100}">100</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Column Visibility Dropdown -->
+                                    <div class="dropdown mr-2">
+                                        <button class="btn btn-primary dropdown-toggle" type="button"
+                                            id="columnToggleDropdown" data-toggle="dropdown" aria-haspopup="true"
+                                            aria-expanded="false" style="padding: 0.375rem 0.5rem;">
+                                            <i class="fas fa-th-list"></i>
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right"
+                                            aria-labelledby="columnToggleDropdown"
+                                            style="min-width: 250px; max-height: 300px; overflow-y: auto; padding: 0.5rem 0;">
+                                            <h6 class="dropdown-header px-3 py-2">
+                                                Show / Hide Columns
+                                            </h6>
+                                            <div id="column-toggle-list"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Filter Dropdown -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-primary dropdown-toggle" type="button"
+                                            id="filterDropdown" data-toggle="dropdown" aria-haspopup="true"
+                                            aria-expanded="false" style="padding: 0.375rem 0.5rem;">
+                                            <i class="fa fa-filter"></i>
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="filterDropdown"
+                                            style="min-width: 200px;">
+                                            <!-- Hidden inputs for sort state -->
+                                            <input type="hidden" name="sortBy" id="sortByInput" th:value="${sortBy}" />
+                                            <input type="hidden" name="asc" id="ascInput" th:value="${asc}" />
+
+                                            <!-- Sort Column -->
+                                            <h6 class="dropdown-header">Sort Column</h6>
+                                            <th:block th:each="field : ${sortFields}">
+                                                <a class="dropdown-item sort-column" href="#" th:text="${field}"
+                                                    th:data-column="${field}"
+                                                    th:classappend="${sortBy == field} ? 'active' : ''">
+                                                </a>
+                                            </th:block>
+
+                                            <div class="dropdown-divider"></div>
+
+                                            <!-- Sort Order -->
+                                            <h6 class="dropdown-header">Sort Order</h6>
+                                            <a class="dropdown-item" href="#" data-asc="true"
+                                                th:classappend="${asc == true} ? 'active' : ''">Ascending</a>
+                                            <a class="dropdown-item" href="#" data-asc="false"
+                                                th:classappend="${asc == false} ? 'active' : ''">Descending</a>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Include Modals -->
+                            <div th:replace="~{work-report/modal :: modal}"></div>
+
+                            <div class="table-responsive">
+                                <table id="work-report-table" class="display table table-striped table-hover">
+                                    <thead class="bg-primary text-white">
+                                        <tr>
+                                            <th>Report Date</th>
+                                            <th>Shift</th>
+                                            <th>Area</th>
+                                            <th>Equipment</th>
+                                            <th>Category</th>
+                                            <th>Problem</th>
+                                            <th>Solution</th>
+                                            <th>Start Time</th>
+                                            <th>Stop Time</th>
+                                            <th>Total Time (min)</th>
+                                            <th>Technician(s)</th>
+                                            <th>Supervisor</th>
+                                            <th>Status</th>
+                                            <th>Scope</th>
+                                            <th>Work Type</th>
+                                            <th>Remark</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="report : ${workReports.content}" th:data-id="${report.id}">
+                                            <!-- Report Date -->
+                                            <td data-field="reportDate"
+                                                th:text="${#temporals.format(report.reportDate, 'MMM dd, yyyy')}">
+                                            </td>
+
+                                            <!-- Shift -->
+                                            <td data-field="shift" th:text="${report.shift}"></td>
+
+                                            <!-- Area -->
+                                            <td data-field="area" th:data-area-code="${report.area?.code}"
+                                                th:text="${report.area?.name ?: '-'}">-</td>
+
+                                            <!-- Equipment -->
+                                            <td data-field="equipment"
+                                                th:data-equipment-code="${report.equipment?.code}"
+                                                th:text="${report.equipment?.name ?: '-'}">-</td>
+
+                                            <!-- Category -->
+                                            <td data-field="category"
+                                                th:text="${#strings.replace(report.category.name, '_', ' ')}"></td>
+
+                                            <!-- Problem -->
+                                            <td data-field="problem" th:text="${report.problem ?: '-'}"></td>
+
+                                            <!-- Solution -->
+                                            <td data-field="solution" th:text="${report.solution ?: '-'}"></td>
+
+                                            <!-- Start Time -->
+                                            <td data-field="startTime"
+                                                th:text="${#temporals.format(report.startTime, 'MMM dd, yyyy, hh:mm a')}">
+                                            </td>
+
+                                            <!-- Stop Time -->
+                                            <td data-field="stopTime"
+                                                th:text="${#temporals.format(report.stopTime, 'MMM dd, yyyy, hh:mm a')}">
+                                            </td>
+
+                                            <!-- Total Resolution Time -->
+                                            <td data-field="totalResolutionTimeMinutes"
+                                                th:text="${report.totalResolutionTimeMinutes} + ' min'"></td>
+                                            <!-- Technician(s) -->
+                                            <td data-field="technicians">
+                                                <th:block th:each="technician : ${report.technicians}">
+                                                    <span class="badge badge-info mr-1"
+                                                        th:text="${technician.name + ' (' + technician.employeeId + ')'}">
+                                                    </span>
+                                                </th:block>
+                                                <th:block th:if="${#sets.isEmpty(report.technicians)}">
+                                                    <span class="text-muted">-</span>
+                                                </th:block>
+                                            </td>
+                                            <!-- Technician -->
+                                            <!-- <td data-field="technician"
+                                                th:data-employee-id="${report.technician.employeeId}"
+                                                th:text="${report.technician.name ?: '-'}">-</td>
+                                            </td> -->
+                                            <!-- th:text="${report.technician.name + ' (' + report.technician.employeeId + ')'}"> -->
+
+                                            <!-- Supervisor -->
+                                            <td data-field="supervisor"
+                                                th:data-employee-id="${report.supervisor?.employeeId}"
+                                                th:text="${report.supervisor?.name ?: '-'}">-</td>
+                                            </td>
+                                            <!-- th:text="${report.supervisor?.name != null ? report.supervisor.name + ' (' + report.supervisor.employeeId + ')' : '-'}"> -->
+
+                                            <!-- Status -->
+                                            <td data-field="status">
+                                                <span class="badge badge-pill px-3 py-2" th:classappend="${
+                      report.status == 'OPEN' ? 'badge-danger' :
+                      report.status == 'IN_PROGRESS' ? 'badge-warning' :
+                      report.status == 'PENDING' ? 'badge-info' :
+                      report.status == 'CLOSED' ? 'badge-success' :
+                      'badge-secondary'
+                  }" th:text="${report.status ?: '-'}"></span>
+                                            </td>
+
+                                            <!-- Scope -->
+                                            <td data-field="scope">
+                                                <span class="badge badge-pill px-3 py-2" th:classappend="${
+                      report.scope == 'ELECTRICAL' ? 'badge-danger' :
+                      report.scope == 'MECHANICAL' ? 'badge-info' :
+                      report.scope == 'IT' ? 'badge-success' :
+                      'badge-secondary'
+                  }" th:text="${report.scope ?: '-'}"></span>
+                                            </td>
+
+                                            <!-- Work Type -->
+                                            <td data-field="workType" th:text="${report.workType ?: '-'}"></td>
+
+                                            <!-- Remark -->
+                                            <td data-field="remark" th:text="${report.remark ?: '-'}"></td>
+
+                                            <!-- Action Buttons -->
+                                            <td>
+                                                <div class="form-button-action">
+                                                    <button type="button"
+                                                        class="btn btn-link btn-primary btn-lg edit-row"
+                                                        th:data-id="${report.id}"
+                                                        th:data-name="${report.equipment?.name}">
+                                                        <i class="fa fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-link btn-danger delete-row"
+                                                        th:data-id="${report.id}"
+                                                        th:data-name="${report.equipment?.name}">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination & Info -->
+                            <div class="row mt-3 align-items-center">
+                                <div class="col-md-6 col-sm-12">
+                                    <p class="text-muted mb-0">
+                                        Showing
+                                        <span th:text="${workReports.number * workReports.size + 1} ?: 0"></span>
+                                        -
+                                        <span
+                                            th:text="${workReports.number * workReports.size + workReports.numberOfElements} ?: 0"></span>
+                                        of <span th:text="${workReports.totalElements} ?: 0"></span> entries
+                                    </p>
+                                </div>
+                                <div class="col-md-6 col-sm-12">
+                                    <nav class="d-flex justify-content-end">
+                                        <ul class="pagination mb-0">
+
+                                            <!-- Previous Button -->
+                                            <li class="page-item"
+                                                th:classappend="${!workReports.hasPrevious} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/work-reports(keyword=${keyword}, page=${workReports.number}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:if="${workReports.hasPrevious}">Prev</a>
+                                                <span class="page-link" th:if="${!workReports.hasPrevious}">Prev</span>
+                                            </li>
+
+                                            <!-- Current Page (1-based display) -->
+                                            <li class="page-item active">
+                                                <span class="page-link" th:text="${workReports.number + 1}">1</span>
+                                            </li>
+
+                                            <!-- Next Button -->
+                                            <li class="page-item" th:classappend="${!workReports.hasNext} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/work-reports(keyword=${keyword}, page=${(workReports.number + 1) + 1}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:if="${workReports.hasNext}">Next</a>
+                                                <span class="page-link" th:if="${!workReports.hasNext}">Next</span>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Container for the dropdown */
+        .column-toggle-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .custom-checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 0.4rem 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.15s ease;
+            user-select: none;
+        }
+
+        .custom-checkbox-item:hover {
+            background-color: #f1f3f5;
+        }
+
+        .custom-checkbox {
+            position: relative;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            margin-right: 10px;
+        }
+
+        .custom-checkbox input {
+            opacity: 0;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .custom-checkbox .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 18px;
+            height: 18px;
+            background-color: #fff;
+            border: 2px solid #ced4da;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .custom-checkbox input:checked+.checkmark {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .custom-checkbox input:checked+.checkmark:after {
+            content: "";
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .custom-checkbox-label {
+            font-size: 0.95rem;
+            color: #212529;
+            font-weight: 500;
+            flex-grow: 1;
+        }
+    </style>
+
+    <!-- Scripts -->
+    <th:block layout:fragment="scripts">
+        <script>
+            $(document).ready(function () {
+
+                // Extract technician objects from the table cell
+                function getTechniciansFromCell(cell) {
+                    const technicians = [];
+                    const badges = cell.querySelectorAll('.badge');
+                    for (let badge of badges) {
+                        const text = badge.textContent.trim(); // "John (EMP001)"
+                        const match = text.match(/^(.+) \((.+)\)$/);
+                        if (match) {
+                            const name = match[1].trim();
+                            const empId = match[2].trim();
+                            technicians.push({ name, empId });
+                        }
+                    }
+                    return technicians;
+                }
+
+                // Initialize the tag input and hidden select for technicians
+                function initEditTechnicianInput(technicians) {
+                    const tagList = document.getElementById("editTechnicianTagList");
+                    const hiddenSelect = document.getElementById("editTechnicianSelect");
+
+                    // Clear previous content
+                    tagList.innerHTML = "";
+                    hiddenSelect.innerHTML = "";
+
+                    technicians.forEach(tech => {
+                        const tag = document.createElement("div");
+                        tag.className = "tag";
+                        tag.dataset.value = tech.empId;
+
+                        tag.innerHTML = `
+            ${tech.name} (${tech.empId})
+            <span class="remove-tag" 
+                  onclick="window.removeTag(this, 'editTechnicianSelect', 'editTechnicianTagList')">
+                ×
+            </span>
+        `;
+
+                        tagList.appendChild(tag);
+
+                        // Add to hidden <select>
+                        const option = document.createElement("option");
+                        option.value = tech.empId;
+                        option.selected = true;
+                        hiddenSelect.appendChild(option);
+                    });
+
+                    // Sync event (if needed)
+                    hiddenSelect.dispatchEvent(new Event('change'));
+                }
+                // --- Edit Modal Trigger ---
+                $(document).on('click', '.edit-row', function () {
+                    function toIsoDate(dateStr) {
+                        if (!dateStr) return '';
+                        const date = new Date(dateStr);
+                        if (isNaN(date.getTime())) return '';
+
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+
+                        return `${year}-${month}-${day}`; // e.g., "2025-04-05"
+                    }
+
+                    function toIsoDateTime(dateTimeStr) {
+                        if (!dateTimeStr) return '';
+                        const date = new Date(dateTimeStr);
+                        if (isNaN(date.getTime())) return '';
+
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+
+                        return `${year}-${month}-${day}T${hours}:${minutes}`;
+                    }
+
+                    const row = $(this).closest('tr');
+                    const currentId = $(this).data('id');
+
+                    // Populate simple fields
+                    $('#editId').val(currentId);
+                    $('#editReportDate').val(toIsoDate(row.find('[data-field="reportDate"]').text().trim()));
+                    $('#editShift').val(row.find('[data-field="shift"]').text().trim());
+
+                    // Category
+                    const categoryText = row.find('[data-field="category"]').text().trim();
+                    $('#editCategory').val(
+                        categoryText.toUpperCase().replace(/\s+/g, '_') // "Corrective Maintenance" → "CORRECTIVE_MAINTENANCE"
+                    );
+
+                    // Status
+                    const statusText = row.find('[data-field="status"] span').text().trim().toUpperCase();
+                    $('#editStatus').val(statusText);
+
+                    const scopeText = row.find('[data-field="scope"] span').text().trim().toUpperCase();
+                    $('#editScope').val(scopeText);
+
+                    // Problem & Solution
+                    $('#editProblem').val(row.find('[data-field="problem"]').text().trim());
+                    $('#editSolution').val(row.find('[data-field="solution"]').text().trim());
+
+                    // Start Time & Stop Time (same format as reportDate)
+                    $('#editStartTime').val(toIsoDateTime(row.find('[data-field="startTime"]').text().trim()));
+                    $('#editStopTime').val(toIsoDateTime(row.find('[data-field="stopTime"]').text().trim()));
+
+                    // Total Resolution Time (extract number)
+                    const totalTimeText = row.find('[data-field="totalResolutionTimeMinutes"]').text().trim();
+                    const minutes = totalTimeText.match(/\d+/);
+                    $('#editTotalTime').val(minutes ? minutes[0] : '');
+
+                    // Work Type & Remark
+                    $('#editWorkType').val(row.find('[data-field="workType"]').text().trim());
+                    $('#editRemark').val(row.find('[data-field="remark"]').text().trim());
+
+                    // --- Area: Populate with name and bind code ---
+                    const areaName = row.find('[data-field="area"]').text().trim();
+                    const areaCode = row.find('[data-field="area"]').data('areaCode');
+
+                    $('#editAreaInput').val(`${areaName} (${areaCode})`);
+                    $('#editAreaSelect').val(areaCode);
+                    // if (areaCode) {
+                    //     $('#editAreaInput').val(`${areaName} (${areaCode})`);
+                    //     $('#editAreaSelect').val($(document.querySelector(`#areaOptions option[data-code="${areaCode}"]`)).data('id') || '');
+                    // } else {
+                    //     $('#editAreaInput').val('');
+                    //     $('#editAreaSelect').val('');
+                    // }
+
+                    // --- Equipment ---
+                    const equipName = row.find('[data-field="equipment"]').text().trim();
+                    const equipCode = row.find('[data-field="equipment"]').data('equipmentCode');
+                    // if (equipCode) {
+                    $('#editEquipmentInput').val(`${equipName} (${equipCode})`);
+                    $('#editEquipmentSelect').val(equipCode);
+                    // } else {
+                    //     $('#editEquipmentInput').val('');
+                    //     $('#editEquipmentSelect').val('');
+                    // }
+
+                    //         const technicianTagList = document.getElementById('editTechnicianTagList');
+                    //         const hiddenSelect = document.getElementById('editTechnicianSelect');
+
+                    //         // Clear previous tags
+                    //         technicianTagList.innerHTML = "";
+                    //         hiddenSelect.innerHTML = "";
+
+                    //         // Get technician data from row (assuming each technician is in a span.badge)
+                    //         const techBadges = row.find('[data-field="technicians"] .badge');
+                    //         const techData = [];
+                    //         techBadges.each(function () {
+                    //             const text = $(this).text().trim(); // "John (AAA)"
+                    //             const match = text.match(/(.+) \((.+)\)/);
+                    //             if (match) {
+                    //                 const name = match[1];
+                    //                 const empId = match[2];
+                    //                 techData.push({ name, empId });
+                    //             }
+                    //         });
+
+                    //         // Add each as a tag
+                    //         techData.forEach(tech => {
+                    //             const tag = document.createElement("div");
+                    //             tag.className = "tag";
+                    //             tag.dataset.value = tech.empId;
+                    //             tag.innerHTML = `
+                    //     ${tech.name} (${tech.empId})
+                    //     <span class="remove-tag" onclick="window.removeTag(this, 'editTechnicianSelect', 'editTechnicianTagList')">×</span>
+                    // `;
+                    //             technicianTagList.appendChild(tag);
+
+                    //             // Add to hidden select
+                    //             const option = document.createElement("option");
+                    //             option.value = tech.empId;
+                    //             option.selected = true;
+                    //             hiddenSelect.appendChild(option);
+                    //         });
+
+                    // --- Technicians ---
+                    const techCell = row.find('[data-field="technicians"]')[0];
+                    const technicians = getTechniciansFromCell(techCell);
+                    initEditTechnicianInput(technicians);
+
+
+                    // --- Technician ---
+                    // const techName = row.find('[data-field="technician"]').text().trim();
+                    // const techId = row.find('[data-field="technician"]').data('employeeId');
+                    // if (techId) {
+                    //    $('#editTechnicianInput').val(`${techName} (${techId})`);
+                    //    $('#editTechnicianSelect').val(techId);
+                    // } else {
+                    //     $('#editTechnicianInput').val('');
+                    //     $('#editTechnicianSelect').val('');
+                    //}
+
+                    // --- Supervisor ---
+                    const supName = row.find('[data-field="supervisor"]').text().trim();
+                    const supId = row.find('[data-field="supervisor"]').data('employeeId');
+                    // if (supId) {
+                    $('#editSupervisorInput').val(`${supName} (${supId})`);
+                    $('#editSupervisorSelect').val(supId);
+                    // } else {
+                    //     $('#editSupervisorInput').val('');
+                    //     $('#editSupervisorSelect').val('');
+                    // }
+
+                    // Show modal
+                    $('#editRowModal').modal('show');
+                });
+
+                // --- Delete Modal Trigger ---
+                $(document).on('click', '.delete-row', function () {
+                    const name = $(this).data('name');
+                    const id = $(this).data('id');
+
+                    $('#deleteDocName').text(name);
+                    $('#confirmDeleteButton').attr('href', '/work-reports/delete/' + encodeURIComponent(id));
+                    $('#deleteRowModal').modal('show');
+                });
+            });
+
+            // Auto-show Flash Modal
+            $(document).ready(function () {
+                if ($('#flashMessageModalContainer').length) {
+                    console.log("modal");
+                    $('#flashMessageModal').modal('show');
+                }
+            });
+        </script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const table = document.getElementById("work-report-table");
+                const headerRow = table.querySelector("thead tr");
+                const dataRows = table.querySelectorAll("tbody tr");
+                const container = document.getElementById("column-toggle-list");
+
+                // Define columns in the same order as <th> in the table
+                const columnSettings = [
+                    { key: "reportDate", label: "Report Date", visible: true },
+                    { key: "shift", label: "Shift", visible: true },
+                    { key: "area", label: "Area", visible: false },
+                    { key: "equipment", label: "Equipment", visible: true },
+                    { key: "category", label: "Category", visible: true },
+                    { key: "problem", label: "Problem", visible: true },
+                    { key: "solution", label: "Solution", visible: false },
+                    { key: "startTime", label: "Start Time", visible: false },
+                    { key: "stopTime", label: "Stop Time", visible: false },
+                    { key: "totalResolutionTimeMinutes", label: "Total Resolution Time", visible: true },
+                    { key: "technicians", label: "Technician(s)", visible: true },
+                    // { key: "technician", label: "Technician", visible: true },
+                    { key: "supervisor", label: "Supervisor", visible: false },
+                    { key: "status", label: "Status", visible: true },
+                    { key: "scope", label: "Scope", visible: true },
+                    { key: "workType", label: "Work Type", visible: false },
+                    { key: "remark", label: "Remark", visible: false }
+                    // "Action" column is excluded from toggle (always visible or managed separately)
+                ];
+
+                columnSettings.forEach((col, index) => {
+                    // Create wrapper div
+                    const div = document.createElement("div");
+                    div.className = "px-3 py-1";
+                    div.style.cursor = "pointer";
+                    div.style.userSelect = "none";
+
+                    // Checkbox with Font Awesome
+                    div.innerHTML = `
+            <div class="d-flex align-items-center">
+                <span class="column-checkbox" data-index="${index}" 
+                    style="display: inline-block; width: 18px; height: 18px; border: 2px solid #adb5bd; border-radius: 4px; margin-right: 8px; text-align: center; line-height: 16px; font-size: 12px; transition: 0.2s background; 
+                    ${col.visible ? 'background-color: #007bff; border-color: #007bff;' : ''}">
+                    ${col.visible ? '<i class="fas fa-check" style="color: white;"></i>' : ''}
+                </span>
+                <span style="font-size: 0.95rem; color: #212529;">${col.label}</span>
+            </div>
+        `;
+
+                    const checkboxSpan = div.querySelector(".column-checkbox");
+                    const th = headerRow.children[index];
+                    const tds = Array.from(dataRows).map(row => row.children[index]);
+
+                    // Hide if not visible initially
+                    if (!col.visible) {
+                        th.style.display = "none";
+                        tds.forEach(td => td.style.display = "none");
+                    }
+
+                    // Toggle on click
+                    div.addEventListener("click", function () {
+                        const isChecked = checkboxSpan.querySelector("i") !== null;
+                        if (isChecked) {
+                            // Uncheck → hide
+                            checkboxSpan.style.backgroundColor = "";
+                            checkboxSpan.style.borderColor = "#adb5bd";
+                            checkboxSpan.innerHTML = "";
+                            th.style.display = "none";
+                            tds.forEach(td => td.style.display = "none");
+                        } else {
+                            // Check → show
+                            checkboxSpan.style.backgroundColor = "#007bff";
+                            checkboxSpan.style.borderColor = "#007bff";
+                            checkboxSpan.innerHTML = '<i class="fas fa-check" style="color: white;"></i>';
+                            th.style.display = "";
+                            tds.forEach(td => td.style.display = "");
+                        }
+                    });
+
+                    container.appendChild(div);
+                });
+            });
+
+            const sortFieldLabels = {
+                'reportDate': 'Report Date',
+                'shift': 'Shift',
+                'startTime': 'Start Time',
+                'stopTime': 'Stop Time',
+                'category': 'Category',
+                'status': 'Status',
+                'equipment.name': 'Equipment',
+                'area.name': 'Area',
+
+                // 'technician.name': 'Technician',
+                'supervisor.name': 'Supervisor',
+                'workType': 'Work Type',
+                'problem': 'Problem',
+                'solution': 'Solution',
+                'remark': 'Remark'
+                // Add more if needed
+            };
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const form = document.getElementById('workReportsForm'); // Reuse existing form
+                const sortByInput = document.getElementById('sortByInput');
+                const ascInput = document.getElementById('ascInput');
+
+                // Update dropdown items with friendly names
+                document.querySelectorAll('.sort-column').forEach(item => {
+                    const field = item.getAttribute('data-column');
+                    const displayText = sortFieldLabels[field] || field; // Fallback to field name
+                    item.textContent = displayText;
+
+                    // Highlight active sort column
+                    if (sortByInput.value === field) {
+                        item.classList.add('active');
+                    }
+                });
+
+                // Handle column click
+                document.querySelectorAll('.sort-column').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const column = this.getAttribute('data-column');
+                        sortByInput.value = column;
+
+                        // Update active class
+                        document.querySelectorAll('.sort-column').forEach(el => {
+                            el.classList.remove('active');
+                        });
+                        this.classList.add('active');
+
+                        // Submit form
+                        form.submit();
+                    });
+                });
+
+                // Handle sort order (asc=true/false)
+                document.querySelectorAll('[data-asc]').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const ascValue = this.getAttribute('data-asc') === 'true'; // boolean
+                        ascInput.value = ascValue;
+
+                        // Update active class
+                        document.querySelectorAll('[data-asc]').forEach(el => {
+                            el.classList.remove('active');
+                        });
+                        this.classList.add('active');
+
+                        // Submit form
+                        form.submit();
+                    });
+                });
+            });
+        </script>
+    </th:block>
+</body>
+
+</html>

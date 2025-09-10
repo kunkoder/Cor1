@@ -1,0 +1,518 @@
+<div th:fragment="modal">
+    <!-- Modal Add -->
+    <div class="modal fade" id="addRowModal" tabindex="-1" role="dialog" aria-labelledby="addRowModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header bg-primary text-white no-bd">
+                    <h5 class="modal-title" id="addRowModalLabel">
+                        Report New Issue
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body p-4">
+                    <form th:action="@{/complaints}" th:object="${complaintDTO}" method="post" id="formAdd"
+                        enctype="multipart/form-data">
+
+                        <!-- Subject -->
+                        <div class="form-group">
+                            <label for="subject">Subject <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" th:field="*{subject}"
+                                placeholder="e.g. Motor Overheating">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('subject')}"
+                                th:errors="*{subject}">
+                                Please enter a subject.
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Area & Machine (Equipment) -->
+                        <div class="form-row">
+                            <!-- Area -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Area <span class="text-danger">*</span></label>
+
+                                    <!-- Visible Autocomplete Input -->
+                                    <input type="text" class="form-control" list="areaOptions" id="areaInput"
+                                        placeholder="Search area by name or code" autocomplete="off" />
+
+                                    <!-- Datalist for Suggestions -->
+                                    <datalist id="areaOptions">
+                                        <option th:each="area : ${areas}"
+                                            th:value="${area.name} + ' (' + ${area.code} + ')'"
+                                            th:data-code="${area.code}">
+                                        </option>
+                                    </datalist>
+
+                                    <!-- Hidden Select for Thymeleaf Binding -->
+                                    <select class="d-none" th:field="*{area.code}" id="areaSelect">
+                                        <option th:each="area : ${areas}" th:value="${area.code}">Area</option>
+                                    </select>
+
+                                    <!-- Validation Feedback -->
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('area.code')}"
+                                        th:errors="*{area.code}">
+                                        Please select an area.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Equipment -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Equipment <span class="text-danger">*</span></label>
+
+                                    <!-- Visible Autocomplete Input -->
+                                    <input type="text" class="form-control" list="equipmentOptions" id="equipmentInput"
+                                        placeholder="Search equipment by name or code" autocomplete="off" required />
+
+                                    <!-- Datalist for Suggestions -->
+                                    <datalist id="equipmentOptions">
+                                        <option th:each="equipment : ${equipments}"
+                                            th:value="${equipment.name} + ' (' + ${equipment.code} + ')'"
+                                            th:data-code="${equipment.code}">
+                                        </option>
+                                    </datalist>
+
+                                    <!-- Hidden Select for Thymeleaf Binding -->
+                                    <select class="d-none" th:field="*{equipment.code}" id="equipmentSelect">
+                                        <option th:each="equipment : ${equipments}" th:value="${equipment.code}">
+                                            Equipment</option>
+                                    </select>
+
+                                    <!-- Validation Feedback -->
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('equipment.code')}"
+                                        th:errors="*{equipment.code}">
+                                        Please select equipment.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- Row 3: Reporter, Assignee & Priority -->
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="reporter">Reporter <span class="text-danger">*</span></label>
+                                    <!-- Hidden Select for Binding -->
+                                    <select class="d-none" th:field="*{reporter.employeeId}" id="reporterSelect">
+                                        <option th:each="user : ${users}" th:value="${user.employeeId}">User</option>
+                                    </select>
+                                    <!-- Autocomplete Input -->
+                                    <input type="text" class="form-control" list="userOptions" id="reporterInput"
+                                        placeholder="Search reporter by name or ID" autocomplete="off" required />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="assignee">Assignee</label>
+                                    <!-- Hidden Select for Binding -->
+                                    <select class="d-none" th:field="*{assignee.employeeId}" id="assigneeSelect">
+                                        <option th:each="user : ${users}" th:value="${user.employeeId}">User</option>
+                                    </select>
+                                    <!-- Autocomplete Input -->
+                                    <input type="text" class="form-control" list="userOptions" id="assigneeInput"
+                                        placeholder="Search assignee by name or ID" autocomplete="off" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Datalist for User Autocomplete -->
+                        <datalist id="userOptions">
+                            <option th:each="user : ${users}" th:value="${user.name} + ' (' + ${user.employeeId} + ')'"
+                                th:data-employee-id="${user.employeeId}">
+                            </option>
+                        </datalist>
+
+                        <!-- Priority & Category -->
+                        <div class="form-row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Report Date</label>
+                                    <input type="datetime-local" class="form-control"
+                                        th:field="*{reportDate}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="priority">Priority <span class="text-danger">*</span></label>
+                                    <select class="form-control" th:field="*{priority}" required>
+                                        <option value="" disabled selected>Select Priority</option>
+                                        <option th:value="LOW">LOW</option>
+                                        <option th:value="MEDIUM">MEDIUM</option>
+                                        <option th:value="HIGH">HIGH</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('priority')}"
+                                        th:errors="*{priority}">
+                                        Please select a priority.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="category">Category <span class="text-danger">*</span></label>
+                                    <select class="form-control" th:field="*{category}" required>
+                                        <option value="" disabled selected>Select Category</option>
+                                        <option th:value="MECHANICAL">MECHANICAL</option>
+                                        <option th:value="ELECTRICAL">ELECTRICAL</option>
+                                        <option th:value="IT">IT</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('category')}"
+                                        th:errors="*{category}">
+                                        Please select a category.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group mb-3">
+                            <label for="description">Description <span class="text-muted">(optional)</span></label>
+                            <textarea class="form-control" th:field="*{description}" rows="4"
+                                placeholder="Describe the issue in detail..."></textarea>
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div class="form-group mb-0">
+                            <label for="imageBefore">Image <span class="text-muted">(optional)</span></label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="imageBefore" name="imageBeforeFile"
+                                    accept="image/*">
+                                <label class="custom-file-label" for="imageBefore">Choose file</label>
+                            </div>
+                            <div class="mt-2">
+                                <img id="addImagePreview" src="" alt="Image Preview" class="img-thumbnail"
+                                    style="max-height: 150px; display: none;">
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer border-0 pt-2 pb-4 px-4 d-flex justify-content-between">
+                    <small class="text-muted">
+                        <i class="fas fa-asterisk text-danger mr-1"></i> Required fields
+                    </small>
+                    <div>
+                        <button type="button" class="btn btn-danger btn-border" data-dismiss="modal">Cancel</button>
+                        <button type="submit" form="formAdd" class="btn btn-primary ml-2">Create Report</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Message Modal (Success or Error) -->
+    <div th:if="${error != null or success != null}" id="flashMessageModalContainer">
+        <div class="modal fade" id="flashMessageModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header"
+                        th:classappend="${error} ? 'bg-danger text-white' : 'bg-success text-white'">
+                        <h5 class="modal-title">
+                            <i
+                                th:class="${error} ? 'fas fa-exclamation-triangle mr-2' : 'fas fa-check-circle mr-2'"></i>
+                            <span th:text="${error} ? 'Error' : 'Success'">Status</span>
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body py-4">
+                        <div th:if="${error}" class="text-center">
+                            <ul class="list-unstyled">
+                                <li th:each="err : ${#strings.listSplit(error, '|')}">
+                                    <p class="mb-2" th:text="${err.trim()}">Error</p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div th:if="${success}" class="text-center">
+                            <p th:text="${success}">Success</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer mt--3">
+                        <button type="button" class="btn" th:classappend="${error} ? 'btn-danger' : 'btn-success'"
+                            data-dismiss="modal">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function syncSelect(inputId, selectId) {
+            const input = document.getElementById(inputId);
+            const select = document.getElementById(selectId);
+
+            if (!input || !select) {
+                console.warn(`Missing input or select: ${inputId}, ${selectId}`);
+                return;
+            }
+
+            input.addEventListener('input', () => {
+                const options = document.querySelectorAll(`#${selectId === 'reporterSelect' || selectId === 'assigneeSelect'
+                    ? 'userOptions' : selectId === 'areaSelect'
+                        ? 'areaOptions'
+                        : 'equipmentOptions'} option`);
+
+                const opt = [...options].find(o => o.value === input.value);
+                select.value = opt ? (opt.dataset.employeeId || opt.dataset.code) : '';
+            });
+        }
+
+        // === Initialize all fields ===
+        syncSelect('areaInput', 'areaSelect');
+        syncSelect('equipmentInput', 'equipmentSelect');
+        syncSelect('reporterInput', 'reporterSelect');
+        syncSelect('assigneeInput', 'assigneeSelect');
+        document.getElementById('imageBefore').onchange = function (evt) {
+            const preview = document.getElementById('addImagePreview');
+            const file = evt.target.files[0];
+            if (file && file.type.match('image.*')) {
+                const reader = new FileReader();
+                reader.onload = function () {
+                    preview.src = reader.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ================= EXPORT TO EXCEL =================
+    document.getElementById('exportExcel')?.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const table = document.getElementById('document-table');
+        if (!table) {
+            alert("Table not found!");
+            return;
+        }
+
+        const headers = [
+            "Code",
+            "Report Date",
+            "Last Update",
+            "Reporter",
+            "Area",
+            "Equipment",
+            "Subject",
+            "Description",
+            "Action Taken",
+            "Assignee",
+            "Priority",
+            "Category",
+            "Status",
+            "Close Time",
+            "Total Time"
+        ];
+
+        const data = [];
+        const rows = table.querySelectorAll('tbody tr');
+
+        rows.forEach(tr => {
+            // Skip hidden/filtered rows
+            if (tr.style.display === 'none') return;
+
+            const tds = tr.querySelectorAll('td');
+            if (tds.length < 15) return;
+
+            let colIndex = 0;
+            const row = [];
+
+            // Code (linked text)
+            row.push(tds[colIndex++].querySelector('a')?.textContent.trim() || '-');
+
+            // Report Date
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Last Update
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Reporter
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Area
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Equipment
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Subject
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Description
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Action Taken
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Assignee
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Priority (extract from badge text)
+            const priorityBadge = tds[colIndex++].querySelector('.badge');
+            row.push(priorityBadge?.textContent.trim() || '-');
+
+            // Category (extract from badge text)
+            const categoryBadge = tds[colIndex++].querySelector('.badge');
+            row.push(categoryBadge?.textContent.trim() || '-');
+
+            // Status (extract from badge text)
+            const statusBadge = tds[colIndex++].querySelector('.badge');
+            row.push(statusBadge?.textContent.trim() || '-');
+
+            // Close Time
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Total Time
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            data.push(row);
+        });
+
+        // Create worksheet and workbook
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Complaints");
+
+        // Generate filename
+        const dateStr = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(wb, `Complaints_Export_${dateStr}.xlsx`);
+    });
+
+    // ================= EXPORT TO PDF =================
+    document.getElementById('exportPdf')?.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'landscape',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        const table = document.getElementById('document-table');
+        if (!table) {
+            alert("Table not found!");
+            return;
+        }
+
+        // Extract headers
+        const headers = [];
+        table.querySelectorAll('thead th').forEach(th => {
+            headers.push(th.textContent.trim());
+        });
+
+        // Extract data
+        const data = [];
+        const rows = table.querySelectorAll('tbody tr');
+
+        rows.forEach(tr => {
+            if (tr.style.display === 'none') return;
+
+            const tds = tr.querySelectorAll('td');
+            if (tds.length < 15) return;
+
+            let colIndex = 0;
+            const row = [];
+
+            // Code
+            row.push(tds[colIndex++].querySelector('a')?.textContent.trim() || '-');
+
+            // Report Date
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Last Update
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Reporter
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Area
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Equipment
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Subject
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Description
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Action Taken
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Assignee
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Priority
+            const priorityBadge = tds[colIndex++].querySelector('.badge');
+            row.push(priorityBadge?.textContent.trim() || '-');
+
+            // Category
+            const categoryBadge = tds[colIndex++].querySelector('.badge');
+            row.push(categoryBadge?.textContent.trim() || '-');
+
+            // Status
+            const statusBadge = tds[colIndex++].querySelector('.badge');
+            row.push(statusBadge?.textContent.trim() || '-');
+
+            // Close Time
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            // Total Time
+            row.push(tds[colIndex++].textContent.trim() || '-');
+
+            data.push(row);
+        });
+
+        // Add title
+        doc.setFontSize(16);
+        doc.text("Complaints Export", 14, 15);
+
+        // Generate table
+        doc.autoTable({
+            head: [headers],
+            body: data,
+            startY: 20,
+            theme: 'grid',
+            styles: { fontSize: 7 },
+            headStyles: { fillColor: [33, 150, 243] }, // blue header
+            columnStyles: {
+                0: { cellWidth: 25 },   // Code
+                1: { cellWidth: 30 },   // Report Date
+                2: { cellWidth: 30 },   // Last Update
+                3: { cellWidth: 25 },   // Reporter
+                4: { cellWidth: 25 },   // Area
+                5: { cellWidth: 25 },   // Equipment
+                6: { cellWidth: 30 },   // Subject
+                7: { cellWidth: 40 },   // Description
+                8: { cellWidth: 30 },   // Action Taken
+                9: { cellWidth: 25 },   // Assignee
+                10: { cellWidth: 20 },  // Priority
+                11: { cellWidth: 25 },  // Category
+                12: { cellWidth: 25 },  // Status
+                13: { cellWidth: 30 },  // Close Time
+                14: { cellWidth: 20 }   // Total Time
+            }
+        });
+
+        // Save PDF
+        const dateStr = new Date().toISOString().slice(0, 10);
+        doc.save(`Complaints_Export_${dateStr}.pdf`);
+    });
+
+});
+</script>
+</div>

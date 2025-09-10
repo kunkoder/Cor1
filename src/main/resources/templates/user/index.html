@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layouts/dashboard}">
+
+<body>
+    <div layout:fragment="content">
+        <div class="page-inner">
+            <div class="page-header">
+                <h4 class="page-title" th:text="${title}"></h4>
+                <ul class="breadcrumbs">
+                    <li class="nav-home">
+                        <a>
+                            <i class="fas fa-users"></i>
+                        </a>
+                    </li>
+                    <li class="separator">
+                        <i class="flaticon-right-arrow"></i>
+                    </li>
+                    <li class="nav-item">
+                        <a>Menu</a>
+                    </li>
+                    <li class="separator">
+                        <i class="flaticon-right-arrow"></i>
+                    </li>
+                    <li class="nav-item">
+                        <a th:text="${title}"></a>
+                    </li>
+                </ul>
+                <div class="header-action-group d-flex align-items-center ml-auto">
+                    <button class="btn btn-primary dropdown-toggle mt-2 mr-2" type="button" id="exportDropdown"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-upload mr-1"></i> Export
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="exportDropdown">
+                        <a class="dropdown-item" href="#" id="exportExcel">
+                            <i class="fa fa-file-excel mr-2 text-success"></i> Excel
+                        </a>
+                        <a class="dropdown-item" href="#" id="exportPdf">
+                            <i class="fa fa-file-pdf mr-2 text-danger"></i> PDF
+                        </a>
+                    </div>
+                    <div th:replace="~{complaint/import-modal :: import-modal}"></div>
+                    <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal">
+                        <i class="fa fa-plus-circle mr-2"></i> Add
+                    </button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center">
+                                <h4 class="card-title" th:text="${title}"></h4>
+                                <form class="form-inline ml-auto" th:action="@{/users}" method="get" id="usersForm">
+                                    <div class="input-icon">
+                                        <input type="text" name="keyword" th:value="${keyword}" id="userSearchInput"
+                                            class="form-control" placeholder="Search...">
+                                        <span class="input-icon-addon"><i class="fa fa-search"></i></span>
+                                    </div>
+
+                                    <!-- Size Dropdown -->
+                                    <div class="form-group">
+                                        <label for="pageSizeSelect" class="sr-only">Items per page:</label>
+                                        <select name="size" id="pageSizeSelect" class="form-control"
+                                            onchange="this.form.submit()">
+                                            <option value="10" th:selected="${pageSize == 10}">10</option>
+                                            <option value="30" th:selected="${pageSize == 30}">30</option>
+                                            <option value="50" th:selected="${pageSize == 50}">50</option>
+                                            <option value="100" th:selected="${pageSize == 100}">100</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Filter Dropdown -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-primary dropdown-toggle" type="button"
+                                            id="filterDropdown" data-toggle="dropdown" aria-haspopup="true"
+                                            aria-expanded="false" style="padding: 0.375rem 0.5rem;">
+                                            <i class="fa fa-filter"></i>
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="filterDropdown"
+                                            style="min-width: 200px;">
+                                            <!-- Hidden inputs for sort state -->
+                                            <input type="hidden" name="sortBy" id="sortByInput" th:value="${sortBy}" />
+                                            <input type="hidden" name="asc" id="ascInput" th:value="${asc}" />
+
+                                            <!-- Sort Column -->
+                                            <h6 class="dropdown-header">Sort Column</h6>
+                                            <th:block th:each="field : ${sortFields}">
+                                                <a class="dropdown-item sort-column" href="#" th:text="${field}"
+                                                    th:data-column="${field}"
+                                                    th:classappend="${sortBy == field} ? 'active' : ''">
+                                                </a>
+                                            </th:block>
+
+                                            <div class="dropdown-divider"></div>
+
+                                            <!-- Sort Order -->
+                                            <h6 class="dropdown-header">Sort Order</h6>
+                                            <a class="dropdown-item" href="#" data-asc="true"
+                                                th:classappend="${asc == true} ? 'active' : ''">Ascending</a>
+                                            <a class="dropdown-item" href="#" data-asc="false"
+                                                th:classappend="${asc == false} ? 'active' : ''">Descending</a>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Include Modals -->
+                            <div th:replace="~{user/modal :: modal}"></div>
+
+                            <!-- Table -->
+                            <div class="table-responsive">
+                                <table id="user-table" class="display table table-striped table-hover">
+                                    <thead class="bg-primary text-white">
+                                        <tr>
+                                            <th>Image</th>
+                                            <th>Full Name</th>
+                                            <th>Employee ID</th>
+                                            <th>Email</th>
+                                            <th>Designation</th>
+                                            <th>Role(s)</th>
+                                            <th>Nationality</th>
+                                            <th>Join Date</th>
+                                            <th>Phone Number</th>
+                                            <th>Status</th>
+                                            <th>Created At</th>
+                                            <th>Activated At</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="user : ${users.content}" class="table-row-hover">
+                                            <td data-field="image">
+                                                <div class="avatar-lg my-2">
+                                                    <img th:src="${user.image != null} ? @{/upload/user/image/__${user.image}__} : @{/assets/img/arashmil.jpg}"
+                                                        class="rounded-circle avatar-img" alt="User Avatar" />
+                                                </div>
+                                            </td>
+                                            <td data-field="name" th:text="${user.name}"></td>
+                                            <td data-field="employeeId" th:text="${user.employeeId}"></td>
+                                            <td data-field="email" th:text="${user.email}"></td>
+                                            <td data-field="designation" th:text="${user.designation}"></td>
+                                            <td data-field="role">
+                                                <th:block th:each="role : ${user.roles}">
+                                                    <span class="badge badge-info" th:text="${role.name}"></span>
+                                                </th:block>
+                                            </td>
+                                            <td data-field="nationality" th:text="${user.nationality}"></td>
+                                            <td data-field="joinDate" th:text="${#temporals.format(user.joinDate, 'yyyy-MM-dd')} ?: '-'"></td>
+                                            <td data-field="phoneNumber" th:text="${user.phoneNumber}"></td>
+                                            <td>
+                                                <span data-field="status" class="badge"
+                                                    th:classappend="${user.status} == 'ACTIVE' ? 'badge-success' : 'badge-danger'"
+                                                    th:text="${user.status}">INACTIVE</span>
+                                            </td>
+                                            <td data-field="createdAt"
+                                                th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd HH:mm')} ?: '-'">
+                                            </td>
+                                            <td data-field="activatedAt"
+                                                th:text="${#temporals.format(user.activatedAt, 'yyyy-MM-dd HH:mm')} ?: '-'">
+                                            </td>
+                                            <td>
+                                                <div class="form-button-action">
+                                                    <button type="button"
+                                                        class="btn btn-link btn-primary btn-lg edit-row"
+                                                        th:data-id="${user.id}" th:data-name="${user.name}">
+                                                        <i class="fa fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-link btn-danger delete-row"
+                                                        th:data-id="${user.id}" th:data-name="${user.name}">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${users.totalElements == 0}">
+                                            <td colspan="13" class="text-center">No users found</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination & Info -->
+                            <div class="row mt-3 align-items-center">
+                                <div class="col-md-6 col-sm-12">
+                                    <p class="text-muted mb-0">
+                                        Showing
+                                        <span th:text="${users.number * users.size + 1} ?: 0"></span>
+                                        -
+                                        <span
+                                            th:text="${users.number * users.size + users.numberOfElements} ?: 0"></span>
+                                        of <span th:text="${users.totalElements} ?: 0"></span> entries
+                                    </p>
+                                </div>
+                                <div class="col-md-6 col-sm-12">
+                                    <nav aria-label="User list pagination" class="d-flex justify-content-end">
+                                        <ul class="pagination mb-0">
+
+                                            <!-- Previous Button -->
+                                            <li class="page-item" th:classappend="${!users.hasPrevious} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/users(keyword=${keyword}, page=${users.number > 0 ? users.number : 0}, size=${currentSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:if="${users.hasPrevious}">Prev</a>
+                                                <span class="page-link" th:if="${!users.hasPrevious}">Prev</span>
+                                            </li>
+
+                                            <!-- Current Page (1-based) -->
+                                            <li class="page-item active">
+                                                <span class="page-link" th:text="${users.number + 1}">1</span>
+                                            </li>
+
+                                            <!-- Next Button -->
+                                            <li class="page-item" th:classappend="${!users.hasNext} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/users(keyword=${keyword}, page=${users.number + 2}, size=${currentSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:if="${users.hasNext}">Next</a>
+                                                <span class="page-link" th:if="${!users.hasNext}">Next</span>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Fragment -->
+    <th:block layout:fragment="scripts">
+        <script>
+            const sortFieldLabels = {
+                'name': 'Full Name',
+                'employeeId': 'Employee Id',
+                'email': 'Email',
+                'status': 'Status',
+                'designation': 'Designation',
+                'nationality': 'Nationality',
+                'joinDate': 'Join Date',
+                'phoneNumber': 'Phone Number',
+                'createdAt': 'Created At',
+                'activatedAt': 'Activated At'
+            };
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const form = document.getElementById('usersForm');
+                const sortByInput = document.getElementById('sortByInput');
+                const ascInput = document.getElementById('ascInput');
+
+                // Update dropdown items with friendly names
+                document.querySelectorAll('.sort-column').forEach(item => {
+                    const field = item.getAttribute('data-column');
+                    const displayText = sortFieldLabels[field] || field; // Fallback to raw field
+                    item.textContent = displayText;
+
+                    // Highlight active sort column
+                    if (sortByInput.value === field) {
+                        item.classList.add('active');
+                    }
+                });
+
+                // Handle column click
+                document.querySelectorAll('.sort-column').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const column = this.getAttribute('data-column');
+                        sortByInput.value = column;
+
+                        // Update active class
+                        document.querySelectorAll('.sort-column').forEach(el => {
+                            el.classList.remove('active');
+                        });
+                        this.classList.add('active');
+
+                        // Submit form
+                        form.submit();
+                    });
+                });
+
+                // Handle sort order (asc=true/false)
+                document.querySelectorAll('[data-asc]').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const ascValue = this.getAttribute('data-asc') === 'true'; // convert to boolean
+                        ascInput.value = ascValue;
+
+                        // Update active class
+                        document.querySelectorAll('[data-asc]').forEach(el => {
+                            el.classList.remove('active');
+                        });
+                        this.classList.add('active');
+
+                        // Submit form
+                        form.submit();
+                    });
+                });
+            });
+
+            $(document).ready(function () {
+
+                // Trigger edit modal
+                // Define switch elements (will be null until modal is shown)
+                const checkbox = document.getElementById('editStatusSwitch');
+                const textSpan = document.getElementById('editStatusText');
+                const hiddenInput = document.getElementById('editStatusTextHidden');
+
+                // Function to update UI based on checkbox state
+                function updateStatus() {
+                    if (!checkbox || !textSpan || !hiddenInput) return;
+
+                    const isActive = checkbox.checked;
+                    textSpan.textContent = isActive ? 'ACTIVE' : 'INACTIVE';
+                    hiddenInput.value = isActive ? 'ACTIVE' : 'INACTIVE';
+                }
+
+                // Function to initialize switch based on current hiddenInput value
+                function initSwitch() {
+                    if (!checkbox || !hiddenInput) return;
+
+                    // Set checkbox state based on hiddenInput's current value
+                    checkbox.checked = (hiddenInput.value === 'ACTIVE');
+                    updateStatus(); // Sync UI (text and value)
+                }
+
+                function getRolesFromCell(cell) {
+                    const roles = [];
+                    const badges = cell.querySelectorAll('.badge');
+                    for (let badge of badges) {
+                        const role = badge.textContent.trim();
+                        if (role) roles.push(role);
+                    }
+                    return roles;
+                }
+
+                function initEditRoleInput(roles) {
+                    const tagList = document.getElementById("editTagList");
+                    const hiddenSelect = document.getElementById("editRoleSelect");
+
+                    // Clear existing
+                    tagList.innerHTML = "";
+                    hiddenSelect.innerHTML = "";
+
+                    roles.forEach(role => {
+                        const tag = document.createElement("div");
+                        tag.className = "tag";
+                        tag.dataset.value = role;
+
+                        // ✅ Use global window.removeTag with parameters
+                        tag.innerHTML = `
+            ${role}
+            <span class="remove-tag" 
+                  onclick="window.removeTag(this, 'editRoleSelect', 'editTagList')">
+                ×
+            </span>
+        `;
+
+                        tagList.appendChild(tag);
+
+                        // Add to hidden select
+                        const option = document.createElement("option");
+                        option.value = role;
+                        option.selected = true;
+                        hiddenSelect.appendChild(option);
+                    });
+                }
+
+                // Trigger edit modal
+                $('.edit-row').on('click', function () {
+                    const currentId = $(this).data('id');
+                    const row = $(this).closest('tr');
+
+                    // Populate form fields
+                    $('#editId').val(currentId);
+                    $('#editName').val(row.find('[data-field="name"]').text().trim());
+                    $('#editEmployeeId').val(row.find('[data-field="employeeId"]').text().trim());
+                    $('#editEmail').val(row.find('[data-field="email"]').text().trim());
+                    $('#editDesignation').val(row.find('[data-field="designation"]').text().trim());
+                    $('#editNationality').val(row.find('[data-field="nationality"]').text().trim());
+                    $('#editJoinDate').val(row.find('[data-field="joinDate"]').text().trim());
+                    $('#editPhoneNumber').val(row.find('[data-field="phoneNumber"]').text().trim());
+                    const roleCell = row.find('[data-field="role"]')[0];
+                    const roles = getRolesFromCell(roleCell);
+                    initEditRoleInput(roles)
+
+                    // Set image preview if exists
+                    const imgSrc = row.find('[data-field="image"] img').attr('src');
+                    if (imgSrc) {
+                        $('#editImagePreview').attr('src', imgSrc).show();
+                    } else {
+                        $('#editImagePreview').hide();
+                    }
+
+
+                    // Set status in hidden input
+                    const statusText = row.find('[data-field="status"]').text().trim();
+                    $('#editStatusTextHidden').val(statusText); // e.g., "ACTIVE" or "INACTIVE"
+
+                    // ✅ Now initialize the switch AFTER setting the value
+                    initSwitch();
+
+                    // Show modal
+                    $('#editRowModal').modal('show');
+                });
+
+                // Listen for checkbox changes
+                $('#editStatusSwitch').on('change', function () {
+                    updateStatus();
+                });
+
+                // --- Delete Modal Trigger ---
+                $('.delete-row').on('click', function () {
+                    const name = $(this).data('name');
+                    const id = $(this).data('id');
+
+                    $('#deleteDocName').text(name);
+                    $('#confirmDeleteButton').attr('href', '/users/delete/' + encodeURIComponent(id));
+                    $('#deleteRowModal').modal('show');
+                });
+            });
+
+            // Auto-show Flash Modal
+            $(document).ready(function () {
+                if ($('#flashMessageModalContainer').length) {
+                    console.log("modal");
+                    $('#flashMessageModal').modal('show');
+                }
+            });
+
+        </script>
+        <script>
+document.addEventListener("DOMContentLoaded", function () {
+    // ========================
+    // Export to Excel
+    // ========================
+    document.getElementById('exportExcel').addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const headers = [
+            "Full Name",
+            "Employee ID",
+            "Email",
+            "Designation",
+            "Role(s)",
+            "Nationality",
+            "Join Date",
+            "Phone Number",
+            "Status",
+            "Created At",
+            "Activated At"
+        ];
+
+        const data = [];
+        document.querySelectorAll('#user-table tbody tr').forEach(tr => {
+            if (tr.style.display === 'none') return; // Skip filtered rows
+
+            const tds = tr.querySelectorAll('td');
+            let colIndex = 0;
+            const row = [];
+
+            // Skip Image (index 0)
+            colIndex++;
+
+            // Full Name
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Employee ID
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Email
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Designation
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Role(s) - extract from badges
+            const roleCell = tds[colIndex++];
+            const roles = Array.from(roleCell.querySelectorAll('.badge'))
+                .map(b => b.textContent.trim())
+                .join(", ");
+            row.push(roles || '-');
+
+            // Nationality
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Join Date
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Phone Number
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Status
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Created At
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Activated At
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Skip Action column (last one)
+
+            data.push(row);
+        });
+
+        // Create worksheet and workbook
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Users");
+
+        // Generate filename
+        const dateStr = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(wb, `User_Data_${dateStr}.xlsx`);
+    });
+
+    // ========================
+    // Export to PDF
+    // ========================
+    document.getElementById('exportPdf').addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'landscape',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        // Define headers (excluding Image and Action)
+        const headers = [
+            "Full Name",
+            "Employee ID",
+            "Email",
+            "Designation",
+            "Role(s)",
+            "Nationality",
+            "Join Date",
+            "Phone Number",
+            "Status",
+            "Created At",
+            "Activated At"
+        ];
+
+        // Extract data
+        const data = [];
+        document.querySelectorAll('#user-table tbody tr').forEach(tr => {
+            if (tr.style.display === 'none') return;
+
+            const tds = tr.querySelectorAll('td');
+            let colIndex = 0;
+            const row = [];
+
+            // Skip Image (index 0)
+            colIndex++;
+
+            // Full Name
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Employee ID
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Email
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Designation
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Role(s)
+            const roleCell = tds[colIndex++];
+            const roles = Array.from(roleCell.querySelectorAll('.badge'))
+                .map(b => b.textContent.trim())
+                .join(", ");
+            row.push(roles || '-');
+
+            // Nationality
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Join Date
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Phone Number
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Status
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Created At
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Activated At
+            row.push(tds[colIndex++].textContent.trim());
+
+            // Skip Action
+
+            data.push(row);
+        });
+
+        // Add title
+        doc.setFontSize(16);
+        doc.text("User Data Export", 14, 15);
+
+        // Generate table
+        doc.autoTable({
+            head: [headers],
+            body: data,
+            startY: 25,
+            theme: 'grid',
+            styles: { fontSize: 8, cellPadding: 2 },
+            headStyles: { fillColor: [51, 122, 183] }, // Bootstrap primary blue
+            columnStyles: {
+                0: { cellWidth: 30 },   // Full Name
+                1: { cellWidth: 25 },   // Employee ID
+                2: { cellWidth: 35 },   // Email
+                3: { cellWidth: 25 },   // Designation
+                4: { cellWidth: 25 },   // Roles
+                5: { cellWidth: 20 },   // Nationality
+                6: { cellWidth: 20 },   // Join Date
+                7: { cellWidth: 25 },   // Phone
+                8: { cellWidth: 15 },   // Status
+                9: { cellWidth: 25 },   // Created At
+                10: { cellWidth: 25 }   // Activated At
+            }
+        });
+
+        // Save
+        const dateStr = new Date().toISOString().slice(0, 10);
+        doc.save(`User_Data_${dateStr}.pdf`);
+    });
+});
+</script>
+    </th:block>
+
+</body>
+
+</html>
