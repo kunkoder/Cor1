@@ -1,7 +1,3 @@
-/**
- * ImportWizard - Lightweight, reusable import modal logic
- * Usage: new ImportWizard({ fieldMapping: { ... }, likelyFields: [...] })
- */
 class ImportWizard {
     constructor(options) {
         this.options = {
@@ -55,8 +51,6 @@ class ImportWizard {
         this.bindSheetSelection();
         this.bindNavigation();
         this.bindFinalImport();
-        if (this.options.exportExcelBtnId) this.bindExportExcel();
-        if (this.options.exportPdfBtnId) this.bindExportPdf();
     }
 
     showStep(n) {
@@ -248,67 +242,5 @@ class ImportWizard {
             form.submit();
             this.options.onSuccess();
         });
-    }
-
-    // bindExportExcel() {
-    //     const btn = document.getElementById(this.options.exportExcelBtnId);
-    //     if (!btn) return;
-
-    //     btn.addEventListener('click', (e) => {
-    //         e.preventDefault();
-    //         const headers = Array.from(document.querySelectorAll(`#${this.options.previewTableId} thead th`))
-    //             .filter(th => !th.textContent.includes('Action'))
-    //             .map(th => th.textContent.trim());
-
-    //         const data = Array.from(document.querySelectorAll(`#${this.options.previewTableId} tbody tr`))
-    //             .filter(tr => tr.style.display !== 'none')
-    //             .map(tr => {
-    //                 const tds = tr.querySelectorAll('td');
-    //                 return Array.from(tds).slice(0, -1).map(td => td.textContent.trim());
-    //             });
-
-    //         const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-    //         const wb = XLSX.utils.book_new();
-    //         XLSX.utils.book_append_sheet(wb, ws, "Data");
-    //         XLSX.writeFile(wb, `Import_Data_${this.today()}.xlsx`);
-    //     });
-    // }
-
-    // bindExportPdf() {
-    //     const btn = document.getElementById(this.options.exportPdfBtnId);
-    //     if (!btn) return;
-
-    //     btn.addEventListener('click', (e) => {
-    //         e.preventDefault();
-    //         const { jsPDF } = window.jspdf;
-    //         const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-
-    //         const headers = Array.from(document.querySelectorAll(`#${this.options.previewTableId} thead th`))
-    //             .filter(th => !th.textContent.includes('Action'))
-    //             .map(th => th.textContent.trim());
-
-    //         const data = Array.from(document.querySelectorAll(`#${this.options.previewTableId} tbody tr`))
-    //             .filter(tr => tr.style.display !== 'none')
-    //             .map(tr => {
-    //                 const tds = tr.querySelectorAll('td');
-    //                 return Array.from(tds).slice(0, -1).map(td => td.textContent.trim());
-    //             });
-
-    //         doc.setFontSize(16);
-    //         doc.text("Import Data", 14, 15);
-    //         doc.autoTable({
-    //             head: [headers],
-    //             body: data,
-    //             startY: 20,
-    //             theme: 'grid',
-    //             styles: { fontSize: 8 },
-    //             columnStyles: headers.reduce((acc, _, i) => ({ ...acc, [i]: { cellWidth: 'auto' } }), {})
-    //         });
-    //         doc.save(`Import_Data_${this.today()}.pdf`);
-    //     });
-    // }
-
-    today() {
-        return new Date().toISOString().slice(0, 10);
     }
 }

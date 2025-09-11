@@ -47,7 +47,6 @@ public class ComplaintDTO {
     @NotNull(message = "Category is mandatory")
     private Complaint.Category category;
 
-    @NotNull(message = "Status is mandatory")
     private Complaint.Status status;
 
     @NotNull(message = "Reporter is mandatory")

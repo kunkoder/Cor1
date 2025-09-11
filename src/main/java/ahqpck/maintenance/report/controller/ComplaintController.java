@@ -17,6 +17,7 @@ import ahqpck.maintenance.report.service.EquipmentService;
 import ahqpck.maintenance.report.service.PartService;
 import ahqpck.maintenance.report.service.UserService;
 import ahqpck.maintenance.report.util.ImportUtil;
+import ahqpck.maintenance.report.util.WebUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -44,12 +45,7 @@ import java.util.stream.Collectors;
 public class ComplaintController {
 
     private final ComplaintService complaintService;
-    private final UserRepository userRepository;
-    private final AreaRepository areaRepository;
-    private final EquipmentRepository equipmentRepository;
-    private final PartRepository partRepository;
     private final EquipmentService equipmentService;
-    private final PartService partService;
     private final AreaService areaService;
     private final UserService userService;
 
@@ -71,10 +67,8 @@ public class ComplaintController {
             int zeroBasedPage = page - 1;
             int parsedSize = "All".equalsIgnoreCase(size) ? Integer.MAX_VALUE : Integer.parseInt(size);
 
-            // Convert LocalDate to LocalDateTime for DB filtering (start/end of day)
             LocalDateTime from = reportDateFrom != null ? reportDateFrom.atStartOfDay() : null;
             LocalDateTime to = reportDateTo != null ? reportDateTo.atTime(LocalTime.MAX) : null;
-            System.out.println("From: " + from + ", To: " + to);
 
             Page<ComplaintDTO> complaintPage = complaintService.getAllComplaints(keyword, from, to, assigneeEmpId,
                     status, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
@@ -89,21 +83,16 @@ public class ComplaintController {
             model.addAttribute("asc", asc);
 
             model.addAttribute("title", "Complaint List");
-            model.addAttribute("sortFields", new String[] {
-                    "id", "subject", "status", "priority", "category",
-                    "reportDate", "updatedAt", "closeTime"
-            });
 
-            // Load dropdown data
             model.addAttribute("users", getAllUsersForDropdown());
             model.addAttribute("areas", getAllAreasForDropdown());
             model.addAttribute("equipments", getAllEquipmentsForDropdown());
 
-            // Empty DTO for create form
             model.addAttribute("complaintDTO", new ComplaintDTO());
 
         } catch (Exception e) {
             model.addAttribute("error", "Failed to load complaints: " + e.getMessage());
+            return "error/500";
         }
 
         return "complaint/index";
@@ -113,40 +102,35 @@ public class ComplaintController {
     public String getComplaintDetail(@PathVariable String id, Model model) {
         try {
             ComplaintDTO complaintDTO = complaintService.getComplaintById(id);
-            System.out.println("id => " + complaintDTO);
             model.addAttribute("complaint", complaintDTO);
             model.addAttribute("title", "Complaint Detail");
 
-            // Load dropdown data
             model.addAttribute("users", getAllUsersForDropdown());
             model.addAttribute("areas", getAllAreasForDropdown());
             model.addAttribute("equipments", getAllEquipmentsForDropdown());
 
-            return "complaint/detail"; // → src/main/resources/templates/complaint/detail.html
+            System.out.println(complaintDTO);
+            return "complaint/detail";
 
         } catch (NotFoundException e) {
             model.addAttribute("error", "Complaint not found: " + e.getMessage());
-            // return "error/404"; // or redirect to list
-            return "complaint/detail";
+            return "error/404";
         } catch (Exception e) {
             model.addAttribute("error", "Failed to load complaint: " + e.getMessage());
-            // return "error/generic";
-            return "complaint/detail";
+            return "error/500";
         }
     }
 
-    // === CREATE COMPLAINT ===
     @PostMapping
     public String createComplaint(
             @Valid @ModelAttribute ComplaintDTO complaintDTO,
             BindingResult bindingResult,
-            @RequestParam(value = "imageBefore", required = false) MultipartFile imageBefore,
+            @RequestParam(value = "imageBeforeFile", required = false) MultipartFile imageBefore,
             RedirectAttributes ra) {
 
-        System.out.println("dto complaint" + complaintDTO);
-        if (bindingResult.hasErrors()) {
-            handleBindingErrors(bindingResult, ra, complaintDTO);
-            return "redirect:/complaints";
+        if (WebUtil.hasErrors(bindingResult)) {
+            ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
+            return "redirect:/forgot-password";
         }
 
         try {
@@ -164,35 +148,27 @@ public class ComplaintController {
     // === UPDATE COMPLAINT ===
     @PostMapping("/update")
     public String updateComplaint(
-            // @RequestParam String partsUsedJson,
             @Valid @ModelAttribute ComplaintDTO complaintDTO,
             BindingResult bindingResult,
+            @RequestParam(value = "imageBeforeFile", required = false) MultipartFile imageBeforeFile,
+            @RequestParam(value = "imageAfterFile", required = false) MultipartFile imageAfterFile,
+            @RequestParam(value = "deleteImageBefore", required = false, defaultValue = "false") Boolean deleteImageBefore,
+            @RequestParam(value = "deleteImageAfter", required = false, defaultValue = "false") Boolean deleteImageAfter,
             RedirectAttributes ra) {
 
-        // System.out.println(complaintDTO);
-        if (bindingResult.hasErrors()) {
-            handleBindingErrors(bindingResult, ra, complaintDTO);
-            return "redirect:/complaints";
+        if (WebUtil.hasErrors(bindingResult)) {
+            ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
+            return "redirect:/forgot-password";
         }
 
         try {
-            // ObjectMapper mapper = new ObjectMapper();
-            // List<ComplaintPartDTO> partsUsed = mapper.readValue(
-            // partsUsedJson,
-            // new TypeReference<List<ComplaintPartDTO>>() {
-            // });
-            // System.out.println(partsUsedJson);
-            // complaintDTO.setPartsUsed(partsUsed);
-            // System.out.println(partsUsedJson);
-            complaintService.updateComplaint(complaintDTO);
+            complaintService.updateComplaint(complaintDTO, imageBeforeFile, imageAfterFile, deleteImageBefore, deleteImageAfter);
             ra.addFlashAttribute("success", "Complaint updated successfully.");
-            // ra.addFlashAttribute("complaintDTO", complaintDTO);
             return "redirect:/complaints";
 
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
             ra.addFlashAttribute("complaintDTO", complaintDTO);
-            // return "complaint/detail";
             return "redirect:/complaints";
         }
     }

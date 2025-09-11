@@ -4,6 +4,8 @@
 
 <body>
     <div layout:fragment="content">
+        <div th:replace="~{complaint/modal :: modal}"></div>
+        <div th:replace="~{fragments/import-modal :: import-modal}"></div>
         <div class="page-inner">
             <div class="page-header">
                 <h4 class="page-title" th:text="${title}"></h4>
@@ -43,7 +45,6 @@
                             <i class="fa fa-file-pdf mr-2 text-danger"></i> PDF
                         </a>
                     </div>
-                    <div th:replace="~{complaint/import-modal :: import-modal}"></div>
                     <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal">
                         <i class="fa fa-plus-circle mr-2"></i> Add
                     </button>
@@ -91,12 +92,17 @@
                                                         class="form-control form-control-sm" placeholder="To">
                                                 </div>
                                             </div>
-
+                                            
                                             <div class="form-group pb-0">
                                                 <label class="form-label small d-block">Assignee</label>
-                                                <input type="text" class="form-control form-control-sm w-100"
-                                                    list="filter-userOptions" id="filter-assigneeInput"
-                                                    placeholder="Search by name or ID" autocomplete="off" />
+                                                <div class="position-relative w-100">
+                                                    <input type="text" class="form-control form-control-sm w-100"
+                                                        id="filter-assigneeInput" placeholder="Search by name or ID"
+                                                        autocomplete="off" />
+                                                    <div id="filter-assigneeDropdown" class="dropdown-menu w-100"
+                                                        style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                                    </div>
+                                                </div>
 
                                                 <datalist id="filter-userOptions">
                                                     <option th:each="user : ${users}"
@@ -112,11 +118,16 @@
                                                 </select>
                                             </div>
 
-                                            <div class="form-group">
+                                            <div class="form-group pb-0">
                                                 <label class="form-label small d-block">Equipment</label>
-                                                <input type="text" class="form-control form-control-sm w-100"
-                                                    list="filter-equipmentOptions" id="filter-equipmentInput"
-                                                    placeholder="Search by name or code" autocomplete="off" />
+                                                <div class="position-relative w-100">
+                                                    <input type="text" class="form-control form-control-sm w-100"
+                                                        id="filter-equipmentInput" placeholder="Search by name or code"
+                                                        autocomplete="off" />
+                                                    <div id="filter-equipmentDropdown" class="dropdown-menu w-100"
+                                                        style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                                    </div>
+                                                </div>
 
                                                 <datalist id="filter-equipmentOptions">
                                                     <option th:each="equip : ${equipments}"
@@ -129,6 +140,19 @@
                                                     <option value=""></option>
                                                     <option th:each="equip : ${equipments}" th:value="${equip.code}">
                                                     </option>
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="form-label small d-block">Status</label>
+                                                <select name="status" class="form-control form-control-sm w-100">
+                                                    <option value="">All Status</option>
+                                                    <th:block
+                                                        th:each="status : ${T(ahqpck.maintenance.report.entity.Complaint.Status).values()}">
+                                                        <option th:value="${status}" th:text="${status}"
+                                                            th:selected="${param.status == status}">
+                                                        </option>
+                                                    </th:block>
                                                 </select>
                                             </div>
 
@@ -183,7 +207,7 @@
                                             <option value="100" th:selected="${pageSize == '100'}">100</option>
                                             <option value="300" th:selected="${pageSize == '300'}">300</option>
                                             <option value="500" th:selected="${pageSize == '500'}">500</option>
-                                            <option value="All" th:selected="${pageSize == 'All'}">All</option>
+                                            <!-- <option value="All" th:selected="${pageSize == 'All'}">All</option> -->
                                         </select>
                                     </div>
                                 </form>
@@ -191,15 +215,12 @@
                         </div>
 
                         <div class="card-body">
-
-                            <div th:replace="~{complaint/modal :: modal}"></div>
-
                             <div class="table-responsive">
                                 <table id="document-table" class="display table table-striped table-hover">
                                     <thead class="bg-primary text-white">
                                         <tr>
                                             <th style="min-width: 50px;">Code</th>
-                                            <th style="min-width: 125px;">Report Date</th>
+                                            <th style="min-width: 135px;">Report Date</th>
                                             <th style="min-width: 125px;">Last Update</th>
                                             <th style="min-width: 50px;">Reporter</th>
                                             <th style="min-width: 100px;">Area</th>
@@ -230,13 +251,18 @@
                                                 th:text="${complaint.updatedAt != null ? #temporals.format(complaint.updatedAt, 'MMM d, yyyy HH:mm') : '-'}">
                                                 -
                                             </td>
-                                            <td data-field="reporter" th:text="${complaint.reporter?.name ?: '-'}">
+                                            <td data-field="reporter"
+                                                th:data-employee-id="${complaint.reporter?.employeeId}"
+                                                th:text="${complaint.reporter?.name ?: '-'}">
                                                 -
                                             </td>
-                                            <td data-field="area" th:text="${complaint.area?.name ?: '-'}">
+                                            <td data-field="area" th:data-area-code="${complaint.area?.code}"
+                                                th:text="${complaint.area?.name ?: '-'}">
                                                 -
                                             </td>
-                                            <td data-field="equipment" th:text="${complaint.equipment?.name ?: '-'}">
+                                            <td data-field="equipment"
+                                                th:data-equipment-code="${complaint.equipment?.code}"
+                                                th:text="${complaint.equipment?.name ?: '-'}">
                                                 -
                                             </td>
                                             <td data-field="subject" th:text="${complaint.subject ?: '-'}">-</td>
@@ -244,7 +270,9 @@
                                             </td>
                                             <td data-field="actionTaken" th:text="${complaint.actionTaken ?: '-'}">-
                                             </td>
-                                            <td data-field="assignee" th:text="${complaint.assignee?.name ?: '-'}">-
+                                            <td data-field="assignee"
+                                                th:data-employee-id="${complaint.assignee?.employeeId}"
+                                                th:text="${complaint.assignee?.name ?: '-'}">-
                                             </td>
                                             <td data-field="priority">
                                                 <span class="badge badge-pill px-3 py-2" th:classappend="${
@@ -330,7 +358,6 @@
                                     </nav>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -340,15 +367,25 @@
 
     <!-- Scripts Fragment -->
     <th:block layout:fragment="scripts">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        <script src="/assets/js/import-wizard.js"></script>
+        <script src="/assets/js/export-wizard.js"></script>
         <script>
             document.addEventListener("DOMContentLoaded", function () {
 
-                // Column Visibility Toggle
+                // ==============================
+                // COLUMN VISIBILITY TOGGLE
+                // Lets user show/hide table columns dynamically
+                // ==============================
                 const table = document.getElementById("document-table");
                 const headerRow = table.querySelector("thead tr");
                 const dataRows = table.querySelectorAll("tbody tr");
                 const container = document.getElementById("column-toggle-list");
 
+                // Define initial visibility state for each column
                 const columnSettings = [
                     { key: "code", label: "Code", visible: true },
                     { key: "reportDate", label: "Report Date", visible: true },
@@ -358,7 +395,7 @@
                     { key: "equipment", label: "Equipment", visible: true },
                     { key: "subject", label: "Subject", visible: false },
                     { key: "description", label: "Description", visible: true },
-                    { key: "actionTaken", label: "Action Taken", visible: true },
+                    { key: "actionTaken", label: "Action Taken", visible: false },
                     { key: "assignee", label: "Assignee", visible: true },
                     { key: "priority", label: "Priority", visible: false },
                     { key: "category", label: "Category", visible: false },
@@ -367,6 +404,7 @@
                     { key: "totalTimeMinutes", label: "Total Time", visible: true }
                 ];
 
+                // Render toggle UI and sync with table columns
                 columnSettings.forEach((col, index) => {
                     const div = document.createElement("div");
                     div.className = "px-3 py-1";
@@ -374,24 +412,26 @@
                     div.style.userSelect = "none";
 
                     div.innerHTML = `
-            <div class="d-flex align-items-center">
-                <span class="column-checkbox" data-index="${index}" 
-                    style="display: inline-block; width: 18px; height: 18px; border: 2px solid #adb5bd; border-radius: 4px; margin-right: 8px; text-align: center; line-height: 16px; font-size: 12px; transition: 0.2s background; 
-                    ${col.visible ? 'background-color: #007bff; border-color: #007bff;' : ''}">
-                    ${col.visible ? '<i class="fas fa-check" style="color: white;"></i>' : ''}
-                </span>
-                <span style="font-size: 0.95rem; color: #212529;">${col.label}</span>
-            </div>`;
+                    <div class="d-flex align-items-center">
+                        <span class="column-checkbox" data-index="${index}" 
+                            style="display: inline-block; width: 18px; height: 18px; border: 2px solid #adb5bd; border-radius: 4px; margin-right: 8px; text-align: center; line-height: 16px; font-size: 12px; transition: 0.2s background; 
+                            ${col.visible ? 'background-color: #007bff; border-color: #007bff;' : ''}">
+                            ${col.visible ? '<i class="fas fa-check" style="color: white;"></i>' : ''}
+                        </span>
+                        <span style="font-size: 0.95rem; color: #212529;">${col.label}</span>
+                    </div>`;
 
                     const checkboxSpan = div.querySelector(".column-checkbox");
                     const th = headerRow.children[index];
                     const tds = Array.from(dataRows).map(row => row.children[index]);
 
+                    // Apply initial visibility
                     if (!col.visible) {
                         th.style.display = "none";
                         tds.forEach(td => td.style.display = "none");
                     }
 
+                    // Toggle visibility on click
                     div.addEventListener("click", function (e) {
                         e.stopPropagation();
                         const isChecked = checkboxSpan.innerHTML.trim() !== "";
@@ -408,10 +448,14 @@
                             tds.forEach(td => td.style.display = "");
                         }
                     });
+
                     container.appendChild(div);
                 });
 
-                // Sorting Setup
+                // ==============================
+                // SORTING SETUP
+                // Syncs UI dropdown with form inputs for server-side sorting
+                // ==============================
                 const sortFieldLabels = {
                     'code': 'Code',
                     'reportDate': 'Report Date',
@@ -432,7 +476,7 @@
                 const sortByInput = document.getElementById('sortByInput');
                 const ascInput = document.getElementById('ascInput');
 
-                // Initialize sort column display text and active state
+                // Highlight currently active sort column in UI
                 document.querySelectorAll('.sort-column').forEach(item => {
                     const field = item.getAttribute('data-column');
                     const displayText = sortFieldLabels[field] || field;
@@ -443,7 +487,7 @@
                     }
                 });
 
-                // Generate dynamic sort column links
+                // Generate dynamic sort links based on available fields
                 const sortContainer = document.getElementById('sort-column-container');
                 const currentSortBy = sortByInput.value;
 
@@ -458,6 +502,7 @@
                         link.classList.add('active');
                     }
 
+                    // On click: set hidden form field + submit
                     link.addEventListener('click', function (e) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -476,7 +521,7 @@
                     sortContainer.appendChild(link);
                 }
 
-                // Handle sort direction (ASC/DESC)
+                // Handle sort direction (ASC/DESC toggle)
                 document.querySelectorAll('[data-asc]').forEach(item => {
                     item.addEventListener('click', function (e) {
                         e.preventDefault();
@@ -493,55 +538,81 @@
                     });
                 });
 
-                // Flash Message Modal
+                // ==============================
+                // FLASH MESSAGE MODAL
+                // Shows success/error messages after form submission
+                // ==============================
                 const modalContainer = document.getElementById('flashMessageModalContainer');
                 if (modalContainer) {
-                    console.log("modal");
                     const modal = new bootstrap.Modal(document.getElementById('flashMessageModal'));
                     modal.show();
                 }
 
-                // Filter Autocomplete Sync
-                function syncSelect(inputId, selectId) {
-                    const input = document.getElementById(inputId);
-                    const select = document.getElementById(selectId);
+                // ==============================
+                // FILTER AUTOCOMPLETE SYNC
+                // Keeps hidden <select> in sync with text <input> for filtering
+                // ==============================
+                
+                setupLiveSearch('filter-assigneeInput', 'filter-assigneeSelect', 'filter-userOptions', 'Assignee');
+                setupLiveSearch('filter-equipmentInput', 'filter-equipmentSelect', 'filter-equipmentOptions', 'Equipment');
 
-                    if (!input || !select) {
-                        console.warn(`Missing input or select: ${inputId}, ${selectId}`);
-                        return;
-                    }
-
-                    input.addEventListener('input', () => {
-                        let options;
-                        if (selectId === 'filter-assigneeSelect') {
-                            options = document.querySelectorAll('#filter-userOptions option');
-                        } else if (selectId === 'filter-equipmentSelect') {
-                            options = document.querySelectorAll('#filter-equipmentOptions option');
-                        } else {
-                            return;
-                        }
-
-                        const inputValue = input.value.trim();
-                        if (inputValue === '') {
-                            select.value = '';
-                            return;
-                        }
-
-                        const opt = [...options].find(o => o.value === input.value);
-                        select.value = opt ? (opt.dataset.employeeId || opt.dataset.code) : '';
-                    });
-                }
-
-                syncSelect('filter-assigneeInput', 'filter-assigneeSelect');
-                syncSelect('filter-equipmentInput', 'filter-equipmentSelect');
-
-                // Keep filter dropdown open until Apply clicked
+                // ==============================
+                // FILTER DROPDOWN BEHAVIOR
+                // Keep dropdown open while selecting filters, close only on "Apply"
+                // ==============================
                 const filterDropdown = document.getElementById('filterDropdownBtn');
                 const dropdownMenu = filterDropdown.nextElementSibling;
                 const applyButton = dropdownMenu.querySelector('button[type="submit"]');
 
                 dropdownMenu.addEventListener('click', e => e.stopPropagation());
                 applyButton.addEventListener('click', () => $(filterDropdown).dropdown('toggle'));
+
+                // ==============================
+                // IMPORT WIZARD SETUP
+                // Configures Excel import mapping for backend fields
+                // ==============================
+                new ImportWizard({
+                    likelyFields: [
+                        "subject", "area", "equipment", "reporter", "status", "close time", "code",
+                        "assignee", "priority", "category", "report date", "action taken", "description", "total time"
+                    ],
+                    fieldMapping: {
+                        "Code": "code",
+                        "Area": "area",
+                        "Equipment": "equipment",
+                        "Reporter": "reporter",
+                        "Subject": "subject",
+                        "Description": "description",
+                        "Assignee": "assignee",
+                        "Priority": "priority",
+                        "Category": "category",
+                        "Status": "status",
+                        "Action Taken": "actionTaken",
+                        "Report Date": "reportDate",
+                        "Close Time": "closeTime",
+                        "Total Time": "totalResolutionTimeMinutes"
+                    },
+                    onError: (err) => {
+                        alert("Import Error: " + err.message);
+                    }
+                });
+
+                // ==============================
+                // EXPORT WIZARD SETUP
+                // Handles PDF & Excel exports using ExportWizard class
+                // ==============================
+                const exportWizard = new ExportWizard('document-table');
+
+                document.getElementById('exportExcel')?.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    exportWizard.exportToExcel('Complaints List');
+                });
+
+                document.getElementById('exportPdf')?.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    exportWizard.exportToPdf('Complaints List');
+                });
+
             });
         </script>
     </th:block>

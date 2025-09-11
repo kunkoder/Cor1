@@ -47,8 +47,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ComplaintService {
 
-    @Value("${app.upload-complaint-image-before.dir:src/main/resources/static/upload/equipment/image/before}")
-    private String uploadDir;
+    @Value("${app.upload-complaint-image-before.dir:src/main/resources/static/upload/complaint/image/before}")
+    private String uploadBeforeDir;
+
+    @Value("${app.upload-complaint-image-after.dir:src/main/resources/static/upload/complaint/image/after}")
+    private String uploadAfterDir;
 
     private static final Logger log = LoggerFactory.getLogger(ComplaintService.class);
 
@@ -63,7 +66,6 @@ public class ComplaintService {
     private final ImportUtil importUtil;
     private final ZeroPaddedCodeGenerator codeGenerator;
 
-    // ================== GET ALL WITH PAGINATION & SEARCH ==================
     // @Transactional(readOnly = true)
     public Page<ComplaintDTO> getAllComplaints(String keyword, LocalDateTime reportDateFrom, LocalDateTime reportDateTo,
             String assigneeEmpId, Complaint.Status status, String equipmentCode, int page, int size, String sortBy,
@@ -81,7 +83,6 @@ public class ComplaintService {
         return complaintPage.map(this::toDTO);
     }
 
-    // ================== GET BY ID ==================
     // @Transactional(readOnly = true)
     public ComplaintDTO getComplaintById(String id) {
         Complaint complaint = complaintRepository.findById(id)
@@ -89,14 +90,10 @@ public class ComplaintService {
         return toDTO(complaint);
     }
 
-    // ================== CREATE ==================
-
     public void createComplaint(ComplaintDTO dto, MultipartFile imageBefore) {
-        // validateDTO(dto);
 
         Complaint complaint = new Complaint();
 
-        // Generate code before mapping
         if (dto.getCode() == null || dto.getCode().trim().isEmpty()) {
             String generatedCode = codeGenerator.generate(Complaint.class, "code", "CP");
             complaint.setCode(generatedCode);
@@ -106,8 +103,59 @@ public class ComplaintService {
 
         if (imageBefore != null && !imageBefore.isEmpty()) {
             try {
-                String fileName = fileUploadUtil.saveFile(uploadDir, imageBefore, "image");
+                String fileName = fileUploadUtil.saveFile(uploadBeforeDir, imageBefore, "image");
                 complaint.setImageBefore(fileName);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Failed to save image: " + e.getMessage());
+            }
+        }
+
+        complaintRepository.save(complaint);
+    }
+
+    public void updateComplaint(ComplaintDTO dto, MultipartFile imageBefore, MultipartFile imageAfter,
+            Boolean deleteImageBefore,
+            Boolean deleteImageAfter) {
+
+        Complaint complaint = complaintRepository.findById(dto.getId())
+                .orElseThrow(() -> new NotFoundException("Complaint not found with ID: " + dto.getId()));
+
+        Complaint.Status oldStatus = complaint.getStatus();
+        Complaint.Status newStatus = dto.getStatus();
+
+        mapToEntity(complaint, dto);
+
+        if (newStatus != null && newStatus != oldStatus) {
+            handleStatusTransition(complaint, oldStatus, newStatus);
+        }
+
+        String oldBeforeImage = complaint.getImageBefore();
+        if (deleteImageBefore && oldBeforeImage != null) {
+            fileUploadUtil.deleteFile(uploadBeforeDir, oldBeforeImage);
+            complaint.setImageBefore(null);
+        } else if (imageBefore != null && !imageBefore.isEmpty()) {
+            try {
+                String newImage = fileUploadUtil.saveFile(uploadBeforeDir, imageBefore, "image");
+                if (oldBeforeImage != null) {
+                    fileUploadUtil.deleteFile(uploadBeforeDir, oldBeforeImage);
+                }
+                complaint.setImageBefore(newImage);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Failed to save image: " + e.getMessage());
+            }
+        }
+
+        String oldAfterImage = complaint.getImageAfter();
+        if (deleteImageAfter && oldAfterImage != null) {
+            fileUploadUtil.deleteFile(uploadAfterDir, oldAfterImage);
+            complaint.setImageAfter(null);
+        } else if (imageAfter != null && !imageAfter.isEmpty()) {
+            try {
+                String newImage = fileUploadUtil.saveFile(uploadAfterDir, imageAfter, "image");
+                if (oldAfterImage != null) {
+                    fileUploadUtil.deleteFile(uploadAfterDir, oldAfterImage);
+                }
+                complaint.setImageAfter(newImage);
             } catch (IOException e) {
                 throw new IllegalArgumentException("Failed to save image: " + e.getMessage());
             }
@@ -242,24 +290,6 @@ public class ComplaintService {
         }
 
         return new ImportUtil.ImportResult(importedCount, errorMessages);
-    }
-
-    public void updateComplaint(ComplaintDTO dto) {
-        Complaint complaint = complaintRepository.findById(dto.getId())
-                .orElseThrow(() -> new NotFoundException("Complaint not found with ID: " + dto.getId()));
-
-        Complaint.Status oldStatus = complaint.getStatus();
-        Complaint.Status newStatus = dto.getStatus();
-
-        // Map all other fields first
-        mapToEntity(complaint, dto);
-
-        // Handle status transitions
-        if (newStatus != null && newStatus != oldStatus) {
-            handleStatusTransition(complaint, oldStatus, newStatus);
-        }
-
-        complaintRepository.save(complaint);
     }
 
     /**
