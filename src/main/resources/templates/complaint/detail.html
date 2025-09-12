@@ -258,9 +258,12 @@
                                                     onclick="this.querySelector('input[type=file]').click();">
                                                     <div id="beforeImageContainer"
                                                         class="w-100 d-flex justify-content-center">
-                                                        <img id="beforeImagePreview" th:if="${complaint?.imageBefore}"
+                                                        <img th:if="${complaint?.imageBefore}"
                                                             th:src="@{/upload/complaint/image/before/__${complaint.imageBefore}__}"
                                                             alt="Before Repair Preview" class="img-fluid rounded"
+                                                            style="max-height: 300px; object-fit: scale-down;" />
+
+                                                        <img id="beforeImagePreview" class="img-fluid rounded"
                                                             style="max-height: 300px; object-fit: scale-down;" />
 
                                                         <div th:unless="${complaint?.imageBefore}"
@@ -277,7 +280,8 @@
                                                 <div th:if="${complaint?.imageBefore}" class="form-check">
                                                     <label class="form-check-label d-flex align-items-center">
                                                         <input class="form-check-input" type="checkbox"
-                                                            name="deleteImageBefore" id="deleteImageBefore" value="">
+                                                            name="deleteImageBefore" id="deleteImageBefore"
+                                                            value="true">
                                                         <span class="form-check-sign small text-danger">Delete this
                                                             image</span>
                                                     </label>
@@ -289,8 +293,8 @@
                                             <div class="card border-light shadow-sm h-50">
                                                 <div
                                                     class="card-header bg-light d-flex justify-content-between align-items-center">
-                                                    <strong class="text-success">
-                                                        <i class="fas fa-check-circle mr-1"></i> After Repair
+                                                    <strong class="text-warning">
+                                                        <i class="fas fa-camera mr-1"></i> After Repair
                                                     </strong>
                                                 </div>
                                                 <div class="card-body d-flex flex-column align-items-center text-center p-3"
@@ -298,10 +302,14 @@
                                                     onclick="this.querySelector('input[type=file]').click();">
                                                     <div id="afterImageContainer"
                                                         class="w-100 d-flex justify-content-center">
-                                                        <img id="afterImagePreview" th:if="${complaint?.imageAfter}"
+                                                        <img th:if="${complaint?.imageAfter}"
                                                             th:src="@{/upload/complaint/image/after/__${complaint.imageAfter}__}"
                                                             alt="After Repair Preview" class="img-fluid rounded"
                                                             style="max-height: 300px; object-fit: scale-down;" />
+
+                                                        <img id="afterImagePreview" class="img-fluid rounded"
+                                                            style="max-height: 300px; object-fit: scale-down;" />
+
                                                         <div th:unless="${complaint?.imageAfter}"
                                                             id="afterImagePlaceholder" class="text-muted">
                                                             <i class="fas fa-image fa-2x mb-2"
@@ -311,12 +319,12 @@
                                                     </div>
                                                     <input type="file" name="imageAfterFile" accept="image/*"
                                                         style="display: none;"
-                                                        onchange="handleImageUpload(this, 'afterImagePreview', 'afterImagePlaceholder')">
+                                                        onchange="handleImageUpload(this, 'afterImagePreview', 'afterImagePlaceholder')" />
                                                 </div>
                                                 <div th:if="${complaint?.imageAfter}" class="form-check">
                                                     <label class="form-check-label d-flex align-items-center">
                                                         <input class="form-check-input" type="checkbox"
-                                                            name="deleteImageAfter" id="deleteImageAfter" value="">
+                                                            name="deleteImageAfter" id="deleteImageAfter" value="true">
                                                         <span class="form-check-sign small text-danger">Delete this
                                                             image</span>
                                                     </label>
@@ -713,12 +721,22 @@
                 window.handleImageUpload = function (input, previewId, placeholderId) {
                     const file = input.files[0];
                     if (!file) return;
+
                     const reader = new FileReader();
                     reader.onload = function (e) {
                         const preview = document.getElementById(previewId);
                         const placeholder = document.getElementById(placeholderId);
+                        
                         preview.src = e.target.result;
                         preview.style.display = 'block';
+                        const containerId = previewId.replace('ImagePreview', 'ImageContainer');
+                        const container = document.getElementById(containerId);
+
+                        if (container) {
+                            const thImage = container.querySelector('img:not(#' + previewId + ')');
+                            if (thImage) thImage.style.display = 'none';
+                        }
+                        
                         if (placeholder) placeholder.style.display = 'none';
                     };
                     reader.readAsDataURL(file);
