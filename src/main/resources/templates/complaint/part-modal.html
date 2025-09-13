@@ -1,6 +1,4 @@
 <div th:fragment="part-modal">
-    <!-- Modal Add Part -->
-    <!-- Modal Add Part -->
     <div class="modal fade" id="addPartModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -12,7 +10,7 @@
                     <!-- Inside modal-body, before table -->
                     <div class="form-row mb-3 align-items-center">
                         <div class="col">
-                            <input type="text" id="partSearch" class="form-control"
+                            <input type="text" id="partSearch" class="form-control form-control-sm"
                                 placeholder="Search by code, name, or category..." />
                         </div>
                         <div class="col-auto">
@@ -23,8 +21,8 @@
                     </div>
                     <!-- Search will be injected here -->
                     <div class="table-responsive">
-                        <table class="table table-hover" id="partSearchResults">
-                            <thead>
+                        <table class="display table table-striped table-hover" id="partSearchResults">
+                            <thead class="bg-primary text-white">
                                 <tr>
                                     <th>Code</th>
                                     <th>Name</th>
@@ -90,22 +88,21 @@
                     tr.setAttribute('data-part-code', part.code);
                     tr.setAttribute('data-part-id', part.id); // 👈 STORE ID ON ROW
                     tr.innerHTML = `
-            <td><code class="bg-light px-2 py-1 rounded">${part.code}</code></td>
-            <td>${part.name}</td>
-            <td>${part.category}</td>
-            <td class="text-center font-weight-bold"
-                contenteditable="true"
-                data-original="1"
-                onclick="this.textContent = this.getAttribute('data-original'); this.focus();"
-                onblur="this.setAttribute('data-original', this.textContent.trim());">
-                1
-            </td>
-            <td class="text-center">
-                <button class="btn btn-link text-danger btn-sm delete-row" type="button">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </td>
-        `;
+                    <td><code class="bg-light px-2 py-1 rounded">${part.code}</code></td>
+                    <td>${part.name}</td>
+                    <td>${part.category}</td>
+                    <td class="text-center font-weight-bold"
+                        contenteditable="true"
+                        data-original="1"
+                        onclick="this.textContent = this.getAttribute('data-original'); this.focus();"
+                        onblur="this.setAttribute('data-original', this.textContent.trim());">
+                        1
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-link text-danger btn-sm delete-row" type="button">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>`;
                     tbody.appendChild(tr);
 
                     tr.querySelector('.delete-row').addEventListener('click', function () {
@@ -148,7 +145,7 @@
                     addField(`partsUsed[${index}].quantity`, qty);
                 });
             }
-            
+
             function updatePartsUsedData() {
                 const parts = [];
                 document.querySelectorAll('#partsTable tbody tr').forEach(row => {
@@ -234,43 +231,97 @@
 
             // === Render Pagination ===
             function renderPagination(data, currentPage) {
-                const pagination = document.getElementById('partsPagination');
-                pagination.innerHTML = '';
+                const paginationContainer = document.getElementById('partsPagination');
+                paginationContainer.innerHTML = ''; // Clear pagination buttons only
+
+                // === Finding or Creating "Showing..." Container ===
+                let showingDiv = document.getElementById('partsShowingInfo');
+
+                if (!showingDiv) {
+                    // Create it only once
+                    showingDiv = document.createElement('div');
+                    showingDiv.id = 'partsShowingInfo'; // 👈 Unique ID for reuse
+                    showingDiv.className = 'text-muted mb-2';
+                    paginationContainer.parentNode.insertBefore(showingDiv, paginationContainer);
+                }
+
+                // === Update Content (Never Re-create Element) ===
+                const start = currentPage * pageSize + 1;
+                const end = Math.min(start + pageSize - 1, data.totalElements);
+                showingDiv.innerHTML = `
+                Showing ${start}–${end} of ${data.totalElements} entries`;
+
+                // === Pagination Buttons ===
+                const ul = document.createElement('ul');
+                ul.className = 'pagination mb-0 justify-content-end';
 
                 // Previous Button
                 const prevLi = document.createElement('li');
                 prevLi.className = data.hasPrevious ? 'page-item' : 'page-item disabled';
-                prevLi.innerHTML = `<a class="page-link" href="#">Prev</a>`;
+                prevLi.innerHTML = '<a class="page-link" href="#">Prev</a>';
                 prevLi.addEventListener('click', (e) => {
                     e.preventDefault();
                     if (data.hasPrevious) loadParts(currentSearch, currentPage - 1);
                 });
-                pagination.appendChild(prevLi);
+                ul.appendChild(prevLi);
 
-                // Page Numbers (max 5 buttons)
-                const startPage = Math.max(0, currentPage - 2);
-                const endPage = Math.min(data.totalPages, startPage + 5);
-
-                for (let i = startPage; i < endPage; i++) {
-                    const li = document.createElement('li');
-                    li.className = i === currentPage ? 'page-item active' : 'page-item';
-                    li.innerHTML = `<a class="page-link" href="#">${i + 1}</a>`;
-                    li.addEventListener('click', (e) => {
+                // First Page Button
+                if (currentPage > 0) {
+                    const firstLi = document.createElement('li');
+                    firstLi.className = 'page-item';
+                    firstLi.innerHTML = '<a class="page-link" href="#">1</a>';
+                    firstLi.addEventListener('click', (e) => {
                         e.preventDefault();
-                        loadParts(currentSearch, i);
+                        loadParts(currentSearch, 0);
                     });
-                    pagination.appendChild(li);
+                    ul.appendChild(firstLi);
+                }
+
+                // Ellipsis before current page
+                if (currentPage > 1) {
+                    const ellipsisLi = document.createElement('li');
+                    ellipsisLi.className = 'page-item disabled';
+                    ellipsisLi.innerHTML = '<span class="page-link">...</span>';
+                    ul.appendChild(ellipsisLi);
+                }
+
+                // Current Page
+                const currentLi = document.createElement('li');
+                currentLi.className = 'page-item active';
+                currentLi.innerHTML = `<span class="page-link">${currentPage + 1}</span>`;
+                ul.appendChild(currentLi);
+
+                // Ellipsis after current page
+                if (currentPage < data.totalPages - 2) {
+                    const ellipsisLi = document.createElement('li');
+                    ellipsisLi.className = 'page-item disabled';
+                    ellipsisLi.innerHTML = '<span class="page-link">...</span>';
+                    ul.appendChild(ellipsisLi);
+                }
+
+                // Last Page Button
+                if (currentPage < data.totalPages - 1) {
+                    const lastLi = document.createElement('li');
+                    lastLi.className = 'page-item';
+                    lastLi.innerHTML = `<a class="page-link" href="#">${data.totalPages}</a>`;
+                    lastLi.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        loadParts(currentSearch, data.totalPages - 1);
+                    });
+                    ul.appendChild(lastLi);
                 }
 
                 // Next Button
                 const nextLi = document.createElement('li');
                 nextLi.className = data.hasNext ? 'page-item' : 'page-item disabled';
-                nextLi.innerHTML = `<a class="page-link" href="#">Next</a>`;
+                nextLi.innerHTML = '<a class="page-link" href="#">Next</a>';
                 nextLi.addEventListener('click', (e) => {
                     e.preventDefault();
                     if (data.hasNext) loadParts(currentSearch, currentPage + 1);
                 });
-                pagination.appendChild(nextLi);
+                ul.appendChild(nextLi);
+
+                paginationContainer.appendChild(ul);
             }
 
             // === Search Input ===

@@ -104,16 +104,26 @@
                                         <input type="hidden" name="reporter.employeeId"
                                             th:value="${complaint.reporter?.employeeId ?: '-'}" />
 
-                                        <!-- Assignee with autocomplete -->
-                                        <p class="mb-2">
-                                            <strong>Assignee:</strong>
-                                            <input type="text"
-                                                class="form-control form-control-sm d-inline-block w-auto"
-                                                list="userOptions" id="assigneeInput"
-                                                style="border: none; cursor: text; border-bottom: 1px dashed #ccc;"
-                                                onfocus="this.style.borderBottom = '1px dashed #007bff';"
-                                                onblur="this.style.borderBottom = '1px dashed #ccc';" />
-                                        </p>
+                                        <!-- Assignee with custom dropdown -->
+                                        <div class="form-group d-flex align-items-center pl-0">
+                                            <label for="assigneeInput" class="mb-0" style="white-space: nowrap;">
+                                                <strong>Assignee:</strong></label>
+                                            <div class="position-relative flex-grow-1">
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control form-control-sm"
+                                                        id="assigneeInput" placeholder="Search assignee by name or ID"
+                                                        style="border: none; cursor: text; border-bottom: 1px dashed #ccc; max-width: 311px;"
+                                                        onfocus="this.style.borderBottom = '1px dashed #007bff';"
+                                                        onblur="this.style.borderBottom = '1px dashed #ccc';"
+                                                        autocomplete="off" />
+                                                </div>
+
+                                                <div id="assigneeDropdown" class="dropdown-menu w-100"
+                                                    style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background: white; border-radius: 0 0 0.3rem 0.3rem; margin-top: -1px;">
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <input type="hidden" name="assigneeName" id="assigneeName" />
                                         <input type="hidden" name="assignee.employeeId" id="assigneeEmployeeId" />
 
@@ -124,16 +134,26 @@
                                             </option>
                                         </datalist>
 
-                                        <!-- Area with autocomplete -->
-                                        <p class="mb-2">
-                                            <strong>Area:</strong>
-                                            <input type="text"
-                                                class="form-control form-control-sm d-inline-block w-auto"
-                                                list="areaOptions" id="areaInput" placeholder="Search area..."
-                                                style="border: none; cursor: text; border-bottom: 1px dashed #ccc;"
-                                                onfocus="this.style.borderBottom = '1px dashed #007bff';"
-                                                onblur="this.style.borderBottom = '1px dashed #ccc';" />
-                                        </p>
+                                        <!-- Area with custom dropdown -->
+                                        <div class="form-group d-flex align-items-center pl-0">
+                                            <label for="areaInput" class="mb-0" style="white-space: nowrap;">
+                                                <strong>Area:</strong>
+                                            </label>
+                                            <div class="position-relative flex-grow-1">
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control form-control-sm"
+                                                        id="areaInput" placeholder="Search area..."
+                                                        style="border: none; cursor: text; border-bottom: 1px dashed #ccc; max-width: 337px;"
+                                                        onfocus="this.style.borderBottom = '1px dashed #007bff';"
+                                                        onblur="this.style.borderBottom = '1px dashed #ccc';"
+                                                        autocomplete="off" />
+                                                </div>
+                                                <div id="areaDropdown" class="dropdown-menu w-100"
+                                                    style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background: white; border-radius: 0 0 0.3rem 0.3rem; margin-top: -1px;">
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <input type="hidden" name="areaName" id="areaName" />
                                         <input type="hidden" name="area.code" id="areaCode" />
 
@@ -144,17 +164,26 @@
                                             </option>
                                         </datalist>
 
-                                        <!-- Equipment with autocomplete -->
-                                        <p class="mb-2">
-                                            <strong>Equipment:</strong>
-                                            <input type="text"
-                                                class="form-control form-control-sm d-inline-block w-auto"
-                                                list="equipmentOptions" id="equipmentInput"
-                                                placeholder="Search equipment..."
-                                                style="border: none; cursor: text; border-bottom: 1px dashed #ccc;"
-                                                onfocus="this.style.borderBottom = '1px dashed #007bff';"
-                                                onblur="this.style.borderBottom = '1px dashed #ccc';" />
-                                        </p>
+                                        <!-- Equipment with custom dropdown -->
+                                        <div class="form-group d-flex align-items-center pl-0">
+                                            <label for="equipmentInput" class="mb-0" style="white-space: nowrap;">
+                                                <strong>Equipment:</strong>
+                                            </label>
+                                            <div class="position-relative flex-grow-1">
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control form-control-sm"
+                                                        id="equipmentInput" placeholder="Search equipment..."
+                                                        style="border: none; cursor: text; border-bottom: 1px dashed #ccc; max-width: 300px;"
+                                                        onfocus="this.style.borderBottom = '1px dashed #007bff';"
+                                                        onblur="this.style.borderBottom = '1px dashed #ccc';"
+                                                        autocomplete="off" />
+                                                </div>
+                                                <div id="equipmentDropdown" class="dropdown-menu w-100"
+                                                    style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background: white; border-radius: 0 0 0.3rem 0.3rem; margin-top: -1px;">
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <input type="hidden" name="equipmentName" id="equipmentName" />
                                         <input type="hidden" name="equipment.code" id="equipmentCode" />
 
@@ -434,7 +463,161 @@
                 $('#deleteRowModal').modal('show');
             });
 
+            function setupLiveSearchInput(inputId, dropdownId, hiddenNameId, hiddenIdId, datalistId, labelField = 'item', dataAttr) {
+                const input = document.getElementById(inputId);
+                const dropdown = document.getElementById(dropdownId);
+                const hiddenName = document.getElementById(hiddenNameId);
+                const hiddenId = document.getElementById(hiddenIdId);
+                const clearBtn = document.getElementById(inputId.replace('Input', 'ClearBtn'));
+
+                if (!input || !dropdown || !hiddenName || !hiddenId) {
+                    console.warn(`Missing elements for ${labelField || inputId} live search`);
+                    return;
+                }
+
+                // Extract options from datalist
+                const options = Array.from(document.querySelectorAll(`#${datalistId} option`)).map(opt => ({
+                    value: opt.value,
+                    label: opt.value.split(' (')[0],
+                    id: opt.dataset[dataAttr],
+                    fullText: opt.value
+                }));
+
+                // Fallback: use window.users if available (server-rendered JS array)
+                if (options.length === 0 && window.users && Array.isArray(window.users)) {
+                    options.push(...window.users.map(user => ({
+                        value: `${user.name} (${user.employeeId})`,
+                        label: user.name,
+                        id: user.employeeId,
+                        fullText: `${user.name} (${user.employeeId})`
+                    })));
+                }
+
+                // Set initial value if COMPLAINT.assignee exists
+                if (window.COMPLAINT?.assignee) {
+                    const { name, employeeId } = COMPLAINT.assignee;
+                    if (name && employeeId) {
+                        input.value = `${name} (${employeeId})`;
+                        hiddenName.value = name;
+                        hiddenId.value = employeeId;
+                    }
+                }
+
+                // Show/hide dropdown based on input
+                input.addEventListener('input', function () {
+                    const term = this.value.toLowerCase().trim();
+                    dropdown.innerHTML = '';
+
+                    if (term === '') {
+                        dropdown.style.display = 'none';
+                        return;
+                    }
+
+                    const filtered = options.filter(opt =>
+                        opt.label.toLowerCase().includes(term) ||
+                        opt.id.toLowerCase().includes(term)
+                    );
+
+                    if (filtered.length === 0) {
+                        dropdown.style.display = 'none';
+                        return;
+                    }
+
+                    filtered.forEach(opt => {
+                        const div = document.createElement('div');
+                        div.className = 'dropdown-item';
+                        div.style.cursor = 'pointer';
+                        div.style.padding = '0.5rem';
+                        div.style.whiteSpace = 'normal';
+
+                        // Highlight matches in name and ID
+                        let highlightedLabel = opt.label;
+                        let highlightedId = opt.id;
+
+                        if (term) {
+                            const regex = new RegExp(`(${term})`, 'gi');
+                            highlightedLabel = opt.label.replace(regex, '<strong>$1</strong>');
+                            highlightedId = opt.id.replace(regex, '<strong>$1</strong>');
+                        }
+
+                        div.innerHTML = `
+                ${highlightedLabel}
+                <small class="text-muted ms-1">(${highlightedId})</small>
+            `;
+
+                        div.addEventListener('click', () => {
+                            input.value = opt.fullText;
+                            hiddenName.value = opt.label;
+                            hiddenId.value = opt.id;
+                            dropdown.style.display = 'none';
+                            input.focus();
+                        });
+
+                        dropdown.appendChild(div);
+                    });
+
+                    dropdown.style.display = 'block';
+                });
+
+                // Hide dropdown when clicking outside
+                document.addEventListener('click', function (e) {
+                    if (!input.contains(e.target) && !dropdown.contains(e.target) && e.target !== clearBtn) {
+                        dropdown.style.display = 'none';
+                    }
+                });
+
+                // Keyboard navigation
+                input.addEventListener('keydown', function (e) {
+                    const items = dropdown.querySelectorAll('.dropdown-item');
+                    if (items.length === 0) return;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        let current = Array.from(items).findIndex(item => item.classList.contains('active'));
+                        current = (current + 1) % items.length;
+                        items.forEach(item => item.classList.remove('active'));
+                        items[current].classList.add('active');
+                        items[current].scrollIntoView({ block: 'nearest' });
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        let current = Array.from(items).findIndex(item => item.classList.contains('active'));
+                        current = current <= 0 ? items.length - 1 : current - 1;
+                        items.forEach(item => item.classList.remove('active'));
+                        items[current].classList.add('active');
+                        items[current].scrollIntoView({ block: 'nearest' });
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const active = dropdown.querySelector('.dropdown-item.active');
+                        if (active) active.click();
+                    } else if (e.key === 'Escape') {
+                        dropdown.style.display = 'none';
+                        input.value = '';
+                        hiddenName.value = '';
+                        hiddenId.value = '';
+                    }
+                });
+
+                // Clear button functionality
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        input.value = '';
+                        hiddenName.value = '';
+                        hiddenId.value = '';
+                        dropdown.style.display = 'none';
+                        input.focus();
+                    });
+                }
+
+                // Prevent default datalist behavior (optional)
+                input.setAttribute('list', '');
+            }
+
+
+
             document.addEventListener("DOMContentLoaded", function () {
+                setupLiveSearchInput('assigneeInput', 'assigneeDropdown', 'assigneeName', 'assigneeEmployeeId', 'userOptions', 'Assignee', 'employeeId');
+                setupLiveSearchInput('areaInput', 'areaDropdown', 'areaName', 'areaCode', 'areaOptions', 'Area', 'code');
+                setupLiveSearchInput('equipmentInput', 'equipmentDropdown', 'equipmentName', 'equipmentCode', 'equipmentOptions', 'Equipment', 'code');
 
                 // Parts used inputs container
                 function updatePartsUsedInputs() {
@@ -494,20 +677,20 @@
                     if (input) input.value = value;
                 }
 
-                linkInputToHidden('assigneeInput',
-                    { id: 'assigneeName', extract: null },
-                    { id: 'assigneeEmployeeId', extract: 'employeeId' }
-                );
+                // linkInputToHidden('assigneeInput',
+                //     { id: 'assigneeName', extract: null },
+                //     { id: 'assigneeEmployeeId', extract: 'employeeId' }
+                // );
 
-                linkInputToHidden('areaInput',
-                    { id: 'areaName', extract: null },
-                    { id: 'areaCode', extract: 'code' }
-                );
+                // linkInputToHidden('areaInput',
+                //     { id: 'areaName', extract: null },
+                //     { id: 'areaCode', extract: 'code' }
+                // );
 
-                linkInputToHidden('equipmentInput',
-                    { id: 'equipmentName', extract: null },
-                    { id: 'equipmentCode', extract: 'code' }
-                );
+                // linkInputToHidden('equipmentInput',
+                //     { id: 'equipmentName', extract: null },
+                //     { id: 'equipmentCode', extract: 'code' }
+                // );
 
                 if (COMPLAINT) {
                     if (COMPLAINT.assignee) {
@@ -726,7 +909,7 @@
                     reader.onload = function (e) {
                         const preview = document.getElementById(previewId);
                         const placeholder = document.getElementById(placeholderId);
-                        
+
                         preview.src = e.target.result;
                         preview.style.display = 'block';
                         const containerId = previewId.replace('ImagePreview', 'ImageContainer');
@@ -736,7 +919,7 @@
                             const thImage = container.querySelector('img:not(#' + previewId + ')');
                             if (thImage) thImage.style.display = 'none';
                         }
-                        
+
                         if (placeholder) placeholder.style.display = 'none';
                     };
                     reader.readAsDataURL(file);

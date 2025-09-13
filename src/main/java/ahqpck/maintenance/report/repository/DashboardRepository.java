@@ -73,7 +73,7 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
                     SELECT COUNT(*)
                     FROM complaints c
                     WHERE c.status = 'CLOSED'
-                      AND DATE(c.close_time) = DATE(d.day)
+                      AND DATE(c.report_date) = DATE(d.day)
                 ), 0) AS closed,
 
                 -- Pending: status = 'PENDING' AND reported on this day

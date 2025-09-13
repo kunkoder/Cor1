@@ -11,6 +11,7 @@ function toApiDateTime(dateStr, isEnd = false) {
     } else {
         date.setHours(0, 0, 0, 0); // 00:00:00.000
     }
+
     return date.toISOString().slice(0, 16); // "2025-08-01T00:00"
 }
 
@@ -89,6 +90,30 @@ document.getElementById('complaint-stats-form').addEventListener('submit', funct
     fetchComplaintStats(from, to);
 });
 
+
+document.querySelectorAll('.card-stats').forEach(card => {
+    const link = card.closest('a'); // Find the parent <a> tag
+    card.addEventListener('click', function () {
+        const status = link.getAttribute('data-status');
+        const fromInput = document.getElementById('complaint-stats-from').value;
+        const toInput = document.getElementById('complaint-stats-to').value;
+
+        // Build query parameters
+        const params = new URLSearchParams();
+
+        if (fromInput) params.append('reportDateFrom', fromInput.split('T')[0]);
+        if (toInput) params.append('reportDateTo', toInput.split('T')[0]);
+
+        if (status) params.append('status', status);
+
+        params.append('sortBy', 'reportDate');
+        params.append('asc', 'false');
+        params.append('size', '10');
+
+        link.href = '/complaints?' + params.toString();
+    });
+});
+
 function initComplaintStatsForm() {
     setComplaintStatsDefaults();
 
@@ -101,9 +126,16 @@ function initComplaintStatsForm() {
 // Complaint Chart
 let complaintChart = null;
 
-function updateComplaintChart(mode, from = null, to = null, year = null) {
+function updateComplaintChart(mode, from = null, to = null, year = null, month = null) {
     if (mode === 'yearly') {
-        const url = `/api/dashboards/monthly-complaint${year ? '?year=' + year : ''}`;
+        // Yearly: Show 12 months summary
+        let url = `/api/dashboards/monthly-complaint`;
+        const params = [];
+
+        if (year) params.push(`year=${year}`);
+
+        if (params.length > 0) url += '?' + params.join('&');
+
         fetch(url)
             .then(r => r.json())
             .then(data => {
@@ -134,9 +166,45 @@ function updateComplaintChart(mode, from = null, to = null, year = null) {
             })
             .catch(err => console.error('Monthly fetch error:', err));
 
+    } else if (mode === 'monthly') {
+        // Monthly: Show DAILY data for the entire selected month (up to today if future)
+        if (!year) return; // Safety
+
+        const monthNum = month || new Date().getMonth() + 1; // default to current month
+        const yearNum = year;
+
+        const firstDay = new Date(Date.UTC(yearNum, monthNum - 1, 1));
+        const lastDay = new Date(Date.UTC(yearNum, monthNum, 0)); // Last day of month
+
+        // Cap to today if future month
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const effectiveLastDay = new Date(Math.min(lastDay, today));
+
+        const fromApi = toApiDateTime(formatDate(firstDay), false);   // T00:00
+        const toApi = toApiDateTime(formatDate(effectiveLastDay), true); // T23:59
+
+        console.log("Monthly fetch:", fromApi, toApi);
+        const url = `/api/dashboards/daily-complaint?from=${fromApi}&to=${toApi}`;
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                if (!Array.isArray(data)) return;
+
+                const labels = data.map(d => d.date);
+                const openData = data.map(d => d.open || 0);
+                const closedData = data.map(d => d.closed || 0);
+                const pendingData = data.map(d => d.pending || 0);
+
+                renderComplaintChart(labels, openData, closedData, pendingData, `Daily Tickets for ${new Date(yearNum, monthNum - 1).toLocaleString('default', { month: 'long' })} ${yearNum}`);
+            })
+            .catch(err => console.error('Daily fetch error:', err));
+
     } else {
-        const fromApi = toApiDateTime(from, false); // T00:00
-        const toApi = toApiDateTime(to, true);     // T23:59
+        // Weekly or custom date range
+        const fromApi = toApiDateTime(from, false);
+        const toApi = toApiDateTime(to, true);
         const url = `/api/dashboards/daily-complaint?from=${fromApi}&to=${toApi}`;
 
         fetch(url)
@@ -159,24 +227,16 @@ function renderComplaintChart(labels, open, closed, pending, title) {
     const ctx = document.getElementById('complaint-bar-chart').getContext('2d');
     if (complaintChart) complaintChart.destroy();
 
-    const allData = [...open, ...closed, ...pending];
     const stackedValues = labels.map((_, i) => (open[i] || 0) + (closed[i] || 0) + (pending[i] || 0));
     const totalMax = Math.max(...stackedValues, 0);
 
     let stepSize;
-    if (totalMax <= 20) {
-        stepSize = 5;
-    } else if (totalMax <= 50) {
-        stepSize = 10;
-    } else if (totalMax <= 100) {
-        stepSize = 20;
-    } else if (totalMax <= 200) {
-        stepSize = 25;
-    } else if (totalMax <= 500) {
-        stepSize = 50;
-    } else {
-        stepSize = Math.ceil(totalMax / 10 / 10) * 10;
-    }
+    if (totalMax <= 20) stepSize = 5;
+    else if (totalMax <= 50) stepSize = 10;
+    else if (totalMax <= 100) stepSize = 20;
+    else if (totalMax <= 200) stepSize = 25;
+    else if (totalMax <= 500) stepSize = 50;
+    else stepSize = Math.ceil(totalMax / 10 / 10) * 10;
 
     const yAxisMax = Math.ceil(totalMax / stepSize) * stepSize;
 
@@ -213,6 +273,90 @@ function renderComplaintChart(labels, open, closed, pending, title) {
                         }
                     }
                 }
+            },
+
+            onClick: function (event) {
+                const rect = ctx.canvas.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left;
+                const mouseY = event.clientY - rect.top;
+
+                const chartWidth = ctx.canvas.width;
+                const chartHeight = ctx.canvas.height;
+                const numBars = labels.length;
+
+                // === Calculate bar width (matches Chart.js v2.7 internal logic) ===
+                const barWidth = (chartWidth / numBars) * 0.8;
+                const barSpacing = (chartWidth / numBars) - barWidth;
+
+                // === Find which bar (x-index) was clicked ===
+                let barIndex = Math.floor((mouseX - barSpacing / 2) / (barWidth + barSpacing));
+                if (barIndex < 0) barIndex = 0;
+                if (barIndex >= numBars) barIndex = numBars - 1;
+
+                const label = labels[barIndex];
+                if (!label) return;
+
+                // === Get values for this bar ===
+                const openVal = open[barIndex] || 0;
+                const closedVal = closed[barIndex] || 0;
+                const pendingVal = pending[barIndex] || 0;
+                const total = openVal + closedVal + pendingVal;
+
+                if (total === 0) return; // Clicked empty bar
+
+                // === Convert values to pixel heights (Chart.js draws bottom-up) ===
+                const maxValue = yAxisMax || total;
+                const pixelPerUnit = chartHeight / maxValue;
+
+                const openTop = openVal * pixelPerUnit;
+                const closedTop = openTop + closedVal * pixelPerUnit;
+                const pendingTop = closedTop + pendingVal * pixelPerUnit;
+
+                // === Flip Y: Canvas y=0 is top, but we measure from bottom ===
+                const invertedMouseY = chartHeight - mouseY;
+
+                // === Determine which segment was clicked (from bottom up) ===
+                let status = null;
+
+                if (invertedMouseY <= openTop) {
+                    status = 'OPEN';
+                } else if (invertedMouseY <= closedTop) {
+                    status = 'CLOSED';
+                } else if (invertedMouseY <= pendingTop) {
+                    status = 'PENDING';
+                } else {
+                    return; // Clicked above the bar
+                }
+
+                // === Build URL ===
+                let from, to;
+
+                if (label && label.length === 3) {
+                    const year = document.getElementById('complaint-year-select')?.value || new Date().getFullYear();
+                    const monthMap = {
+                        "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
+                        "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
+                    };
+                    const monthIndex = monthMap[label];
+                    if (monthIndex === undefined) return;
+
+                    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+                    from = `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+                    to = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${daysInMonth}`;
+                } else {
+                    from = label;
+                    to = label;
+                }
+
+                const params = new URLSearchParams();
+                params.append('reportDateFrom', from);
+                params.append('reportDateTo', to);
+                params.append('status', status);
+                params.append('sortBy', 'reportDate');
+                params.append('asc', 'false');
+                params.append('size', '10');
+
+                window.location.href = '/complaints?' + params.toString();
             }
         }
     });
@@ -228,9 +372,17 @@ function initComplaintChartForm() {
 
     populateYearSelector('complaint-year-select', now.getFullYear());
 
+    // Initialize month selector to current month
+    const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+    document.getElementById('complaint-month-select').value = currentMonth;
+
+    // Hide both selectors initially
+    document.getElementById('complaint-year-selector').style.display = 'none';
+    document.getElementById('complaint-month-selector').style.display = 'none';
+
     document.querySelector('.dropdown-menu').addEventListener('click', function (e) {
         if (e.target.closest('select, input, .btn, .input-group')) {
-            e.stopPropagation(); // 🔑 Keep dropdown open
+            e.stopPropagation(); // Keep dropdown open
         }
     });
 
@@ -238,46 +390,67 @@ function initComplaintChartForm() {
         btn.addEventListener('click', () => {
             const range = btn.getAttribute('data-range');
             const now = new Date();
+            const year = document.getElementById('complaint-year-select').value;
+
+            // Reset visibility
+            document.getElementById('complaint-year-selector').style.display = 'none';
+            document.getElementById('complaint-month-selector').style.display = 'none';
 
             if (range === 'weekly') {
-                document.getElementById('complaint-year-selector').style.display = 'none';
                 const from = new Date(now);
+                console.log('Weekly range selected', from, now);
                 from.setDate(now.getDate() - 6);
                 document.getElementById('complaint-from').value = formatDate(from);
                 document.getElementById('complaint-to').value = formatDate(now);
                 updateComplaintChart('daily', formatDate(from), formatDate(now));
             } else if (range === 'monthly') {
-                document.getElementById('complaint-year-selector').style.display = 'none';
-                const from = new Date(now.getFullYear(), now.getMonth(), 1);
-                document.getElementById('complaint-from').value = formatDate(from);
-                document.getElementById('complaint-to').value = formatDate(now);
-                updateComplaintChart('daily', formatDate(from), formatDate(now));
+                document.getElementById('complaint-month-selector').style.display = 'block';
+                const month = document.getElementById('complaint-month-select').value;
+                updateComplaintChart('monthly', null, null, year, month);
             } else if (range === 'yearly') {
                 document.getElementById('complaint-year-selector').style.display = 'block';
-                const year = document.getElementById('complaint-year-select').value;
                 updateComplaintChart('yearly', null, null, year);
             }
         });
     });
 
+    // 👇 Handle month selection — triggers update based on current year
+    document.getElementById('complaint-month-select').addEventListener('change', () => {
+        const year = document.getElementById('complaint-year-select').value;
+        const month = document.getElementById('complaint-month-select').value;
+        updateComplaintChart('monthly', null, null, year, month);
+    });
+
+    // 👇 Handle year selection — update both yearly and monthly views
     document.getElementById('complaint-year-select').addEventListener('change', () => {
         const year = document.getElementById('complaint-year-select').value;
-        updateComplaintChart('yearly', null, null, year);
+        const currentMode = document.querySelector('.btn.active[data-range]')?.getAttribute('data-range') ||
+            document.querySelector('.btn[data-range]:nth-child(2)').getAttribute('data-range'); // default to monthly
+
+        if (currentMode === 'monthly') {
+            const month = document.getElementById('complaint-month-select').value;
+            updateComplaintChart('monthly', null, null, year, month);
+        } else if (currentMode === 'yearly') {
+            updateComplaintChart('yearly', null, null, year);
+        }
     });
 
     document.getElementById('apply-complaint-filters').addEventListener('click', () => {
         const from = document.getElementById('complaint-from').value;
         const to = document.getElementById('complaint-to').value;
         const year = document.getElementById('complaint-year-select').value;
+        const month = document.getElementById('complaint-month-select').value;
 
         if (document.getElementById('complaint-year-selector').style.display === 'block') {
             updateComplaintChart('yearly', null, null, year);
+        } else if (document.getElementById('complaint-month-selector').style.display === 'block') {
+            updateComplaintChart('monthly', null, null, year, month);
         } else {
-            document.getElementById('complaint-year-selector').style.display = 'none';
             updateComplaintChart('daily', from, to);
         }
     });
 
+    // Initial load
     updateComplaintChart('daily', formatDate(from), formatDate(now));
 }
 

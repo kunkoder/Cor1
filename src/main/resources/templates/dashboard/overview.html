@@ -49,81 +49,97 @@
 						</div>
 						<div class="card-body">
 							<div class="row row-card-no-pd mb-0" style="box-shadow: none;">
+
+								<!-- Total -->
 								<div class="col-sm-6 col-md-3">
-									<div class="card card-stats card-primary card-round mt-1">
-										<div class="card-body">
-											<div class="row">
-												<div class="col-5">
-													<div class="icon-big text-center">
-														<i class="fas fa-ticket-alt text-white"></i>
+									<a href="#" class="text-decoration-none" data-status="">
+										<div class="card card-stats card-primary card-round mt-1 cursor-pointer">
+											<div class="card-body">
+												<div class="row">
+													<div class="col-5">
+														<div class="icon-big text-center">
+															<i class="fas fa-ticket-alt text-white"></i>
+														</div>
 													</div>
-												</div>
-												<div class="col-7 col-stats">
-													<div class="numbers">
-														<p class="card-category">Total</p>
-														<h4 class="card-title" id="complaint-stats-total">--</h4>
+													<div class="col-7 col-stats">
+														<div class="numbers">
+															<p class="card-category">Total</p>
+															<h4 class="card-title" id="complaint-stats-total">--</h4>
+														</div>
 													</div>
 												</div>
 											</div>
 										</div>
-									</div>
+									</a>
 								</div>
+
+								<!-- Pending -->
 								<div class="col-sm-6 col-md-3">
-									<div class="card card-stats card-danger card-round mt-1">
-										<div class="card-body">
-											<div class="row">
-												<div class="col-5">
-													<div class="icon-big text-center">
-														<i class="fas fa-clock text-white"></i>
+									<a href="#" class="text-decoration-none" data-status="PENDING">
+										<div class="card card-stats card-danger card-round mt-1 cursor-pointer">
+											<div class="card-body">
+												<div class="row">
+													<div class="col-5">
+														<div class="icon-big text-center">
+															<i class="fas fa-clock text-white"></i>
+														</div>
 													</div>
-												</div>
-												<div class="col-7 col-stats">
-													<div class="numbers">
-														<p class="card-category">Pending</p>
-														<h4 class="card-title" id="complaint-stats-pending">--</h4>
+													<div class="col-7 col-stats">
+														<div class="numbers">
+															<p class="card-category">Pending</p>
+															<h4 class="card-title" id="complaint-stats-pending">--</h4>
+														</div>
 													</div>
 												</div>
 											</div>
 										</div>
-									</div>
+									</a>
 								</div>
+
+								<!-- Open -->
 								<div class="col-sm-6 col-md-3">
-									<div class="card card-stats card-warning card-round mt-1">
-										<div class="card-body">
-											<div class="row">
-												<div class="col-5">
-													<div class="icon-big text-center">
-														<i class="fas fa-folder-open text-white"></i>
+									<a href="#" class="text-decoration-none" data-status="OPEN">
+										<div class="card card-stats card-warning card-round mt-1 cursor-pointer">
+											<div class="card-body">
+												<div class="row">
+													<div class="col-5">
+														<div class="icon-big text-center">
+															<i class="fas fa-folder-open text-white"></i>
+														</div>
 													</div>
-												</div>
-												<div class="col-7 col-stats">
-													<div class="numbers">
-														<p class="card-category">Open</p>
-														<h4 class="card-title" id="complaint-stats-open">--</h4>
+													<div class="col-7 col-stats">
+														<div class="numbers">
+															<p class="card-category">Open</p>
+															<h4 class="card-title" id="complaint-stats-open">--</h4>
+														</div>
 													</div>
 												</div>
 											</div>
 										</div>
-									</div>
+									</a>
 								</div>
+
+								<!-- Closed -->
 								<div class="col-sm-6 col-md-3">
-									<div class="card card-stats card-success card-round mt-1">
-										<div class="card-body">
-											<div class="row">
-												<div class="col-5">
-													<div class="icon-big text-center">
-														<i class="fas fa-check-circle text-white"></i>
+									<a href="#" class="text-decoration-none" data-status="CLOSED">
+										<div class="card card-stats card-success card-round mt-1 cursor-pointer">
+											<div class="card-body">
+												<div class="row">
+													<div class="col-5">
+														<div class="icon-big text-center">
+															<i class="fas fa-check-circle text-white"></i>
+														</div>
 													</div>
-												</div>
-												<div class="col-7 col-stats">
-													<div class="numbers">
-														<p class="card-category">Closed</p>
-														<h4 class="card-title" id="complaint-stats-closed">--</h4>
+													<div class="col-7 col-stats">
+														<div class="numbers">
+															<p class="card-category">Closed</p>
+															<h4 class="card-title" id="complaint-stats-closed">--</h4>
+														</div>
 													</div>
 												</div>
 											</div>
 										</div>
-									</div>
+									</a>
 								</div>
 							</div>
 						</div>
@@ -165,11 +181,36 @@
 											<button type="button" class="btn btn-outline-primary flex-fill"
 												data-range="yearly">Yearly</button>
 										</div>
-										<div id="complaint-year-selector" style="display: none;">
+
+										<!-- Year Selector (shown in Weekly/Yearly) -->
+										<div id="complaint-year-selector" style="display: none;" class="mt-2">
 											<div class="form-group">
 												<label for="complaint-year-select">Year</label>
 												<select id="complaint-year-select"
 													class="form-control form-control-sm"></select>
+											</div>
+										</div>
+
+										<!-- Month Selector (shown ONLY in Monthly mode) -->
+										<div id="complaint-month-selector" style="display: none;" class="mt-2">
+											<div class="form-group">
+												<label for="complaint-month-select">Month</label>
+												<select id="complaint-month-select"
+													class="form-control form-control-sm">
+													<option value="">All Months</option>
+													<option value="01">January</option>
+													<option value="02">February</option>
+													<option value="03">March</option>
+													<option value="04">April</option>
+													<option value="05">May</option>
+													<option value="06">June</option>
+													<option value="07">July</option>
+													<option value="08">August</option>
+													<option value="09">September</option>
+													<option value="10">October</option>
+													<option value="11">November</option>
+													<option value="12">December</option>
+												</select>
 											</div>
 										</div>
 										<button id="apply-complaint-filters"
