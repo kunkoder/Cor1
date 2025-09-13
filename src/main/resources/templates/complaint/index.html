@@ -336,8 +336,18 @@
                                                     th:href="@{/complaints(keyword=${keyword}, page=1, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">1</a>
                                             </li>
 
+                                            <li class="page-item"
+                                                th:if="${complaints.totalPages >= 3 and complaints.number > 1}">
+                                                <span class="page-link">...</span>
+                                            </li>
+
                                             <li class="page-item active">
                                                 <span class="page-link" th:text="${complaints.number + 1}">1</span>
+                                            </li>
+
+                                            <li class="page-item"
+                                                th:if="${complaints.totalPages >= 3 and complaints.number + 1 < complaints.totalPages - 1}">
+                                                <span class="page-link">...</span>
                                             </li>
 
                                             <li class="page-item"

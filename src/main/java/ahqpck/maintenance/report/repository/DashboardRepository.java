@@ -112,52 +112,52 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
 
     @Query(value = """
             SELECT
-                DATE_FORMAT(d.month_start, '%Y-%m') AS date,
+            DATE_FORMAT(d.month_start, '%Y-%m') AS date,
 
-                -- Open: status = 'OPEN' AND reported in this month
-                COALESCE((
-                    SELECT COUNT(*)
-                    FROM complaints c
-                    WHERE c.status = 'OPEN'
-                      AND YEAR(c.report_date) = YEAR(d.month_start)
-                      AND MONTH(c.report_date) = MONTH(d.month_start)
-                ), 0) AS open,
+            -- Open: status = 'OPEN' AND reported in this month
+            COALESCE((
+            SELECT COUNT(*)
+            FROM complaints c
+            WHERE c.status = 'OPEN'
+            AND YEAR(c.report_date) = YEAR(d.month_start)
+            AND MONTH(c.report_date) = MONTH(d.month_start)
+            ), 0) AS open,
 
-                -- Closed: status = 'CLOSED' AND closed in this month
-                COALESCE((
-                    SELECT COUNT(*)
-                    FROM complaints c
-                    WHERE c.status = 'CLOSED'
-                      AND YEAR(c.close_time) = YEAR(d.month_start)
-                      AND MONTH(c.close_time) = MONTH(d.month_start)
-                ), 0) AS closed,
+            -- Closed: status = 'CLOSED' AND closed in this month
+            COALESCE((
+            SELECT COUNT(*)
+            FROM complaints c
+            WHERE c.status = 'CLOSED'
+            AND YEAR(c.report_date) = YEAR(d.month_start)
+            AND MONTH(c.report_date) = MONTH(d.month_start)
+            ), 0) AS closed,
 
-                -- Pending: status = 'PENDING' AND reported in this month
-                COALESCE((
-                    SELECT COUNT(*)
-                    FROM complaints c
-                    WHERE c.status = 'PENDING'
-                      AND YEAR(c.report_date) = YEAR(d.month_start)
-                      AND MONTH(c.report_date) = MONTH(d.month_start)
-                ), 0) AS pending
+            -- Pending: status = 'PENDING' AND reported in this month
+            COALESCE((
+            SELECT COUNT(*)
+            FROM complaints c
+            WHERE c.status = 'PENDING'
+            AND YEAR(c.report_date) = YEAR(d.month_start)
+            AND MONTH(c.report_date) = MONTH(d.month_start)
+            ), 0) AS pending
 
             FROM (
-                -- Generate 12 months: Jan to Dec of the target year
-                SELECT DATE_ADD(
-                    CONCAT(:year, '-01-01'),
-                    INTERVAL (units.a + tens.a * 10) MONTH
-                ) AS month_start
-                FROM
-                    (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3
-                     UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7
-                     UNION ALL SELECT 8 UNION ALL SELECT 9) units
-                    CROSS JOIN
-                    (SELECT 0 AS a UNION ALL SELECT 1) tens
+            -- Generate 12 months: Jan to Dec of the target year
+            SELECT DATE_ADD(
+            CONCAT(:year, '-01-01'),
+            INTERVAL (units.a + tens.a * 10) MONTH
+            ) AS month_start
+            FROM
+            (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3
+            UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7
+            UNION ALL SELECT 8 UNION ALL SELECT 9) units
+            CROSS JOIN
+            (SELECT 0 AS a UNION ALL SELECT 1) tens
             ) d
 
             WHERE
-                :year IS NOT NULL AND YEAR(d.month_start) = :year
-                AND d.month_start <= NOW()  -- Prevent future months
+            :year IS NOT NULL AND YEAR(d.month_start) = :year
+            AND d.month_start <= NOW() -- Prevent future months
 
             ORDER BY d.month_start ASC
             """, nativeQuery = true)
@@ -165,7 +165,8 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
 
     @Query(value = """
             SELECT
-                u.name AS assignee,
+                u.name AS assignee_name,
+                u.employee_id AS assignee_id,
                 c.status,
                 DATE(c.report_date) AS report_date,
                 COUNT(*) AS count
@@ -174,7 +175,7 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
             WHERE DATE(c.report_date) >= :from
               AND DATE(c.report_date) < DATE_ADD(:to, INTERVAL 1 DAY)
               AND c.status IN ('OPEN', 'PENDING', 'CLOSED')
-            GROUP BY u.name, c.status, DATE(c.report_date)
+            GROUP BY u.name, u.employee_id, c.status, DATE(c.report_date)
             ORDER BY u.name, report_date
             """, nativeQuery = true)
     List<Object[]> getAssigneeDailyStatus(

@@ -96,47 +96,58 @@ public class DashboardService {
 
         Map<String, AssigneeDailyStatusDetailDTO> assigneeMap = new LinkedHashMap<>();
 
-        for (LocalDate date : dateList) {
-            for (Object[] row : results) {
-                String assignee = (String) row[0];
-                assigneeMap.computeIfAbsent(assignee, k -> {
-                    AssigneeDailyStatusDetailDTO dto = new AssigneeDailyStatusDetailDTO();
-                    dto.setAssignee(k);
-                    List<Integer> zeros = Collections.nCopies(numDays, 0);
-                    dto.setOpen(new ArrayList<>(zeros));
-                    dto.setPending(new ArrayList<>(zeros));
-                    dto.setClosed(new ArrayList<>(zeros));
-                    return dto;
-                });
-            }
-        }
+// Pre-initialize all assignees with empty lists of zeros
+for (Object[] row : results) {
+    String assigneeName = (String) row[0];  // u.name
+    String assigneeEmpId = (String) row[1]; // u.employee_id
 
-        for (Object[] row : results) {
-            String assignee = (String) row[0];
-            String status = (String) row[1];
-            LocalDate reportDate = ((java.sql.Date) row[2]).toLocalDate();
-            Long count = ((Number) row[3]).longValue();
+    // Create a unique key using name + empId to avoid collisions if names are duplicated
+    String assigneeKey = assigneeName + "|" + assigneeEmpId;
 
-            if (!dateList.contains(reportDate))
-                continue;
+    assigneeMap.computeIfAbsent(assigneeKey, k -> {
+        AssigneeDailyStatusDetailDTO dto = new AssigneeDailyStatusDetailDTO();
+        dto.setAssigneeName(assigneeName);
+        dto.setAssigneeEmpId(assigneeEmpId);
+        List<Integer> zeros = Collections.nCopies(numDays, 0);
+        dto.setOpen(new ArrayList<>(zeros));
+        dto.setPending(new ArrayList<>(zeros));
+        dto.setClosed(new ArrayList<>(zeros));
+        return dto;
+    });
+}
 
-            int dayIndex = dateList.indexOf(reportDate);
-            AssigneeDailyStatusDetailDTO dto = assigneeMap.get(assignee);
+// Now populate the counts
+for (Object[] row : results) {
+    String assigneeName = (String) row[0];
+    String assigneeEmpId = (String) row[1];
+    String status = (String) row[2];
+    LocalDate reportDate = ((java.sql.Date) row[3]).toLocalDate();
+    Long count = ((Number) row[4]).longValue();
 
-            if ("OPEN".equals(status)) {
-                List<Integer> open = dto.getOpen();
-                open.set(dayIndex, Math.toIntExact(count));
-                dto.setOpen(open);
-            } else if ("PENDING".equals(status)) {
-                List<Integer> pending = dto.getPending();
-                pending.set(dayIndex, Math.toIntExact(count));
-                dto.setPending(pending);
-            } else if ("CLOSED".equals(status)) {
-                List<Integer> closed = dto.getClosed();
-                closed.set(dayIndex, Math.toIntExact(count));
-                dto.setClosed(closed);
-            }
-        }
+    if (!dateList.contains(reportDate)) {
+        continue;
+    }
+
+    int dayIndex = dateList.indexOf(reportDate);
+
+    // Use composite key to look up DTO
+    String assigneeKey = assigneeName + "|" + assigneeEmpId;
+    AssigneeDailyStatusDetailDTO dto = assigneeMap.get(assigneeKey);
+
+    if ("OPEN".equals(status)) {
+        List<Integer> open = dto.getOpen();
+        open.set(dayIndex, Math.toIntExact(count));
+        dto.setOpen(open); // Not strictly needed since it's mutable, but safe
+    } else if ("PENDING".equals(status)) {
+        List<Integer> pending = dto.getPending();
+        pending.set(dayIndex, Math.toIntExact(count));
+        dto.setPending(pending);
+    } else if ("CLOSED".equals(status)) {
+        List<Integer> closed = dto.getClosed();
+        closed.set(dayIndex, Math.toIntExact(count));
+        dto.setClosed(closed);
+    }
+}
 
         AssigneeDailyStatusDTO response = new AssigneeDailyStatusDTO();
         response.setDates(dateList.stream().map(LocalDate::toString).collect(Collectors.toList()));

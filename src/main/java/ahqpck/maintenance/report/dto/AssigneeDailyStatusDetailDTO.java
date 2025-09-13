@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AssigneeDailyStatusDetailDTO {
-    private String assignee;
+    private String assigneeName;
+    private String assigneeEmpId;
     private List<Integer> open;
     private List<Integer> pending;
     private List<Integer> closed;

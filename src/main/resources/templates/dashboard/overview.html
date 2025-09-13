@@ -33,13 +33,13 @@
 								<h4 class="card-title">Overall Complaint</h4>
 								<form id="complaint-stats-form" class="form-inline">
 									<div class="input-group input-daterange">
-										<input type="datetime-local" class="form-control form-control-sm"
-											id="complaint-stats-from" name="from" required>
+										<input type="datetime-local" class="form-control form-control-sm" id="complaint-stats-from"
+											name="from" required>
 										<div class="input-group-prepend input-group-append">
 											<span class="input-group-text">to</span>
 										</div>
-										<input type="datetime-local" class="form-control form-control-sm"
-											id="complaint-stats-to" name="to" required>
+										<input type="datetime-local" class="form-control form-control-sm" id="complaint-stats-to" name="to"
+											required>
 										<div class="input-group-append">
 											<button type="submit" class="btn btn-sm btn-primary ml-2">Apply</button>
 										</div>
@@ -148,87 +148,98 @@
 			</div>
 
 			<div class="row">
-				<div class="col-md-12">
-					<div class="card full-height">
-						<div class="card-header">
-							<div class="d-flex justify-content-between align-items-center">
-								<h4 class="card-title">Complaint Chart</h4>
-								<div class="dropdown">
-									<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-										id="complaintFilterDropdown" data-toggle="dropdown" aria-haspopup="true"
-										aria-expanded="false">
-										<i class="fas fa-filter"></i> Filters
-									</button>
-									<div class="dropdown-menu dropdown-menu-right p-3" style="width: 360px;"
-										aria-labelledby="complaintFilterDropdown">
-										<div class="form-group">
-											<label for="complaint-from">Date Range</label>
-											<div class="input-group input-daterange">
-												<input type="date" class="form-control form-control-sm"
-													id="complaint-from" required>
-												<div class="input-group-prepend input-group-append">
-													<span class="input-group-text">to</span>
-												</div>
-												<input type="date" class="form-control form-control-sm"
-													id="complaint-to" required>
-											</div>
-										</div>
-										<div class="btn-group btn-group-sm d-flex mb-2">
-											<button type="button" class="btn btn-outline-primary flex-fill"
-												data-range="weekly">Weekly</button>
-											<button type="button" class="btn btn-outline-primary flex-fill"
-												data-range="monthly">Monthly</button>
-											<button type="button" class="btn btn-outline-primary flex-fill"
-												data-range="yearly">Yearly</button>
-										</div>
+	<div class="col-md-12">
+		<div class="card full-height">
+			<div class="card-header">
+				<div class="d-flex justify-content-between align-items-center">
+					<h4 class="card-title">Complaint Chart</h4>
 
-										<!-- Year Selector (shown in Weekly/Yearly) -->
-										<div id="complaint-year-selector" style="display: none;" class="mt-2">
-											<div class="form-group">
-												<label for="complaint-year-select">Year</label>
-												<select id="complaint-year-select"
-													class="form-control form-control-sm"></select>
-											</div>
-										</div>
-
-										<!-- Month Selector (shown ONLY in Monthly mode) -->
-										<div id="complaint-month-selector" style="display: none;" class="mt-2">
-											<div class="form-group">
-												<label for="complaint-month-select">Month</label>
-												<select id="complaint-month-select"
-													class="form-control form-control-sm">
-													<option value="">All Months</option>
-													<option value="01">January</option>
-													<option value="02">February</option>
-													<option value="03">March</option>
-													<option value="04">April</option>
-													<option value="05">May</option>
-													<option value="06">June</option>
-													<option value="07">July</option>
-													<option value="08">August</option>
-													<option value="09">September</option>
-													<option value="10">October</option>
-													<option value="11">November</option>
-													<option value="12">December</option>
-												</select>
-											</div>
-										</div>
-										<button id="apply-complaint-filters"
-											class="btn btn-sm btn-primary btn-block mt-2">
-											Apply Filters
-										</button>
+					<!-- Filter Dropdown - NOW ONLY HAS MONTHLY AND YEARLY -->
+					<div class="dropdown">
+						<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+							id="complaintFilterDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							<i class="fas fa-filter"></i> Filters
+						</button>
+						<div class="dropdown-menu dropdown-menu-right p-3" style="width: 360px;"
+							aria-labelledby="complaintFilterDropdown">
+							<div class="form-group">
+								<label for="complaint-from">Date Range</label>
+								<div class="input-group input-daterange">
+									<input type="date" class="form-control form-control-sm" id="complaint-from" required>
+									<div class="input-group-prepend input-group-append">
+										<span class="input-group-text">to</span>
 									</div>
+									<input type="date" class="form-control form-control-sm" id="complaint-to" required>
 								</div>
 							</div>
-						</div>
-						<div class="card-body d-flex flex-column">
-							<div class="chart-container flex-grow-1">
-								<canvas id="complaint-bar-chart"></canvas>
+
+							<!-- REMOVE WEEKLY BUTTON — KEEP ONLY MONTHLY & YEARLY -->
+							<div class="btn-group btn-group-sm d-flex mb-2">
+								<!-- <button type="button" class="btn btn-outline-primary flex-fill" data-range="weekly">Weekly</button> -->
+								<button type="button" class="btn btn-outline-primary flex-fill"
+									data-range="monthly">Monthly</button>
+								<button type="button" class="btn btn-outline-primary flex-fill"
+									data-range="yearly">Yearly</button>
 							</div>
+
+							<!-- Year Selector (shown in Yearly) -->
+							<div id="complaint-year-selector" style="display: none;" class="mt-2">
+								<div class="form-group">
+									<label for="complaint-year-select">Year</label>
+									<select id="complaint-year-select" class="form-control form-control-sm"></select>
+								</div>
+							</div>
+
+							<!-- Month Selector (shown ONLY in Monthly mode) -->
+							<div id="complaint-month-selector" style="display: none;" class="mt-2">
+								<div class="form-group">
+									<label for="complaint-month-select">Month</label>
+									<select id="complaint-month-select" class="form-control form-control-sm">
+										<option value="">All Months</option>
+										<option value="01">January</option>
+										<option value="02">February</option>
+										<option value="03">March</option>
+										<option value="04">April</option>
+										<option value="05">May</option>
+										<option value="06">June</option>
+										<option value="07">July</option>
+										<option value="08">August</option>
+										<option value="09">September</option>
+										<option value="10">October</option>
+										<option value="11">November</option>
+										<option value="12">December</option>
+									</select>
+								</div>
+							</div>
+
+							<button id="apply-complaint-filters" class="btn btn-sm btn-primary btn-block mt-2">
+								Apply Filters
+							</button>
 						</div>
 					</div>
 				</div>
 			</div>
+
+			<!-- WEEKLY NAVIGATION CONTAINER — ALWAYS VISIBLE (since it's the default view) -->
+			<div id="weekly-nav" class="d-flex justify-content-center align-items-center py-2"
+				style="border-top: 1px solid #eee; margin-top: -1px;">
+				<button class="btn btn-sm btn-outline-primary mx-1" id="prevWeekBtn" title="Previous Week" disabled>
+					<i class="fas fa-chevron-left"></i> Prev
+				</button>
+				<span class="text-muted small mx-2" id="weekRangeLabel">Week of Jan 1–7, 2024</span>
+				<button class="btn btn-sm btn-outline-primary mx-1" id="nextWeekBtn" title="Next Week" disabled>
+					Next <i class="fas fa-chevron-right"></i>
+				</button>
+			</div>
+
+			<div class="card-body d-flex flex-column">
+				<div class="chart-container flex-grow-1">
+					<canvas id="complaint-bar-chart"></canvas>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 
 			<div class="row">
 				<div class="col-md-8">
@@ -237,16 +248,13 @@
 							<div class="card-head-row card-tools-still-right">
 								<h4 class="card-title">Engineers Responsibility</h4>
 								<div class="card-tools">
-									<button class="btn btn-icon btn-link btn-primary btn-xs" id="prevEngineerBtn"
-										title="Previous">
+									<button class="btn btn-icon btn-link btn-primary btn-xs" id="prevEngineerBtn" title="Previous">
 										<i class="fas fa-chevron-left"></i>
 									</button>
-									<button class="btn btn-icon btn-link btn-primary btn-xs" id="nextEngineerBtn"
-										title="Next">
+									<button class="btn btn-icon btn-link btn-primary btn-xs" id="nextEngineerBtn" title="Next">
 										<i class="fas fa-chevron-right"></i>
 									</button>
-									<button class="btn btn-icon btn-link btn-primary btn-xs" id="refreshEngineerBtn"
-										title="Refresh">
+									<button class="btn btn-icon btn-link btn-primary btn-xs" id="refreshEngineerBtn" title="Refresh">
 										<i class="fa fa-sync-alt"></i>
 									</button>
 								</div>
@@ -280,16 +288,15 @@
 							<div class="card-head-row card-tools-still-right">
 								<h4 class="card-title">Equipment</h4>
 								<div class="card-tools">
-									<button class="btn btn-icon btn-link btn-primary btn-xs"
-										id="equipment-work-prev-btn" title="Previous">
+									<button class="btn btn-icon btn-link btn-primary btn-xs" id="equipment-work-prev-btn"
+										title="Previous">
 										<i class="fas fa-chevron-up"></i>
 									</button>
-									<button class="btn btn-icon btn-link btn-primary btn-xs"
-										id="equipment-work-next-btn" title="Next">
+									<button class="btn btn-icon btn-link btn-primary btn-xs" id="equipment-work-next-btn" title="Next">
 										<i class="fas fa-chevron-down"></i>
 									</button>
-									<button class="btn btn-icon btn-link btn-primary btn-xs"
-										id="equipment-work-refresh-btn" title="Refresh">
+									<button class="btn btn-icon btn-link btn-primary btn-xs" id="equipment-work-refresh-btn"
+										title="Refresh">
 										<i class="fa fa-sync-alt"></i>
 									</button>
 								</div>
@@ -313,8 +320,7 @@
 								<!-- Dropdown Trigger Button -->
 								<div class="dropdown">
 									<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-										id="chartFilterDropdown" data-toggle="dropdown" aria-haspopup="true"
-										aria-expanded="false">
+										id="chartFilterDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 										<i class="fas fa-filter"></i> Filters
 									</button>
 									<div class="dropdown-menu dropdown-menu-right p-3" style="width: 360px;"
@@ -324,13 +330,11 @@
 										<div class="form-group">
 											<label for="wr-from">Date Range</label>
 											<div class="input-group input-daterange">
-												<input type="date" class="form-control form-control-sm" id="wr-from"
-													required>
+												<input type="date" class="form-control form-control-sm" id="wr-from" required>
 												<div class="input-group-prepend input-group-append">
 													<span class="input-group-text">to</span>
 												</div>
-												<input type="date" class="form-control form-control-sm" id="wr-to"
-													required>
+												<input type="date" class="form-control form-control-sm" id="wr-to" required>
 											</div>
 										</div>
 
@@ -356,8 +360,7 @@
 										<div id="wr-year-selector" style="display: none;">
 											<div class="form-group">
 												<label for="wr-year-select">Year</label>
-												<select id="wr-year-select"
-													class="form-control form-control-sm"></select>
+												<select id="wr-year-select" class="form-control form-control-sm"></select>
 											</div>
 										</div>
 
@@ -389,8 +392,7 @@
 								<!-- Filters Dropdown Button -->
 								<div class="dropdown">
 									<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-										id="breakdownFilterDropdown" data-toggle="dropdown" aria-haspopup="true"
-										aria-expanded="false">
+										id="breakdownFilterDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 										<i class="fas fa-filter"></i> Filters
 									</button>
 									<div class="dropdown-menu dropdown-menu-right p-3" style="width: 360px;"
@@ -400,13 +402,11 @@
 										<div class="form-group">
 											<label for="breakdown-from">Date Range</label>
 											<div class="input-group input-daterange">
-												<input type="date" class="form-control form-control-sm"
-													id="breakdown-from" required>
+												<input type="date" class="form-control form-control-sm" id="breakdown-from" required>
 												<div class="input-group-prepend input-group-append">
 													<span class="input-group-text">to</span>
 												</div>
-												<input type="date" class="form-control form-control-sm"
-													id="breakdown-to" required>
+												<input type="date" class="form-control form-control-sm" id="breakdown-to" required>
 											</div>
 										</div>
 
@@ -424,14 +424,12 @@
 										<div id="breakdown-year-selector" style="display: none;">
 											<div class="form-group">
 												<label for="breakdown-year-select">Year</label>
-												<select id="breakdown-year-select"
-													class="form-control form-control-sm"></select>
+												<select id="breakdown-year-select" class="form-control form-control-sm"></select>
 											</div>
 										</div>
 
 										<!-- Apply Button -->
-										<button id="apply-breakdown-filters"
-											class="btn btn-sm btn-primary btn-block mt-2">
+										<button id="apply-breakdown-filters" class="btn btn-sm btn-primary btn-block mt-2">
 											Apply Filters
 										</button>
 									</div>
@@ -489,6 +487,7 @@
 			const apiEndpoint = baseUrl + '/api/dashboards/status-count';
 			/*]]>*/
 		</script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 		<script th:src="@{/assets/js/overview-chart.js}"></script>
 		<script th:src="@{/assets/js/generate-report.js}"></script>
 	</th:block>
