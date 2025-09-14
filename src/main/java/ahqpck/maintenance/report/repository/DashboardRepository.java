@@ -28,33 +28,25 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
 
     @Query(value = """
             SELECT
-                CAST(COALESCE((SELECT COUNT(*) FROM complaints), 0) AS SIGNED) AS totalComplaints,
-
-                CAST(COALESCE(SUM(
-                    CASE WHEN c.status IN ('OPEN', 'IN_PROGRESS')
-                          AND DATE(c.report_date) >= DATE(:from)
-                          AND DATE(c.report_date) < DATE(:to) THEN 1 ELSE 0 END
-                ), 0) AS SIGNED) AS totalOpen,
-
-                CAST(COALESCE(SUM(
-                    CASE WHEN c.status IN ('DONE', 'CLOSED')
-                          AND DATE(c.close_time) >= DATE(:from)
-                          AND DATE(c.close_time) < DATE(:to) THEN 1 ELSE 0 END
-                ), 0) AS SIGNED) AS totalClosed,
-
-                CAST(COALESCE((SELECT COUNT(*) FROM complaints WHERE status = 'PENDING'), 0) AS SIGNED) AS totalPending
-
-            FROM
-                (SELECT 1) AS dummy
-            LEFT JOIN complaints c
-                ON (DATE(c.report_date) >= DATE(:from) AND DATE(c.report_date) < DATE(:to)
-                    AND c.status IN ('OPEN', 'IN_PROGRESS'))
-                OR (DATE(c.close_time) >= DATE(:from) AND DATE(c.close_time) < DATE(:to)
-                    AND c.status IN ('DONE', 'CLOSED'))
+                CAST(COALESCE(SUM(CASE WHEN (:from IS NULL OR DATE(c.report_date) >= DATE(:from))
+                                       AND (:to IS NULL OR DATE(c.report_date) < DATE(:to))
+                                  THEN 1 ELSE 0 END), 0) AS SIGNED) AS totalComplaints,
+                CAST(COALESCE(SUM(CASE WHEN c.status IN ('OPEN', 'IN_PROGRESS')
+                                       AND (:from IS NULL OR DATE(c.report_date) >= DATE(:from))
+                                       AND (:to IS NULL OR DATE(c.report_date) < DATE(:to))
+                                  THEN 1 ELSE 0 END), 0) AS SIGNED) AS totalOpen,
+                CAST(COALESCE(SUM(CASE WHEN c.status IN ('DONE', 'CLOSED')
+                                       AND (:from IS NULL OR DATE(c.report_date) >= DATE(:from))
+                                       AND (:to IS NULL OR DATE(c.report_date) < DATE(:to))
+                                  THEN 1 ELSE 0 END), 0) AS SIGNED) AS totalClosed,
+                CAST(COALESCE(SUM(CASE WHEN c.status = 'PENDING'
+                                       AND (:from IS NULL OR DATE(c.report_date) >= DATE(:from))
+                                       AND (:to IS NULL OR DATE(c.report_date) < DATE(:to))
+                                  THEN 1 ELSE 0 END), 0) AS SIGNED) AS totalPending
+            FROM complaints c
+            WHERE :from IS NULL OR DATE(c.report_date) < COALESCE(:to, DATE_ADD(NOW(), INTERVAL 1 DAY))
             """, nativeQuery = true)
-    StatusCountDTO getStatusCount(
-            @Param("from") LocalDateTime from,
-            @Param("to") LocalDateTime to);
+    StatusCountDTO getStatusCount(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
     @Query(value = """
             SELECT
@@ -399,7 +391,8 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
             SELECT
                 e.name AS equipment_name,
                 e.code AS equipment_code,
-                COALESCE(SUM(wr.total_resolution_time_minutes), 0) AS total_resolution_time,
+                COALESCE(SUM(wr.total_resolution_time_minutes), 0) +
+                COALESCE(SUM(c.total_time_minutes), 0) AS total_time,
                 COUNT(DISTINCT wr.id) AS total_work_reports,
                 COUNT(DISTINCT c.id) AS total_complaints,
                 (COUNT(DISTINCT wr.id) + COUNT(DISTINCT c.id)) AS total_occurrences
@@ -407,7 +400,7 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
             LEFT JOIN work_reports wr ON e.code = wr.equipment_code
             LEFT JOIN complaints c ON e.code = c.equipment_code
             GROUP BY e.id, e.code, e.name
-            ORDER BY total_occurrences DESC, total_resolution_time DESC
+            ORDER BY total_occurrences DESC, total_time DESC
             """, nativeQuery = true)
     List<EquipmentCountDTO> getEquipmentCount();
 }

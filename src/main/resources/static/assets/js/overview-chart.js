@@ -40,20 +40,8 @@ function toDateTimeLocal(date) {
 
 // Overall Complaint
 function setComplaintStatsDefaults() {
-    const now = new Date();
-    const startOfDay = new Date(now);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date(now);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const fromInput = document.getElementById('complaint-stats-from');
-    const toInput = document.getElementById('complaint-stats-to');
-
-    if (fromInput && toInput) {
-        fromInput.value = toDateTimeLocal(startOfDay);
-        toInput.value = toDateTimeLocal(endOfDay);
-    }
+    // DO NOTHING — leave inputs empty for "all data" default
+    // No auto-filling from/to → server gets null → returns all complaints
 }
 
 function fetchComplaintStats(from, to) {
@@ -90,15 +78,19 @@ document.getElementById('complaint-stats-form').addEventListener('submit', funct
     fetchComplaintStats(from, to);
 });
 
+document.getElementById('complaint-stats-reset').addEventListener('click', function () {
+    document.getElementById('complaint-stats-from').value = '';
+    document.getElementById('complaint-stats-to').value = '';
+    fetchComplaintStats('', ''); // triggers fetch with no params → all data
+});
 
 document.querySelectorAll('.card-stats').forEach(card => {
-    const link = card.closest('a'); // Find the parent <a> tag
+    const link = card.closest('a');
     card.addEventListener('click', function () {
         const status = link.getAttribute('data-status');
         const fromInput = document.getElementById('complaint-stats-from').value;
         const toInput = document.getElementById('complaint-stats-to').value;
 
-        // Build query parameters
         const params = new URLSearchParams();
 
         if (fromInput) params.append('reportDateFrom', fromInput.split('T')[0]);
@@ -115,12 +107,12 @@ document.querySelectorAll('.card-stats').forEach(card => {
 });
 
 function initComplaintStatsForm() {
-    setComplaintStatsDefaults();
+    setComplaintStatsDefaults(); // now does nothing → defaults to ALL data
 
     const from = document.getElementById('complaint-stats-from').value;
     const to = document.getElementById('complaint-stats-to').value;
 
-    fetchComplaintStats(from, to);
+    fetchComplaintStats(from, to); // sends no params → server returns everything
 }
 
 // Complaint Chart
@@ -299,7 +291,7 @@ function renderComplaintChart(labels, open, closed, pending, title) {
                     max: yAxisMax,
                     ticks: {
                         stepSize: stepSize,
-                        callback: function(value) {
+                        callback: function (value) {
                             return Number.isInteger(value) ? value : '';
                         }
                     }
@@ -874,13 +866,18 @@ function fetchEngineerData(from = null, to = null) {
             // 👇 STEP 2: Render new date headers (grouped by date)
             for (let i = 0; i < numDays; i++) {
                 const dateShort = formatShort(data.dates[i]);
-
                 const thDate = document.createElement('th');
+
                 thDate.colSpan = 2;
-                thDate.textContent = dateShort;
-                thDate.classList.add('bg-primary', 'text-white'); // 🔵 Match primary color
+                thDate.classList.add('bg-primary');
                 thDate.style.verticalAlign = 'middle';
                 dayHeaderRow.appendChild(thDate);
+
+                const a = document.createElement('a');
+                a.href = `/complaints?reportDateFrom=${data.dates[i]}&reportDateTo=${data.dates[i]}`;
+                a.className = 'font-weight-bold text-white';
+                a.textContent = dateShort;
+                thDate.appendChild(a);
             }
 
             // 👇 STEP 3: Create and insert subheader row (Open / Closed)
@@ -890,16 +887,24 @@ function fetchEngineerData(from = null, to = null) {
 
             for (let i = 0; i < numDays; i++) {
                 const thOpen = document.createElement('th');
-                thOpen.textContent = 'Open';
                 thOpen.style.fontSize = '0.8em';
-                thOpen.classList.add('text-white');
                 subHeaderRow.appendChild(thOpen);
 
+                const aOpen = document.createElement('a');
+                aOpen.href = `/complaints?reportDateFrom=${data.dates[i]}&reportDateTo=${data.dates[i]}&status=OPEN`;
+                aOpen.className = 'font-weight-bold text-white';
+                aOpen.textContent = 'Open';
+                thOpen.appendChild(aOpen);
+
                 const thClosed = document.createElement('th');
-                thClosed.textContent = 'Closed';
                 thClosed.style.fontSize = '0.8em';
-                thClosed.classList.add('text-white');
                 subHeaderRow.appendChild(thClosed);
+
+                const aClosed = document.createElement('a');
+                aClosed.href = `/complaints?reportDateFrom=${data.dates[i]}&reportDateTo=${data.dates[i]}&status=CLOSED`;
+                aClosed.className = 'font-weight-bold text-white';
+                aClosed.textContent = 'Closed';
+                thClosed.appendChild(aClosed);
             }
 
             // Insert subheader row right after dayHeaders
@@ -912,12 +917,11 @@ function fetchEngineerData(from = null, to = null) {
             data.data.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-          <td class="text-left fw-bold"><a class="font-weight-bold text-dark" href="/complaints?assigneeEmpId=${row.assigneeEmpId}">${row.assigneeName}</a></td>
-          ${data.dates.map((date, i) => `
-            <td>${row.open[i] || 0}</td>
-            <td>${row.closed[i] || 0}</td>
-          `).join('')}
-        `;
+                <td class="text-left fw-bold"><a class="font-weight-bold text-dark" href="/complaints?assigneeEmpId=${row.assigneeEmpId}">${row.assigneeName}</a></td>
+                ${data.dates.map((date, i) => `
+                    <td><a class="text-dark" href="/complaints?assigneeEmpId=${row.assigneeEmpId}&reportDateFrom=${data.dates[i]}&reportDateTo=${data.dates[i]}&status=OPEN">${row.open[i] || 0}</a></td>
+                    <td><a class="text-dark" href="/complaints?assigneeEmpId=${row.assigneeEmpId}&reportDateFrom=${data.dates[i]}&reportDateTo=${data.dates[i]}&status=CLOSED">${row.closed[i] || 0}</a></td>
+                `).join('')}`;
                 tbody.appendChild(tr);
             });
         })
@@ -1264,7 +1268,7 @@ function updateBreakdownChart(mode, from = null, to = null, year = null) {
                 data.forEach(d => {
                     const i = d.month - 1;
                     if (i >= 0 && i < 12) {
-                        values[i] = d.totalResolutionTimeMinutes || 0;
+                        values[i] = d.totalTimeMinutes || 0;
                         counts[i] = d.breakdownCount || 0;
                     }
                 });
@@ -1274,7 +1278,7 @@ function updateBreakdownChart(mode, from = null, to = null, year = null) {
                     data: {
                         labels: months,
                         datasets: [{
-                            label: "Total Resolution Time (min)",
+                            label: "Total Time (min)",
                             borderColor: "#1d7af3",
                             pointBorderColor: "#FFF",
                             pointBackgroundColor: "#1d7af3",
@@ -1316,7 +1320,7 @@ function updateBreakdownChart(mode, from = null, to = null, year = null) {
                                 beginAtZero: true,
                                 title: {
                                     display: true,
-                                    text: 'Resolution Time (minutes)'
+                                    text: 'Total Time (minutes)'
                                 },
                                 ticks: {
                                     stepSize: Math.max(1, Math.round(Math.max(...values) / 10) || 1)
@@ -1338,7 +1342,7 @@ function updateBreakdownChart(mode, from = null, to = null, year = null) {
                 if (!Array.isArray(data)) return;
 
                 const labels = data.map(d => d.date);
-                const values = data.map(d => d.totalResolutionTimeMinutes || 0);
+                const values = data.map(d => d.totalTimeMinutes || 0);
                 const counts = data.map(d => d.breakdownCount || 0);
 
                 breakdownChart = new Chart(ctx, {
@@ -1346,7 +1350,7 @@ function updateBreakdownChart(mode, from = null, to = null, year = null) {
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: "Total Resolution Time (min)",
+                            label: "Total Time (min)",
                             borderColor: "#1d7af3",
                             pointBorderColor: "#FFF",
                             pointBackgroundColor: "#1d7af3",
@@ -1388,7 +1392,7 @@ function updateBreakdownChart(mode, from = null, to = null, year = null) {
                                 beginAtZero: true,
                                 title: {
                                     display: true,
-                                    text: 'Resolution Time (minutes)'
+                                    text: 'Total Time (minutes)'
                                 },
                                 ticks: {
                                     stepSize: Math.max(1, Math.round(Math.max(...values) / 10) || 1)
@@ -1466,16 +1470,6 @@ function initBreakdownChartForm() {
 }
 
 // Equipment Repaired
-const EQUIPMENT_WORK_API_URL = 'http://localhost:8000/api/dashboards/equipment-count';
-const CONTAINER_ID = 'equipment-work-list-container';
-const PREV_BTN_ID = 'equipment-work-prev-btn';
-const NEXT_BTN_ID = 'equipment-work-next-btn';
-const REFRESH_BTN_ID = 'equipment-work-refresh-btn';
-
-let wrCurrentPage = 1;
-const wrPageSize = 5;
-let wrAllData = [];
-
 function formatNumber(num) {
     return num.toLocaleString();
 }
@@ -1484,31 +1478,76 @@ function formatMinutes(minutes) {
     return `${formatNumber(minutes)} min`;
 }
 
-async function fetchEquipmentWorkData() {
-    const container = document.getElementById(CONTAINER_ID);
+async function initEquipmentWorkList() {
+    const container = document.getElementById('equipment-work-list-container');
     if (!container) {
-        console.error('❌ Container not found:', CONTAINER_ID);
+        console.error('❌ Container not found');
         return;
     }
 
     container.innerHTML = '<div class="text-center py-3">Loading...</div>';
 
     try {
-        const response = await fetch(EQUIPMENT_WORK_API_URL);
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const response = await fetch('/api/dashboards/equipment-count');
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+        const allData = await response.json();
+        allData.sort((a, b) => (b.totalTime || 0) - (a.totalTime || 0));
+
+        let currentPage = 1;
+
+        // Render initial page
+        renderPage(allData, currentPage);
+
+        // Setup buttons
+        const prevBtn = document.getElementById('equipment-work-prev-btn');
+        const nextBtn = document.getElementById('equipment-work-next-btn');
+        const refreshBtn = document.getElementById('equipment-work-refresh-btn');
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderPage(allData, currentPage);
+                }
+            });
         }
 
-        wrAllData = await response.json();
-        console.log('✅ API Response:', wrAllData);
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                if (allData.length > currentPage * 5) {
+                    currentPage++;
+                    renderPage(allData, currentPage);
+                }
+            });
+        }
 
-        wrAllData.sort((a, b) => (b.totalResolutionTime || 0) - (a.totalResolutionTime || 0));
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                initEquipmentWorkList(); // Reload everything
+            });
+        }
 
-        wrCurrentPage = 1; // Reset to first page on refresh
-        renderPage(wrCurrentPage);
+        // Scroll navigation
+        container.addEventListener('wheel', (e) => {
+            if (e.deltaY === 0) return;
+            e.preventDefault();
+
+            if (e.deltaY > 0 && currentPage * 5 < allData.length) {
+                currentPage++;
+                renderPage(allData, currentPage);
+            } else if (e.deltaY < 0 && currentPage > 1) {
+                currentPage--;
+                renderPage(allData, currentPage);
+            }
+        });
+
+        container.style.cursor = 'grab';
+        container.setAttribute('title', 'Scroll to navigate pages');
+
     } catch (err) {
         console.error('🚨 Error loading equipment work data:', err);
-        document.getElementById(CONTAINER_ID).innerHTML = `
+        container.innerHTML = `
             <div class="text-center text-muted py-3">
                 Failed to load data: ${err.message}
             </div>
@@ -1516,15 +1555,15 @@ async function fetchEquipmentWorkData() {
     }
 }
 
-function renderPage(page) {
-    const container = document.getElementById(CONTAINER_ID);
+function renderPage(allData, page) {
+    const container = document.getElementById('equipment-work-list-container');
     if (!container) return;
 
-    const start = (page - 1) * wrPageSize;
-    const end = start + wrPageSize;
-    const pageData = wrAllData.slice(start, end);
+    const start = (page - 1) * 5;
+    const end = start + 5;
+    const pageData = allData.slice(start, end);
 
-    container.innerHTML = ''; // Clear
+    container.innerHTML = '';
 
     if (pageData.length === 0) {
         container.innerHTML = '<div class="text-center text-muted py-3">No data</div>';
@@ -1533,21 +1572,13 @@ function renderPage(page) {
 
     pageData.forEach((item, index) => {
         const rank = start + index + 1;
+        const avatarBg = 'bg-primary';
+        const timeColor = rank === 1 ? 'text-danger' : rank === 2 ? 'text-warning' : rank === 3 ? 'text-success' : 'text-dark';
 
-        // Determine color classes based on rank
-        let avatarBgClass = rank <= 3 ? 'bg-primary' : 'bg-secondary';
-        let timeColorClass = '';
-        if (rank === 1) timeColorClass = 'text-danger';
-        else if (rank === 2) timeColorClass = 'text-warning';
-        else if (rank === 3) timeColorClass = 'text-info';
-        else timeColorClass = 'text-success';
-
-        // Create row div
-        const rowDiv = document.createElement('div');
-        rowDiv.className = `d-flex align-items-center ${index < pageData.length - 1 ? 'mb-3' : ''}`;
-
-        rowDiv.innerHTML = `
-            <div class="avatar ${avatarBgClass} text-white rounded-circle d-flex align-items-center justify-content-center"
+        const row = document.createElement('div');
+        row.className = `d-flex align-items-center ${index < pageData.length - 1 ? 'mb-3' : ''}`;
+        row.innerHTML = `
+            <div class="avatar ${avatarBg} text-white rounded-circle d-flex align-items-center justify-content-center"
                  style="width: 40px; height: 40px; font-weight: bold;">
                 ${rank}
             </div>
@@ -1555,109 +1586,29 @@ function renderPage(page) {
                 <h6 class="fw-bold mb-0">${item.equipmentName}</h6>
                 <small class="text-muted">Code: ${item.equipmentCode}</small>
                 <div class="mt-1">
-                    <span class="badge bg-info">Work Reports: ${item.totalWorkReports}</span>
-                    <span class="badge bg-warning ms-1">Complaints: ${item.totalComplaints}</span>
+                    <span class="badge bg-info ms-1">
+                        <a href="/work-reports?equipmentCode=${item.equipmentCode}" class="text-dark text-decoration-none">
+                            Work Reports: ${item.totalWorkReports}
+                        </a>
+                    </span>
+                    <span class="badge bg-warning ms-1">
+                        <a href="/complaints?equipmentCode=${item.equipmentCode}" class="text-dark text-decoration-none">
+                            Complaints: ${item.totalComplaints}
+                        </a>
+                    </span>
                 </div>
             </div>
             <div class="text-end ml-2">
-                <h5 class="fw-bold ${timeColorClass}">${formatMinutes(item.totalResolutionTime)}</h5>
+                <h5 class="fw-bold ${timeColor}">${formatMinutes(item.totalTime)}</h5>
                 <small class="text-muted d-block">Occurrences: <strong>${formatNumber(item.totalOccurrences)}</strong></small>
             </div>
         `;
+        container.appendChild(row);
 
-        container.appendChild(rowDiv);
-
-        // Add separator except after last item
         const sep = document.createElement('div');
         sep.className = 'separator-dashed';
         container.appendChild(sep);
     });
-}
-
-function setupButtons() {
-    const prevBtn = document.getElementById(PREV_BTN_ID);
-    const nextBtn = document.getElementById(NEXT_BTN_ID);
-    const refreshBtn = document.getElementById(REFRESH_BTN_ID);
-
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            if (wrCurrentPage > 1) {
-                wrCurrentPage--;
-                renderPage(wrCurrentPage);
-            }
-        });
-    } else {
-        console.warn('⚠️ Prev button not found:', PREV_BTN_ID);
-    }
-
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            if (wrAllData.length > wrCurrentPage * wrPageSize) {
-                wrCurrentPage++;
-                renderPage(wrCurrentPage);
-            }
-        });
-    } else {
-        console.warn('⚠️ Next button not found:', NEXT_BTN_ID);
-    }
-
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', () => {
-            fetchEquipmentWorkData();
-        });
-    } else {
-        console.warn('⚠️ Refresh button not found:', REFRESH_BTN_ID);
-    }
-}
-
-function enableScrollNavigation() {
-    const container = document.getElementById(CONTAINER_ID);
-    if (!container) return;
-
-    let isScrolling = false;
-
-    container.addEventListener('wheel', (e) => {
-        if (isScrolling) return;
-        e.preventDefault();
-
-        isScrolling = true;
-        setTimeout(() => { isScrolling = false; }, 300);
-
-        const delta = e.deltaY;
-
-        if (delta > 0) {
-            // Scroll down → next page
-            if (wrAllData.length > wrCurrentPage * wrPageSize) {
-                wrCurrentPage++;
-                renderPage(wrCurrentPage);
-            }
-        } else if (delta < 0) {
-            // Scroll up → previous page
-            if (wrCurrentPage > 1) {
-                wrCurrentPage--;
-                renderPage(wrCurrentPage);
-            }
-        }
-    });
-
-    container.style.cursor = 'grab';
-    container.setAttribute('title', 'Scroll to navigate pages');
-
-    container.addEventListener('mouseenter', () => {
-        container.style.cursor = 'grab';
-    });
-    container.addEventListener('mousedown', () => {
-        container.style.cursor = 'grabbing';
-    });
-    container.addEventListener('mouseup', () => {
-        container.style.cursor = 'grab';
-    });
-}
-
-function initEquipmentWorkList() {
-    setupButtons();
-    enableScrollNavigation();
-    fetchEquipmentWorkData();
 }
 
 window.addEventListener('DOMContentLoaded', () => {

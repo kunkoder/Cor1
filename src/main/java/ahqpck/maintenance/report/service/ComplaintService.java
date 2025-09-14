@@ -6,7 +6,13 @@ import ahqpck.maintenance.report.dto.ComplaintPartDTO;
 import ahqpck.maintenance.report.dto.EquipmentDTO;
 import ahqpck.maintenance.report.dto.PartDTO;
 import ahqpck.maintenance.report.dto.UserDTO;
-import ahqpck.maintenance.report.entity.*;
+import ahqpck.maintenance.report.entity.Area;
+import ahqpck.maintenance.report.entity.Complaint;
+import ahqpck.maintenance.report.entity.ComplaintPart;
+import ahqpck.maintenance.report.entity.ComplaintPartId;
+import ahqpck.maintenance.report.entity.Equipment;
+import ahqpck.maintenance.report.entity.Part;
+import ahqpck.maintenance.report.entity.User;
 import ahqpck.maintenance.report.exception.NotFoundException;
 import ahqpck.maintenance.report.repository.AreaRepository;
 import ahqpck.maintenance.report.repository.ComplaintRepository;
@@ -41,7 +47,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -260,8 +265,8 @@ public class ComplaintService {
                 System.out.println("action taken " + row.get("actionTaken"));
                 dto.setReportDate(importUtil.toLocalDateTime(row.get("reportDate")));
                 System.out.println("date report " + importUtil.toLocalDateTime(row.get("reportDate")));
-                dto.setCloseTime(importUtil.toLocalDateTime(row.get("close time")));
-                dto.setTotalTimeMinutes(importUtil.toDurationInMinutes(row.get("total time")));
+                dto.setCloseTime(importUtil.toLocalDateTime(row.get("closeTime")));
+                dto.setTotalTimeMinutes(importUtil.toDurationInMinutes(row.get("totalTimeMinutes")));
 
                 // Final validation — BUT exclude fields that are now optional
                 Set<ConstraintViolation<ComplaintDTO>> violations = validator.validate(dto);

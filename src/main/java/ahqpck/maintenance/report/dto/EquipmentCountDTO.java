@@ -4,7 +4,7 @@ public interface EquipmentCountDTO {
 
     String getEquipmentName();
     String getEquipmentCode();
-    Integer getTotalResolutionTime();
+    Integer getTotalTime();
     Long getTotalWorkReports();
     Long getTotalComplaints();
     Long getTotalOccurrences();
