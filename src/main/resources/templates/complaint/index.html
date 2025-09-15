@@ -57,8 +57,6 @@
                         <div class="card-header">
                             <div class="d-flex align-items-center">
                                 <h4 class="card-title" th:text="${title}"></h4>
-                                <!-- <form class="form-inline ml-auto" th:action="@{/complaints}" method="get"
-                                    id="complaintsForm"> -->
 
                                 <div class="dropdown mr-2 form-inline ml-auto">
                                     <button class="btn btn-primary dropdown-toggle" type="button" id="filterDropdownBtn"
@@ -68,7 +66,6 @@
                                     </button>
                                     <div class="dropdown-menu p-3" aria-labelledby="filterDropdownBtn"
                                         style="min-width: 350px; max-width: 400px; width: 100%;">
-
                                         <div class="form-group pb-0">
                                             <label class="form-label small d-block">Search</label>
                                             <div class="input-icon w-100">
@@ -78,7 +75,6 @@
                                                 <span class="input-icon-addon"><i class="fa fa-search"></i></span>
                                             </div>
                                         </div>
-
                                         <div class="form-group pb-0">
                                             <label class="form-label small d-block">Report Date</label>
                                             <div class="input-group input-daterange w-100">
@@ -91,7 +87,6 @@
                                                     class="form-control form-control-sm" placeholder="To">
                                             </div>
                                         </div>
-
                                         <div class="form-group pb-0">
                                             <label class="form-label small d-block">Assignee</label>
                                             <div class="position-relative w-100">
@@ -102,21 +97,18 @@
                                                     style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                                 </div>
                                             </div>
-
                                             <datalist id="filter-userOptions">
                                                 <option th:each="user : ${users}"
                                                     th:value="${user.name} + ' (' + ${user.employeeId} + ')'"
                                                     th:data-employee-id="${user.employeeId}">
                                                 </option>
                                             </datalist>
-
                                             <select class="d-none" name="assigneeEmpId" id="filter-assigneeSelect">
                                                 <option value=""></option>
                                                 <option th:each="user : ${users}" th:value="${user.employeeId}">
                                                 </option>
                                             </select>
                                         </div>
-
                                         <div class="form-group pb-0">
                                             <label class="form-label small d-block">Equipment</label>
                                             <div class="position-relative w-100">
@@ -127,21 +119,18 @@
                                                     style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                                 </div>
                                             </div>
-
                                             <datalist id="filter-equipmentOptions">
                                                 <option th:each="equip : ${equipments}"
                                                     th:value="${equip.name} + ' (' + ${equip.code} + ')'"
                                                     th:data-code="${equip.code}">
                                                 </option>
                                             </datalist>
-
                                             <select class="d-none" name="equipmentCode" id="filter-equipmentSelect">
                                                 <option value=""></option>
                                                 <option th:each="equip : ${equipments}" th:value="${equip.code}">
                                                 </option>
                                             </select>
                                         </div>
-
                                         <div class="form-group">
                                             <label class="form-label small d-block">Status</label>
                                             <select name="status" class="form-control form-control-sm w-100">
@@ -154,7 +143,6 @@
                                                 </th:block>
                                             </select>
                                         </div>
-
                                         <button type="button" class="btn btn-primary btn-sm btn-block mt-2"
                                             id="applyFilters">
                                             <i class="fas fa-check"></i> Apply Filters
@@ -210,7 +198,7 @@
                                         <!-- <option value="All" th:selected="${pageSize == 'All'}">All</option> -->
                                     </select>
                                 </div>
-                                <!-- </form> -->
+                                
                             </div>
                         </div>
 
@@ -332,7 +320,7 @@
                                             <li class="page-item" th:if="${complaints.number > 0}"
                                                 th:classappend="${!complaints.hasPrevious} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/complaints(keyword=${keyword}, reportDateFrom=${reportDateFrom}, reportDateTo=${reportDateTo}, assigneeEmpId=${assigneeEmpId}, equipmentCode=${equipmentCode}, status=${status}, page=1, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">1</a>
+                                                    th:href="@{/complaints(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, assigneeEmpId=${param.assigneeEmpId}, equipmentCode=${param.equipmentCode}, status=${param.status}, page=1, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">1</a>
                                             </li>
 
                                             <li class="page-item"
@@ -353,14 +341,14 @@
                                                 th:if="${complaints.number + 1 < complaints.totalPages}"
                                                 th:classappend="${!complaints.hasNext} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/complaints(keyword=${keyword}, reportDateFrom=${reportDateFrom}, reportDateTo=${reportDateTo}, assigneeEmpId=${assigneeEmpId}, equipmentCode=${equipmentCode}, status=${status}, page=${complaints.totalPages}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">
+                                                    th:href="@{/complaints(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, assigneeEmpId=${param.assigneeEmpId}, equipmentCode=${param.equipmentCode}, status=${param.status}, page=${complaints.totalPages}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">
                                                     <span th:text="${complaints.totalPages}">20</span>
                                                 </a>
                                             </li>
 
                                             <li class="page-item" th:classappend="${!complaints.hasNext} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/complaints(keyword=${keyword}, reportDateFrom=${reportDateFrom}, reportDateTo=${reportDateTo}, assigneeEmpId=${param.assigneeEmpId}, equipmentCode=${equipmentCode}, status=${status}, page=${complaints.number + 2}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:href="@{/complaints(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, assigneeEmpId=${param.assigneeEmpId}, equipmentCode=${param.equipmentCode}, status=${param.status}, page=${complaints.number + 2}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
                                                     th:if="${complaints.hasNext}">Next</a>
                                                 <span class="page-link" th:if="${!complaints.hasNext}">Next</span>
                                             </li>
@@ -378,7 +366,8 @@
     <!-- Scripts Fragment -->
     <th:block layout:fragment="scripts">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script src="/assets/js/import-wizard.js"></script>
         <script src="/assets/js/export-wizard.js"></script>
@@ -501,6 +490,21 @@
                     sortContainer.appendChild(a);
                 }
 
+                document.querySelectorAll('.dropdown-item[data-asc]').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const asc = this.dataset.asc;
+                        document.getElementById('ascInput').value = asc;
+
+                        // Update active class
+                        document.querySelectorAll('.dropdown-item[data-asc]').forEach(el => el.classList.remove('active'));
+                        this.classList.add('active');
+
+                        // Navigate
+                        window.location.href = buildUrl(sortByInput.value);
+                    });
+                });
+
                 // Preserve all params when apply filter
                 document.getElementById('pageSizeSelect').addEventListener('change', function () {
                     const size = this.value;
@@ -556,7 +560,7 @@
                 };
 
                 new ImportWizard({
-                    likelyFields: Object.keys(fieldMapping).map(k => k.toLowerCase()),
+                    likelyFields: Object.keys(fieldMapping),
                     fieldMapping: fieldMapping,
                     onError: (err) => {
                         alert("Import Error: " + err.message);

@@ -155,7 +155,7 @@ class ImportWizard {
             btn.dataset.idx = idx;
             btn.textContent = text;
 
-            if (this.options.likelyFields.some(f => text.toLowerCase().includes(f))) {
+            if (this.options.likelyFields.some(f => text.includes(f))) {
                 btn.classList.add('selected');
             }
 

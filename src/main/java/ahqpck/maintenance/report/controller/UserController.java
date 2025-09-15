@@ -56,25 +56,25 @@ public class UserController {
     @Value("${app.upload-user-image.dir:src/main/resources/static/upload/user/image}")
     private String uploadDir;
 
-    @ModelAttribute("userDTO")
-    public UserDTO userDTO() {
-        return new UserDTO();
-    }
+    // @ModelAttribute("userDTO")
+    // public UserDTO userDTO() {
+    //     return new UserDTO();
+    // }
 
-    // === LIST USERS ===
     @GetMapping
     public String listUsers(
             @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "10") @Min(1) int size,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") String size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "true") boolean asc,
             Model model) {
-            
-            int zeroBasedPage = page - 1;
-            Page<UserDTO> userPage = userService.getAllUsers(keyword, zeroBasedPage, size, sortBy, asc);
 
         try {
+            int zeroBasedPage = page - 1;
+            int parsedSize = "All".equalsIgnoreCase(size) ? Integer.MAX_VALUE : Integer.parseInt(size);
+
+            Page<UserDTO> userPage = userService.getAllUsers(keyword, zeroBasedPage, parsedSize, sortBy, asc);
 
             model.addAttribute("users", userPage);
             model.addAttribute("keyword", keyword);
@@ -82,24 +82,15 @@ public class UserController {
             model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("asc", asc);
-
             model.addAttribute("title", "User Management");
-            model.addAttribute("sortFields", new String[] {
-                    "name", "employeeId", "email", "status", "createdAt", "activatedAt"
-            });
-
-            // Provide available roles for UI (e.g., dropdown in form)
-            List<RoleDTO> roles = roleRepository.findAll().stream()
-                    .map(RoleDTO::new)
-                    .collect(Collectors.toList());
-            model.addAttribute("roles", roles);
+            model.addAttribute("roles", userService.getAllRoles());
 
             // Empty DTO for create form
             model.addAttribute("userDTO", new UserDTO());
 
         } catch (Exception e) {
-            model.addAttribute("users", userPage);
             model.addAttribute("error", "Failed to load users: " + e.getMessage());
+            return "error/500";
         }
 
         return "user/index";

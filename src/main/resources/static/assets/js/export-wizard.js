@@ -35,7 +35,8 @@ class ExportWizard {
 
             // Get data-field from corresponding td in sample row
             const td = sampleTds[index];
-            const field = td?.dataset?.field;
+            // Look for data-field on td OR any child inside it
+            const field = td?.dataset?.field || td?.querySelector('[data-field]')?.dataset?.field;
             if (!field) {
                 console.warn(`No data-field found for column index ${index}`);
                 return; // Skip if no field
@@ -65,9 +66,13 @@ class ExportWizard {
                 if (!td) return '-';
 
                 // Handle badge text for priority/category/status
-                const badge = td.querySelector('.badge');
-                if (badge) {
-                    return badge.textContent.trim() || '-';
+                // Handle multiple badges (e.g., roles, technicians)
+                const badges = td.querySelectorAll('.badge');
+                if (badges.length > 0) {
+                    return Array.from(badges)
+                        .map(b => b.textContent.trim())
+                        .filter(t => t)
+                        .join(", ") || '-';
                 }
 
                 // Handle link in Code column
@@ -107,9 +112,13 @@ class ExportWizard {
 
                 // For PDF, we always show clean text — no links, no IDs
                 // Handle badge
-                const badge = td.querySelector('.badge');
-                if (badge) {
-                    return badge.textContent.trim() || '-';
+                // Handle multiple badges
+                const badges = td.querySelectorAll('.badge');
+                if (badges.length > 0) {
+                    return Array.from(badges)
+                        .map(b => b.textContent.trim())
+                        .filter(t => t)
+                        .join(", ") || '-';
                 }
 
                 // For code, extract link text if exists

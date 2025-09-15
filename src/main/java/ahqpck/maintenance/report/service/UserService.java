@@ -12,6 +12,7 @@ import ahqpck.maintenance.report.specification.UserSpecification;
 import ahqpck.maintenance.report.util.EmailUtil;
 import ahqpck.maintenance.report.util.FileUploadUtil;
 import ahqpck.maintenance.report.util.ImportUtil;
+import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +57,13 @@ public class UserService {
         Page<User> userPage = userRepository.findAll(spec, pageable);
 
         return userPage.map(this::toDTO);
+    }
+
+    public List<RoleDTO> getAllRoles() {
+        List<RoleDTO> roles = roleRepository.findAll().stream()
+                    .map(RoleDTO::new)
+                    .collect(Collectors.toList());
+        return roles;
     }
 
     public UserDTO getUserById(String id) {

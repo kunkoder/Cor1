@@ -353,7 +353,7 @@ public class ComplaintService {
     }
 
     // ================== DELETE ==================
-    @Transactional
+    // @Transactional
     public void deleteComplaint(String id) {
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Complaint not found with ID: " + id));
