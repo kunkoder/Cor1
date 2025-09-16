@@ -130,7 +130,7 @@ public class ComplaintController {
 
         if (WebUtil.hasErrors(bindingResult)) {
             ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
-            return "redirect:/forgot-password";
+            return "redirect:/complaints";
         }
 
         try {
@@ -158,7 +158,7 @@ public class ComplaintController {
 
         if (WebUtil.hasErrors(bindingResult)) {
             ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
-            return "redirect:/forgot-password";
+            return "redirect:/complaints";
         }
 
         try {

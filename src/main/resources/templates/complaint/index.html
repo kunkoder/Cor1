@@ -198,7 +198,7 @@
                                         <!-- <option value="All" th:selected="${pageSize == 'All'}">All</option> -->
                                     </select>
                                 </div>
-                                
+
                             </div>
                         </div>
 
@@ -290,6 +290,9 @@
                                             </td>
                                             <td data-field="totalTimeMinutes"
                                                 th:text="${complaint.totalTimeDisplay ?: '-'}">-</td>
+                                        </tr>
+                                        <tr th:if="${complaints.totalElements == 0}">
+                                            <td colspan="15" class="text-center">No complaint found</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -418,11 +421,21 @@
 
                     const checkboxSpan = div.querySelector(".column-checkbox");
                     const th = headerRow.children[index];
-                    const tds = Array.from(dataRows).map(row => row.children[index]);
+                    const tds = dataRows.length > 0
+                        ? Array.from(dataRows).map(row => row.children[index])
+                        : [];
+
+                    if (th && !col.visible) {
+                        th.style.display = "none";
+                    }
 
                     if (!col.visible) {
-                        th.style.display = "none";
-                        tds.forEach(td => td.style.display = "none");
+                        if (th) th.style.display = "none";
+                        tds.forEach(td => {
+                            if (td && !td.hasAttribute('colspan')) {
+                                td.style.display = "none";
+                            }
+                        });
                     }
 
                     div.addEventListener("click", function (e) {
@@ -523,13 +536,6 @@
                     window.location.href = u.toString();
                 });
 
-                // Shows success/error messages after form submission
-                const modalContainer = document.getElementById('flashMessageModalContainer');
-                if (modalContainer) {
-                    const modal = new bootstrap.Modal(document.getElementById('flashMessageModal'));
-                    modal.show();
-                }
-
                 // Keeps hidden <select> in sync with text <input> for filtering
                 setupLiveSearch('filter-assigneeInput', 'filter-assigneeSelect', 'filter-userOptions', 'Assignee');
                 setupLiveSearch('filter-equipmentInput', 'filter-equipmentSelect', 'filter-equipmentOptions', 'Equipment');
@@ -539,6 +545,13 @@
                 const dropdownMenu = filterDropdown.nextElementSibling;
 
                 dropdownMenu.addEventListener('click', e => e.stopPropagation());
+
+                // Auto-show Flash Modal
+                const flashModalContainer = document.getElementById('flashMessageModalContainer');
+                if (flashModalContainer) {
+                    const flashModal = new bootstrap.Modal(document.getElementById('flashMessageModal'));
+                    flashModal.show();
+                }
 
                 // Configures Excel import mapping for backend fields
                 const fieldMapping = {
@@ -562,6 +575,7 @@
                 new ImportWizard({
                     likelyFields: Object.keys(fieldMapping),
                     fieldMapping: fieldMapping,
+                    formAction: '/complaints/import',
                     onError: (err) => {
                         alert("Import Error: " + err.message);
                     }

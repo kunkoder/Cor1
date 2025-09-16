@@ -7,6 +7,7 @@ import ahqpck.maintenance.report.exception.ImportException;
 import ahqpck.maintenance.report.exception.ValidationException;
 import ahqpck.maintenance.report.repository.RoleRepository;
 import ahqpck.maintenance.report.service.UserService;
+import ahqpck.maintenance.report.util.WebUtil;
 import ahqpck.maintenance.report.util.ImportUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
@@ -116,18 +117,8 @@ public class UserController {
             userDTO.setRoles(roleDTOs);
         }
 
-        System.out.println("User DTO: " + userDTO);
-        if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getAllErrors().stream()
-                    .map(error -> {
-                        String field = (error instanceof FieldError) ? ((FieldError) error).getField() : "Input";
-                        String message = error.getDefaultMessage();
-                        return field + ": " + message;
-                    })
-                    .collect(Collectors.joining(" | "));
-
-            ra.addFlashAttribute("error", errorMessage.isEmpty() ? "Invalid input" : errorMessage);
-            ra.addFlashAttribute("userDTO", userDTO);
+        if (WebUtil.hasErrors(bindingResult)) {
+            ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
             return "redirect:/users";
         }
 
@@ -166,17 +157,8 @@ public class UserController {
             userDTO.setRoles(roleDTOs);
         }
 
-        if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getAllErrors().stream()
-                    .map(error -> {
-                        String field = (error instanceof FieldError) ? ((FieldError) error).getField() : "Input";
-                        String message = error.getDefaultMessage();
-                        return field + ": " + message;
-                    })
-                    .collect(Collectors.joining(" | "));
-
-            ra.addFlashAttribute("error", errorMessage.isEmpty() ? "Invalid input" : errorMessage);
-            ra.addFlashAttribute("userDTO", userDTO);
+        if (WebUtil.hasErrors(bindingResult)) {
+            ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
             return "redirect:/users";
         }
 

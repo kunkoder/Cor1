@@ -8,6 +8,7 @@ class ImportWizard {
             headerRowId: 'headerRow',
             previewTableId: 'item-table',
             formId: 'importForm',
+            formAction: '',
 
             // Buttons
             nextBtnId: 'nextBtn',
@@ -239,6 +240,9 @@ class ImportWizard {
             document.getElementById('importSheet').value = this.selectedSheet;
             document.getElementById('importHeaderRow').value = this.headerRowIndex + 1;
 
+            if (this.options.formAction) {
+                form.action = this.options.formAction;
+            }
             form.submit();
             this.options.onSuccess();
         });

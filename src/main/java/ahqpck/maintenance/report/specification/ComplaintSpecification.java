@@ -38,9 +38,10 @@ public class ComplaintSpecification {
                     cb.like(cb.lower(root.get("code")), pattern),
                     cb.like(cb.lower(root.get("subject")), pattern),
                     cb.like(cb.lower(root.get("description")), pattern),
-                    cb.like(cb.lower(root.get("status").as(String.class)), pattern),
+                    cb.like(cb.lower(root.get("actionTaken")), pattern),
                     cb.like(cb.lower(root.get("priority").as(String.class)), pattern),
                     cb.like(cb.lower(root.get("category").as(String.class)), pattern),
+                    cb.like(cb.lower(root.get("status").as(String.class)), pattern),
 
                     // Use coalesce to handle nulls in joined fields
                     cb.like(cb.lower(cb.coalesce(reporter.<String>get("name"), "")), pattern),

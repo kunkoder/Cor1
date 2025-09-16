@@ -50,12 +50,6 @@ public class EquipmentService {
         return equipmentPage.map(this::toDTO);
     }
 
-    public EquipmentDTO getEquipmentById(String id) {
-        Equipment equipment = equipmentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Equipment not found with ID: " + id));
-        return toDTO(equipment);
-    }
-
     public void createEquipment(EquipmentDTO dto, MultipartFile imageFile) {
         if (equipmentRepository.existsByCodeIgnoreCase(dto.getCode())) {
             throw new IllegalArgumentException("Equipment with this code already exists.");
@@ -126,8 +120,18 @@ public class EquipmentService {
             try {
                 EquipmentDTO dto = new EquipmentDTO();
 
+                // === REQUIRED FIELDS (match @NotNull in DTO) ===
+
                 dto.setCode(importUtil.toString(row.get("code")));
+                if (dto.getCode() == null || dto.getCode().isEmpty()) {
+                    throw new IllegalArgumentException("Code is required");
+                }
+
                 dto.setName(importUtil.toString(row.get("name")));
+                if (dto.getName() == null || dto.getName().isEmpty()) {
+                    throw new IllegalArgumentException("Name is required");
+                }
+
                 dto.setModel(importUtil.toString(row.get("model")));
                 dto.setUnit(importUtil.toString(row.get("unit")));
                 dto.setQty(importUtil.toInteger(row.get("qty")));
@@ -137,19 +141,6 @@ public class EquipmentService {
                 dto.setCommissionedDate(importUtil.toLocalDate(row.get("commissionedDate")));
                 dto.setCapacity(importUtil.toString(row.get("capacity")));
                 dto.setRemarks(importUtil.toString(row.get("remarks")));
-
-                // Use injected validator
-                Set<ConstraintViolation<EquipmentDTO>> violations = validator.validate(dto);
-                if (!violations.isEmpty()) {
-                    String msg = violations.stream()
-                            .map(v -> v.getPropertyPath() + ": " + v.getMessage())
-                            .collect(Collectors.joining(", "));
-                    throw new IllegalArgumentException("Validation failed: " + msg);
-                }
-
-                if (dto.getCode() == null || dto.getCode().isEmpty()) {
-                    throw new IllegalArgumentException("Code is required");
-                }
 
                 if (equipmentRepository.existsByCodeIgnoreCase(dto.getCode())) {
                     throw new IllegalArgumentException("Duplicate equipment code: " + dto.getCode());

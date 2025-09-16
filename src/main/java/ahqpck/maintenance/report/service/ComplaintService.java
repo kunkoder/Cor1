@@ -34,7 +34,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -65,13 +64,11 @@ public class ComplaintService {
     private final EquipmentRepository equipmentRepository;
     private final AreaRepository areaRepository;
     private final PartRepository partRepository;
-    private final Validator validator;
 
     private final FileUploadUtil fileUploadUtil;
     private final ImportUtil importUtil;
     private final ZeroPaddedCodeGenerator codeGenerator;
 
-    // @Transactional(readOnly = true)
     public Page<ComplaintDTO> getAllComplaints(String keyword, LocalDateTime reportDateFrom, LocalDateTime reportDateTo,
             String assigneeEmpId, Complaint.Status status, String equipmentCode, int page, int size, String sortBy,
             boolean asc) {
@@ -88,7 +85,6 @@ public class ComplaintService {
         return complaintPage.map(this::toDTO);
     }
 
-    // @Transactional(readOnly = true)
     public ComplaintDTO getComplaintById(String id) {
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Complaint not found with ID: " + id));
@@ -96,7 +92,6 @@ public class ComplaintService {
     }
 
     public void createComplaint(ComplaintDTO dto, MultipartFile imageBefore) {
-
         Complaint complaint = new Complaint();
 
         if (dto.getCode() == null || dto.getCode().trim().isEmpty()) {
@@ -121,14 +116,13 @@ public class ComplaintService {
     public void updateComplaint(ComplaintDTO dto, MultipartFile imageBefore, MultipartFile imageAfter,
             Boolean deleteImageBefore,
             Boolean deleteImageAfter) {
-
         Complaint complaint = complaintRepository.findById(dto.getId())
                 .orElseThrow(() -> new NotFoundException("Complaint not found with ID: " + dto.getId()));
 
+        mapToEntity(complaint, dto);
+
         Complaint.Status oldStatus = complaint.getStatus();
         Complaint.Status newStatus = dto.getStatus();
-
-        mapToEntity(complaint, dto);
 
         if (newStatus != null && newStatus != oldStatus) {
             handleStatusTransition(complaint, oldStatus, newStatus);
@@ -169,11 +163,16 @@ public class ComplaintService {
         complaintRepository.save(complaint);
     }
 
-    // Add this method to EquipmentService
+    public void deleteComplaint(String id) {
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Complaint not found with ID: " + id));
+
+        complaintRepository.delete(complaint);
+    }
+
     public ImportUtil.ImportResult importComplaintsFromExcel(List<Map<String, Object>> data) {
         List<String> errorMessages = new ArrayList<>();
         int importedCount = 0;
-        System.out.println("data imported " + data);
 
         if (data == null || data.isEmpty()) {
             throw new IllegalArgumentException("No data to import.");
@@ -184,105 +183,82 @@ public class ComplaintService {
             try {
                 ComplaintDTO dto = new ComplaintDTO();
 
-                // 🟡 Area (OPTIONAL)
+                // === REQUIRED FIELDS (match @NotNull in DTO) ===
+
+                dto.setReportDate(importUtil.toLocalDateTime(row.get("reportDate")));
+                if (dto.getReportDate() == null) {
+                    throw new IllegalArgumentException("Report date is mandatory");
+                }
+
+                String priorityStr = importUtil.toString(row.get("priority"));
+                if (priorityStr == null || priorityStr.trim().isEmpty()) {
+                    throw new IllegalArgumentException("Priority is mandatory");
+                }
+                try {
+                    dto.setPriority(Complaint.Priority.valueOf(priorityStr.trim().toUpperCase()));
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Invalid Priority: " + priorityStr + ". Use: LOW, MEDIUM, HIGH");
+                }
+
+                String categoryStr = importUtil.toString(row.get("category"));
+                if (categoryStr == null || categoryStr.trim().isEmpty()) {
+                    throw new IllegalArgumentException("Category is mandatory");
+                }
+                try {
+                    dto.setCategory(Complaint.Category.valueOf(categoryStr.trim().toUpperCase()));
+                } catch (Exception e) {
+                    throw new IllegalArgumentException(
+                            "Invalid Category: " + categoryStr + ". Use: MECHANICAL, ELECTRICAL, IT");
+                }
+
+                String reporterEmpId = importUtil.toString(row.get("reporter"));
+                if (reporterEmpId == null || reporterEmpId.trim().isEmpty()) {
+                    throw new IllegalArgumentException("Reporter is mandatory");
+                }
+                UserDTO reporterDTO = new UserDTO();
+                reporterDTO.setEmployeeId(reporterEmpId.trim());
+                dto.setReporter(reporterDTO);
+
+                // === OPTIONAL FIELDS ===
+
+                String assigneeEmpId = importUtil.toString(row.get("assignee"));
+                if (assigneeEmpId != null && !assigneeEmpId.trim().isEmpty()) {
+                    UserDTO assigneeDTO = new UserDTO();
+                    assigneeDTO.setEmployeeId(assigneeEmpId.trim());
+                    dto.setAssignee(assigneeDTO);
+                }
+
                 String areaCode = importUtil.toString(row.get("area"));
                 if (areaCode != null && !areaCode.trim().isEmpty()) {
                     AreaDTO areaDTO = new AreaDTO();
                     areaDTO.setCode(areaCode.trim());
                     dto.setArea(areaDTO);
                 }
-                // If area is missing or blank, leave it null
 
-                // ✅ Equipment (REQUIRED)
                 String equipmentCode = importUtil.toString(row.get("equipment"));
-                if (equipmentCode == null || equipmentCode.trim().isEmpty()) {
-                    throw new IllegalArgumentException("Equipment is required");
-                }
-                EquipmentDTO equipmentDTO = new EquipmentDTO();
-                equipmentDTO.setCode(equipmentCode.trim());
-                dto.setEquipment(equipmentDTO);
-
-                // ✅ Reporter (REQUIRED)
-                String reporterEmpId = importUtil.toString(row.get("reporter"));
-                if (reporterEmpId == null || reporterEmpId.trim().isEmpty()) {
-                    throw new IllegalArgumentException("Reporter is required");
-                }
-                UserDTO reporterDTO = new UserDTO();
-                reporterDTO.setEmployeeId(reporterEmpId.trim());
-                dto.setReporter(reporterDTO);
-
-                // ✅ Assignee (REQUIRED)
-                String assigneeEmpId = importUtil.toString(row.get("assignee"));
-                if (assigneeEmpId == null || assigneeEmpId.trim().isEmpty()) {
-                    throw new IllegalArgumentException("Assignee is required");
-                }
-                UserDTO assigneeDTO = new UserDTO();
-                assigneeDTO.setEmployeeId(assigneeEmpId.trim());
-                dto.setAssignee(assigneeDTO);
-
-                // 🟡 Priority (OPTIONAL)
-                String priorityStr = importUtil.toString(row.get("priority"));
-                if (priorityStr != null && !priorityStr.trim().isEmpty()) {
-                    try {
-                        dto.setPriority(Complaint.Priority.valueOf(priorityStr.trim().toUpperCase()));
-                    } catch (IllegalArgumentException e) {
-                        throw new IllegalArgumentException(
-                                "Invalid Priority value: '" + priorityStr
-                                        + "'. Must be one of: LOW, MEDIUM, HIGH, or leave blank");
-                    }
-                }
-                // If priority is missing or invalid → remains null
-
-                // ✅ Category (REQUIRED)
-                String categoryStr = importUtil.toString(row.get("category"));
-                if (categoryStr == null || categoryStr.trim().isEmpty()) {
-                    throw new IllegalArgumentException("Category is required");
-                }
-                try {
-                    dto.setCategory(Complaint.Category.valueOf(categoryStr.trim().toUpperCase()));
-                } catch (IllegalArgumentException e) {
-                    throw new IllegalArgumentException(
-                            "Invalid Category value: '" + categoryStr
-                                    + "'. Must be one of: MECHANICAL, ELECTRICAL, IT");
+                if (equipmentCode != null && !equipmentCode.trim().isEmpty()) {
+                    EquipmentDTO equipmentDTO = new EquipmentDTO();
+                    equipmentDTO.setCode(equipmentCode.trim());
+                    dto.setEquipment(equipmentDTO);
                 }
 
-                // Optional fields
-                dto.setSubject(importUtil.toString(row.get("subject")));
-                dto.setDescription(importUtil.toString(row.get("description")));
-
-                // Status (optional)
                 String statusStr = importUtil.toString(row.get("status"));
                 if (statusStr != null && !statusStr.trim().isEmpty()) {
                     try {
                         dto.setStatus(Complaint.Status.valueOf(statusStr.trim().toUpperCase()));
-                    } catch (IllegalArgumentException e) {
-                        throw new IllegalArgumentException("Invalid Status value: '" + statusStr + "'");
+                    } catch (Exception ignored) {
+                        throw new IllegalArgumentException("Invalid Status: " + statusStr);
                     }
                 }
-                // Else keep null (default behavior)
 
+                dto.setSubject(importUtil.toString(row.get("subject")));
+                dto.setDescription(importUtil.toString(row.get("description")));
                 dto.setActionTaken(importUtil.toString(row.get("actionTaken")));
-                System.out.println("action taken " + row.get("actionTaken"));
-                dto.setReportDate(importUtil.toLocalDateTime(row.get("reportDate")));
-                System.out.println("date report " + importUtil.toLocalDateTime(row.get("reportDate")));
                 dto.setCloseTime(importUtil.toLocalDateTime(row.get("closeTime")));
                 dto.setTotalTimeMinutes(importUtil.toDurationInMinutes(row.get("totalTimeMinutes")));
 
-                // Final validation — BUT exclude fields that are now optional
-                Set<ConstraintViolation<ComplaintDTO>> violations = validator.validate(dto);
-                if (!violations.isEmpty()) {
-                    // Filter out violations for fields we now allow to be null (e.g., priority,
-                    // area)
-                    List<String> filteredMessages = violations.stream()
-                            .filter(v -> !(v.getPropertyPath().toString().equals("priority") ||
-                                    v.getPropertyPath().toString().equals("area")))
-                            .map(v -> v.getPropertyPath() + ": " + v.getMessage())
-                            .collect(Collectors.toList());
-
-                    if (!filteredMessages.isEmpty()) {
-                        throw new IllegalArgumentException("Validation failed: " + String.join(", ", filteredMessages));
-                    }
-                    // Otherwise, proceed if only ignored fields had issues
+                if (complaintRepository.existsByCodeIgnoreCase(dto.getCode())) {
+                    throw new IllegalArgumentException("Duplicate complaint code: " + dto.getCode());
                 }
 
                 createComplaint(dto, null);
@@ -352,54 +328,60 @@ public class ComplaintService {
         }
     }
 
-    // ================== DELETE ==================
-    // @Transactional
-    public void deleteComplaint(String id) {
-        Complaint complaint = complaintRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Complaint not found with ID: " + id));
-
-        complaintRepository.delete(complaint);
-    }
-
     // ================== MAPPING METHODS ==================
 
     private void mapToEntity(Complaint complaint, ComplaintDTO dto) {
         complaint.setSubject(dto.getSubject());
         complaint.setDescription(dto.getDescription());
-        complaint.setPriority(dto.getPriority());
+        complaint.setPriority(dto.getPriority()); // @NotNull → guaranteed not null
+        complaint.setCategory(dto.getCategory()); // @NotNull → guaranteed not null
         complaint.setStatus(dto.getStatus());
-        complaint.setCategory(dto.getCategory());
-        complaint.setActionTaken(dto.getActionTaken());
-        complaint.setReportDate(dto.getReportDate());
+        complaint.setReportDate(dto.getReportDate()); // @NotNull → guaranteed not null
         complaint.setCloseTime(dto.getCloseTime());
         complaint.setTotalTimeMinutes(dto.getTotalTimeMinutes());
 
-        // Map Area
+        // === Optional: Area ===
         if (dto.getArea() != null && dto.getArea().getCode() != null && !dto.getArea().getCode().trim().isEmpty()) {
             String areaCode = dto.getArea().getCode().trim();
             Area area = areaRepository.findByCode(areaCode)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Area not found with code: " + areaCode));
+                    .orElseThrow(() -> new IllegalArgumentException("Area not found with code: " + areaCode));
             complaint.setArea(area);
         } else {
             complaint.setArea(null);
         }
 
-        // Map Equipment
-        Equipment equipment = equipmentRepository.findByCode(dto.getEquipment().getCode())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Equipment not found with code: " + dto.getEquipment().getCode()));
-        complaint.setEquipment(equipment);
+        // === Optional: Equipment ===
+        if (dto.getEquipment() != null && dto.getEquipment().getCode() != null
+                && !dto.getEquipment().getCode().trim().isEmpty()) {
+            String equipmentCode = dto.getEquipment().getCode().trim();
+            Equipment equipment = equipmentRepository.findByCode(equipmentCode)
+                    .orElseThrow(() -> new IllegalArgumentException("Equipment not found with code: " + equipmentCode));
+            complaint.setEquipment(equipment);
+        } else {
+            complaint.setEquipment(null);
+        }
 
-        User reporter = userRepository.findByEmployeeId4Roles(dto.getReporter().getEmployeeId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Reporter not found with employeeId: " + dto.getReporter().getEmployeeId()));
+        // === Mandatory: Reporter ===
+        if (dto.getReporter() == null || dto.getReporter().getEmployeeId() == null) {
+            throw new IllegalArgumentException("Reporter is mandatory");
+        }
+        String reporterEmpId = dto.getReporter().getEmployeeId().trim();
+        User reporter = userRepository.findByEmployeeId4Roles(reporterEmpId)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Reporter not found with employeeId: " + reporterEmpId));
         complaint.setReporter(reporter);
 
-        User assignee = userRepository.findByEmployeeId4Roles(dto.getAssignee().getEmployeeId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Assignee not found with employeeId: " + dto.getAssignee().getEmployeeId()));
-        complaint.setAssignee(assignee);
+        // === Optional: Assignee ===
+        if (dto.getAssignee() != null && dto.getAssignee().getEmployeeId() != null
+                && !dto.getAssignee().getEmployeeId().trim().isEmpty()) {
+            String assigneeEmpId = dto.getAssignee().getEmployeeId().trim();
+            User assignee = userRepository.findByEmployeeId4Roles(assigneeEmpId)
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("Assignee not found with employeeId: " + assigneeEmpId));
+            complaint.setAssignee(assignee);
+        } else {
+            complaint.setAssignee(null);
+        }
 
         // ✅ PARTS HANDLING: Use merge/update pattern
         if (dto.getPartsUsed() != null) {
@@ -442,9 +424,10 @@ public class ComplaintService {
         }
     }
 
-    // ================== HELPER: DTO Conversion ==================
+    // HELPER: DTO Conversion
     private ComplaintDTO toDTO(Complaint complaint) {
         ComplaintDTO dto = new ComplaintDTO();
+
         dto.setId(complaint.getId());
         dto.setCode(complaint.getCode());
         dto.setReportDate(complaint.getReportDate());
@@ -460,32 +443,20 @@ public class ComplaintService {
         dto.setCloseTime(complaint.getCloseTime());
         dto.setTotalTimeMinutes(complaint.getTotalTimeMinutes());
 
-        if (complaint.getTotalTimeMinutes() == null) {
-            dto.setTotalTimeDisplay("-");
+        if (complaint.getTotalTimeMinutes() != null) {
+            int total = complaint.getTotalTimeMinutes();
+            int days = total / 1440;
+            int hours = (total % 1440) / 60;
+            int mins = total % 60;
+
+            String display = (days > 0 ? days + "d " : "") +
+                    (hours > 0 ? hours + "h " : "") +
+                    (mins > 0 || (days == 0 && hours == 0) ? mins + "m" : "");
+            dto.setTotalTimeDisplay(display.trim());
         } else {
-            int totalMinutes = complaint.getTotalTimeMinutes();
-
-            int days = totalMinutes / (24 * 60);
-            int remainingAfterDays = totalMinutes % (24 * 60);
-            int hours = remainingAfterDays / 60;
-            int minutes = remainingAfterDays % 60;
-
-            StringBuilder display = new StringBuilder();
-
-            if (days > 0) {
-                display.append(days).append("d ");
-            }
-            if (hours > 0) {
-                display.append(hours).append("h ");
-            }
-            if (minutes > 0 || display.length() == 0) {
-                display.append(minutes).append("m");
-            }
-
-            dto.setTotalTimeDisplay(display.toString().trim());
+            dto.setTotalTimeDisplay("-");
         }
 
-        // Map Area
         if (complaint.getArea() != null) {
             AreaDTO areaDTO = new AreaDTO();
             areaDTO.setId(complaint.getArea().getId());
@@ -494,7 +465,6 @@ public class ComplaintService {
             dto.setArea(areaDTO);
         }
 
-        // Map Equipment
         if (complaint.getEquipment() != null) {
             EquipmentDTO equipmentDTO = new EquipmentDTO();
             equipmentDTO.setId(complaint.getEquipment().getId());
@@ -503,13 +473,9 @@ public class ComplaintService {
             dto.setEquipment(equipmentDTO);
         }
 
-        // Map Reporter
         dto.setReporter(mapToUserDTO(complaint.getReporter()));
-
-        // Map Assignee
         dto.setAssignee(mapToUserDTO(complaint.getAssignee()));
 
-        // Map Parts Used
         if (complaint.getPartsUsed() != null) {
             dto.setPartsUsed(complaint.getPartsUsed().stream()
                     .map(cp -> {
@@ -523,8 +489,7 @@ public class ComplaintService {
 
         return dto;
     }
-
-    // ================== HELPER: UserDTO Mapping ==================
+    
     private UserDTO mapToUserDTO(User user) {
         if (user == null)
             return null;
@@ -536,8 +501,7 @@ public class ComplaintService {
         dto.setEmail(user.getEmail());
         return dto;
     }
-
-    // ================== HELPER: PartDTO Mapping ==================
+    
     private PartDTO mapToPartDTO(Part part) {
         if (part == null)
             return null;
@@ -550,222 +514,3 @@ public class ComplaintService {
         return dto;
     }
 }
-
-// ================== VALIDATION ==================
-// private void validateDTO(ComplaintDTO dto) {
-// Set<ConstraintViolation<ComplaintDTO>> violations = validator.validate(dto);
-// if (!violations.isEmpty()) {
-// String errorMsg = violations.stream()
-// .map(v -> v.getMessage())
-// .collect(Collectors.joining(", "));
-// throw new IllegalArgumentException("Validation failed: " + errorMsg);
-// }
-// }
-
-// package ahqpck.maintenance.report.service;
-
-// import ahqpck.maintenance.report.entity.*;
-// import ahqpck.maintenance.report.repository.ComplaintPartRepository;
-// import ahqpck.maintenance.report.repository.ComplaintRepository;
-// import ahqpck.maintenance.report.repository.PartRepository;
-// import jakarta.transaction.Transactional;
-// import lombok.RequiredArgsConstructor;
-// import org.springframework.stereotype.Service;
-
-// import java.time.LocalDateTime;
-// import java.util.List;
-// import java.util.NoSuchElementException;
-
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
-
-// @Service
-// @RequiredArgsConstructor
-// public class ComplaintService {
-
-// private static final Logger log =
-// LoggerFactory.getLogger(ComplaintService.class);
-
-// private final ComplaintRepository complaintRepository;
-// private final PartRepository partRepository;
-// private final ComplaintPartRepository complaintPartRepository;
-
-// /**
-// * Create a new maintenance complaint
-// */
-// @Transactional
-// public Complaint createComplaint(Complaint complaint) {
-// log.info("Creating new complaint with subject: '{}' for machine: {}",
-// complaint.getSubject(), complaint.getMachine());
-
-// complaint.setStatus(Complaint.Status.OPEN);
-// complaint.setCloseTime(null);
-// complaint.setTotalResolutionTimeMinutes(null);
-// Complaint saved = complaintRepository.save(complaint);
-
-// log.info("Complaint created successfully with ID: {}", saved.getId());
-// return saved;
-// }
-
-// /**
-// * Add a part to an existing complaint (before closing)
-// */
-// @Transactional
-// public void addPartToComplaint(String complaintId, String partCode, Integer
-// quantity) {
-// log.info("Adding part '{}' (qty: {}) to complaint ID: {}", partCode,
-// quantity, complaintId);
-
-// Complaint complaint = complaintRepository.findById(complaintId)
-// .orElseThrow(() -> new NoSuchElementException("Complaint not found: " +
-// complaintId));
-
-// Part part = partRepository.findByCode(partCode)
-// .orElseThrow(() -> new NoSuchElementException("Part not found: " +
-// partCode));
-
-// // Check if this part is already added
-// boolean alreadyAdded = complaint.getPartsUsed().stream()
-// .anyMatch(cp -> cp.getPart().getId().equals(part.getId()));
-
-// if (alreadyAdded) {
-// throw new IllegalArgumentException("Part is already added to this complaint.
-// Update quantity instead.");
-// }
-
-// complaint.addPart(part, quantity);
-// complaintRepository.save(complaint);
-// log.info("Part '{}' (qty: {}) added to complaint {}", partCode, quantity,
-// complaintId);
-// }
-
-// /**
-// * Update complaint status
-// * If status is set to CLOSED:
-// * - Sets closeTime
-// * - Calculates total resolution time
-// * - Deducts used parts from inventory
-// */
-// @Transactional
-// public Complaint updateStatus(String complaintId, Complaint.Status newStatus)
-// {
-// log.info("Updating complaint ID: {} status to {}", complaintId, newStatus);
-
-// Complaint complaint = complaintRepository.findById(complaintId)
-// .orElseThrow(() -> new NoSuchElementException("Complaint not found: " +
-// complaintId));
-
-// Complaint.Status oldStatus = complaint.getStatus();
-// complaint.setStatus(newStatus);
-
-// if (newStatus == Complaint.Status.CLOSED && oldStatus !=
-// Complaint.Status.CLOSED) {
-// LocalDateTime now = LocalDateTime.now();
-// complaint.setCloseTime(now);
-// // totalResolutionTimeMinutes is calculated in @PreUpdate
-// }
-
-// complaintRepository.save(complaint);
-
-// // Deduct inventory only when transitioning to CLOSED
-// if (newStatus == Complaint.Status.CLOSED && oldStatus !=
-// Complaint.Status.CLOSED) {
-// deductPartsFromInventory(complaint);
-// }
-
-// if (newStatus == Complaint.Status.CLOSED && oldStatus !=
-// Complaint.Status.CLOSED) {
-// log.info("Complaint {} CLOSED: Deducting {} parts from inventory",
-// complaintId, complaint.getPartsUsed().size());
-// }
-
-// return complaint;
-// }
-
-// /**
-// * Deduct all parts used in this complaint from stock
-// */
-// private void deductPartsFromInventory(Complaint complaint) {
-// for (ComplaintPart cp : complaint.getPartsUsed()) {
-// log.info("Deducting {} x '{}' (Part ID: {}) from stock",
-// cp.getQuantity(), cp.getPart().getName(), cp.getPart().getId());
-// cp.getPart().useParts(cp.getQuantity());
-// partRepository.save(cp.getPart());
-// }
-// }
-
-// /**
-// * Reopen a CLOSED complaint → restock parts
-// */
-// @Transactional
-// public Complaint reopenComplaint(String complaintId) {
-// log.warn("Reopening CLOSED complaint: {}", complaintId);
-// Complaint complaint = complaintRepository.findById(complaintId)
-// .orElseThrow(() -> new NoSuchElementException("Complaint not found: " +
-// complaintId));
-
-// if (complaint.getStatus() != Complaint.Status.CLOSED) {
-// throw new IllegalArgumentException("Only CLOSED complaints can be
-// reopened.");
-// }
-
-// // Restock all parts
-// restockParts(complaint);
-
-// complaint.setStatus(Complaint.Status.IN_PROGRESS);
-// complaint.setCloseTime(null);
-// complaint.setTotalResolutionTimeMinutes(null);
-
-// log.info("Complaint {} reopened and {} parts restocked", complaintId,
-// complaint.getPartsUsed().size());
-// return complaintRepository.save(complaint);
-// }
-
-// private void restockParts(Complaint complaint) {
-// for (ComplaintPart cp : complaint.getPartsUsed()) {
-// Part part = cp.getPart();
-// part.addStock(cp.getQuantity());
-// partRepository.save(part);
-// }
-// }
-
-// /**
-// * Find complaint by ID
-// */
-// public Complaint getComplaintById(String complaintId) {
-// return complaintRepository.findById(complaintId)
-// .orElseThrow(() -> new NoSuchElementException("Complaint not found: " +
-// complaintId));
-// }
-
-// /**
-// * Get all complaints
-// */
-// public List<Complaint> getAllComplaints() {
-// return complaintRepository.findAll();
-// }
-
-// /**
-// * Get complaints by status
-// */
-// public List<Complaint> getComplaintsByStatus(Complaint.Status status) {
-// return complaintRepository.findByStatus(status);
-// }
-
-// /**
-// * Get complaints by machine
-// */
-// public List<Complaint> getComplaintsByMachine(String machine) {
-// return complaintRepository.findByMachine(machine);
-// }
-
-// /**
-// * Update assignee
-// */
-// @Transactional
-// public Complaint updateAssignee(String complaintId, String assignee) {
-// Complaint complaint = getComplaintById(complaintId);
-// complaint.setAssignee(assignee);
-// return complaintRepository.save(complaint);
-// }
-// }

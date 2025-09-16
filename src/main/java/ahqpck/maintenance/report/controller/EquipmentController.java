@@ -1,13 +1,16 @@
 package ahqpck.maintenance.report.controller;
 
 import ahqpck.maintenance.report.dto.EquipmentDTO;
+import ahqpck.maintenance.report.dto.UserDTO;
 import ahqpck.maintenance.report.service.EquipmentService;
 import ahqpck.maintenance.report.util.ImportUtil;
+import ahqpck.maintenance.report.util.WebUtil;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -36,34 +39,32 @@ public class EquipmentController {
     @GetMapping
     public String listEquipments(
             @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "1") @Min(1) int page, // Now starts at 1
-            @RequestParam(defaultValue = "10") @Min(1) int size,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") String size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "true") boolean asc,
             Model model) {
 
         try {
-            // Convert 1-based page to 0-based index (Spring expects 0 = first page)
             int zeroBasedPage = page - 1;
+            int parsedSize = "All".equalsIgnoreCase(size) ? Integer.MAX_VALUE : Integer.parseInt(size);
 
-            var equipmentPage = equipmentService.getAllEquipments(keyword, zeroBasedPage, size, sortBy, asc);
+            Page<EquipmentDTO> equipmentPage = equipmentService.getAllEquipments(keyword, zeroBasedPage, parsedSize, sortBy, asc);
+
             model.addAttribute("equipments", equipmentPage);
             model.addAttribute("keyword", keyword);
             model.addAttribute("currentPage", page); // Store 1-based for Thymeleaf
             model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("asc", asc);
-
             model.addAttribute("title", "Equipments");
-            model.addAttribute("sortFields", new String[] {
-                    "code", "name", "model", "manufacturer", "serialNo", "qty", "capacity", "manufacturedDate",
-                    "commissionedDate"
-            });
+            
+            // Empty DTO for create form
             model.addAttribute("equipmentDTO", new EquipmentDTO());
-            System.out.println(model);
 
         } catch (Exception e) {
             model.addAttribute("error", "Failed to load equipment: " + e.getMessage());
+            return "error/500";
         }
 
         return "equipment/index";
@@ -76,17 +77,8 @@ public class EquipmentController {
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             RedirectAttributes ra) {
 
-        if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getAllErrors().stream()
-                    .map(error -> {
-                        String field = (error instanceof FieldError) ? ((FieldError) error).getField() : "Input";
-                        String message = error.getDefaultMessage();
-                        return field + ": " + message;
-                    })
-                    .collect(Collectors.joining(" | "));
-
-            ra.addFlashAttribute("error", errorMessage.isEmpty() ? "Invalid input" : errorMessage);
-            ra.addFlashAttribute("equipmentDTO", equipmentDTO);
+        if (WebUtil.hasErrors(bindingResult)) {
+            ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
             return "redirect:/equipments";
         }
 
@@ -110,17 +102,8 @@ public class EquipmentController {
             @RequestParam(value = "deleteImage", required = false, defaultValue = "false") boolean deleteImage,
             RedirectAttributes ra) {
 
-        if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getAllErrors().stream()
-                    .map(error -> {
-                        String field = (error instanceof FieldError) ? ((FieldError) error).getField() : "Input";
-                        String message = error.getDefaultMessage();
-                        return field + ": " + message;
-                    })
-                    .collect(Collectors.joining(" | "));
-
-            ra.addFlashAttribute("error", errorMessage.isEmpty() ? "Invalid input" : errorMessage);
-            ra.addFlashAttribute("equipmentDTO", equipmentDTO);
+        if (WebUtil.hasErrors(bindingResult)) {
+            ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
             return "redirect:/equipments";
         }
 

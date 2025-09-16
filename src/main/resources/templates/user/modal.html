@@ -5,7 +5,7 @@
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white no-bd">
-                    <h5 class="modal-title" id="addRowModalLabel">Add New User</h5>
+                    <h5 class="modal-title" id="addRowModalLabel">New User</h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -13,8 +13,7 @@
                 <div class="modal-body p-4">
                     <form th:action="@{/users}" th:object="${userDTO}" method="post" enctype="multipart/form-data"
                         id="formAdd">
-
-                        <!-- Full Name -->
+                        
                         <div class="form-row">
                             <div class="col-md-12">
                                 <div class="form-group">
@@ -26,8 +25,7 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Employee ID & Email -->
+                        
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -48,8 +46,7 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Password & Roles -->
+                        
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -60,28 +57,22 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Role(s) <span class="text-danger">*</span></label>
-
-                                    <!-- Hidden select (for form submission) -->
+                                    
                                     <select id="roleSelect" name="roleNames" multiple style="display: none;">
                                         <option th:each="role : ${roles}" th:value="${role.name}"
                                             th:text="${role.name}"></option>
                                     </select>
-
-                                    <!-- Custom tag input UI -->
+                                    
                                     <div class="tag-input" id="tagInput">
-                                        <div class="tag-list" id="tagList">
-                                            <!-- Tags will be added here dynamically -->
-                                        </div>
+                                        <div class="tag-list" id="tagList"></div>
                                         <input type="text" id="tagSearch" class="tag-input-field"
                                             placeholder="Add role..." list="roleOptions">
                                     </div>
-
-                                    <!-- Datalist for autocomplete -->
+                                    
                                     <datalist id="roleOptions">
                                         <option th:each="role : ${roles}" th:value="${role.name}"></option>
                                     </datalist>
-
-                                    <!-- Validation error -->
+                                    
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('roleNames')}"
                                         th:errors="*{roleNames}">
                                         Please select at least one role.
@@ -91,10 +82,9 @@
                         </div>
 
                         <div class="form-row">
-                            <!-- Image Upload & Management -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Designation <span class="text-danger">*</span></label>
+                                    <label>Designation</label>
                                     <input type="text" class="form-control" th:field="*{designation}">
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('designation')}"
                                         th:errors="*{designation}">Please enter a designation.
@@ -113,8 +103,7 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Nationality & Phone Number -->
+                        
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -132,11 +121,10 @@
                             </div>
                         </div>
 
-                        <!-- Join Date & Image Upload -->
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Image <span class="text-muted">(optional)</span></label>
+                                    <label>Image</span></label>
                                     <div class="custom-file">
                                         <input type="file" class="custom-file-input" id="addImageInput" name="imageFile"
                                             accept="image/*">
@@ -186,14 +174,12 @@
                         id="formEdit">
                         <input type="hidden" name="id" id="editId">
 
-                        <!-- Full Name -->
                         <div class="form-group">
                             <label>Full Name <span class="text-danger">*</span></label>
                             <input type="text" name="name" class="form-control" id="editName" required>
                             <div class="invalid-feedback">Please enter a name.</div>
                         </div>
 
-                        <!-- Employee ID & Email -->
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -212,7 +198,6 @@
                             </div>
                         </div>
 
-                        <!-- Password & Role -->
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -221,38 +206,28 @@
                                     <input type="password" name="password" class="form-control" id="editPassword">
                                 </div>
                             </div>
-                            <!-- Edit Modal: Role Selector -->
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Role(s) <span class="text-danger">*</span></label>
-
-                                    <!-- Hidden select (unique ID) -->
                                     <select id="editRoleSelect" name="roleNames" multiple
                                         style="display: none;"></select>
-
-                                    <!-- Custom tag input UI (identical structure) -->
+                                        
                                     <div class="tag-input" id="editTagInput">
-                                        <div class="tag-list" id="editTagList">
-                                            <!-- Tags will be added here dynamically -->
-                                        </div>
+                                        <div class="tag-list" id="editTagList"></div>
                                         <input type="text" id="editTagSearch" class="tag-input-field"
                                             placeholder="Add role..." list="roleOptions">
                                     </div>
-
-                                    <!-- Datalist for autocomplete -->
                                     <datalist id="roleOptions">
                                         <option th:each="role : ${roles}" th:value="${role.name}"></option>
                                     </datalist>
-
                                 </div>
                             </div>
-
                         </div>
 
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Designation <span class="text-danger">*</span></label>
+                                    <label>Designation</label>
                                     <input type="text" name="designation" class="form-control" id="editDesignation">
                                     <div class="invalid-feedback">Please enter a designation.</div>
                                 </div>
@@ -270,7 +245,6 @@
                             </div>
                         </div>
 
-                        <!-- Nationality & Phone Number -->
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -288,17 +262,15 @@
                             </div>
                         </div>
 
-                        <!-- Join Date & Image Upload -->
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Current Image <span class="text-muted">(optional)</span></label>
+                                    <label>Current Image</label>
                                     <div class="mb-2">
                                         <img id="editImagePreview" src="" alt="No image" class="img-thumbnail"
                                             style="max-height: 150px; display: none;">
                                     </div>
 
-                                    <!-- Delete Image Checkbox -->
                                     <div class="custom-control custom-checkbox mb-2">
                                         <input type="checkbox" class="custom-control-input" id="deleteImage"
                                             name="deleteImage" value="true">
@@ -360,42 +332,7 @@
         </div>
     </div>
 
-    <!-- Flash Message Modal (Success or Error) -->
-    <div th:if="${error != null or success != null}" id="flashMessageModalContainer">
-        <div class="modal fade" id="flashMessageModal" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header"
-                        th:classappend="${error} ? 'bg-danger text-white' : 'bg-success text-white'">
-                        <h5 class="modal-title">
-                            <i
-                                th:class="${error} ? 'fas fa-exclamation-triangle mr-2' : 'fas fa-check-circle mr-2'"></i>
-                            <span th:text="${error} ? 'Error' : 'Success'">Status</span>
-                        </h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body py-4">
-                        <div th:if="${error}" class="text-center">
-                            <ul class="list-unstyled">
-                                <li th:each="err : ${#strings.listSplit(error, '|')}">
-                                    <p class="mb-2" th:text="${err.trim()}">Error</p>
-                                </li>
-                            </ul>
-                        </div>
-                        <div th:if="${success}" class="text-center">
-                            <p th:text="${success}">Success</p>
-                        </div>
-                    </div>
-                    <div class="modal-footer mt--3">
-                        <button type="button" class="btn" th:classappend="${error} ? 'btn-danger' : 'btn-success'"
-                            data-dismiss="modal">OK</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div th:replace="~{fragments/error-modal :: error-modal}"></div>
 
     <style>
         /* --- Switch Toggle Styling --- */
