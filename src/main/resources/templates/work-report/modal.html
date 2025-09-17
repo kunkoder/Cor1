@@ -112,13 +112,21 @@
 
                                     <select id="technicianSelect" name="technicianEmpIds" multiple
                                         style="display: none;">
-                                        <option th:each="user : ${users}" th:value="${user.employeeId}"></option>
+                                        <option th:each="user : ${users}" th:value="${user.employeeId}"
+                                            th:data-employee-id="${user.employeeId}"
+                                            th:text="${user.name} + ' (' + ${user.employeeId} + ')'">
+                                        </option>
                                     </select>
 
-                                    <div class="tag-input" id="technicianTagInput">
+                                    <div class="tag-input" id="technicianInput">
                                         <div class="tag-list" id="technicianTagList"></div>
-                                        <input type="text" id="technicianTagSearch" class="tag-input-field"
-                                            placeholder="Add technician..." list="userOptions" required>
+                                        <div class="position-relative w-100">
+                                            <input type="text" id="technicianTagSearch" class="tag-input-field"
+                                                placeholder="Add technician..." autocomplete="off" required>
+                                            <div id="technicianTagSearchDropdown" class="dropdown-menu w-100"
+                                                style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('technicianEmpIds')}"
@@ -314,14 +322,14 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Report Date</label>
-                                    <input type="date" class="form-control" id="editReportDate" name="reportDate" required>
+                                    <input type="date" class="form-control" id="editReportDate" name="reportDate"
+                                        required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Shift <span class="text-danger">*</span></label>
-                                    <select class="form-control" th:field="*{shift}" id="editShift" name="shift"
-                                        required>
+                                    <select class="form-control" id="editShift" name="shift" required>
                                         <option value="" disabled selected>Select Shift</option>
                                         <th:block
                                             th:each="shift : ${T(ahqpck.maintenance.report.entity.WorkReport.Shift).values()}">
@@ -391,7 +399,7 @@
                                     <select id="editTechnicianSelect" name="technicianEmpIds" multiple
                                         class="d-none"></select>
 
-                                    <div class="tag-input" id="editTechnicianTagInput">
+                                    <div class="tag-input" id="editTechnicianInput">
                                         <div class="tag-list" id="editTechnicianTagList"></div>
                                         <input type="text" id="editTechnicianSearch" class="tag-input-field"
                                             placeholder="Search technician by name or ID..." list="userOptions">
@@ -558,7 +566,378 @@
         </div>
     </div>
 
+    <style>
+        .tag-input {
+            /* Match .form-control */
+            border: 1px solid #ebedf2;
+            border-radius: 0.25rem;
+            /* 6px - Bootstrap default */
+            padding: 0.375rem 0.75rem;
+            /* 6px 12px - Bootstrap padding */
+            min-height: calc(1.5em + 0.75rem + 2px);
+            /* ~42px, matches input height */
+            line-height: 1.5;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.375rem;
+            /* 6px gap between tags */
+            background-color: #fff;
+            background-clip: padding-box;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            cursor: text;
+            width: 100%;
+        }
+
+        /* Focus style like Bootstrap */
+        .tag-input:focus-within {
+            border-color: #3e93ff;
+            outline: 0;
+        }
+
+        /* Optional: Disabled state */
+        .tag-input:has(input:disabled) {
+            background-color: #e9ecef;
+            opacity: 1;
+            pointer-events: none;
+        }
+
+        /* Tag List */
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        /* Individual Tag */
+        .tag {
+            background: #007bff;
+            color: white;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .tag .remove-tag {
+            margin-left: 4px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fff;
+            opacity: 0.8;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .tag .remove-tag:hover {
+            opacity: 1;
+        }
+
+        /* Input Field inside Tag Input */
+        .tag-input-field {
+            border: none;
+            outline: none;
+            font-size: 0.9rem;
+            padding: 0px;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .tag-input-field::placeholder {
+            color: #999;
+        }
+    </style>
+
     <script>
+        function setupLiveSearch(inputId, selectId, optionsContainerId, fieldLabel = 'item') {
+            const input = document.getElementById(inputId);
+            const select = document.getElementById(selectId);
+            const dropdown = document.getElementById(`${inputId.replace('Input', 'Dropdown')}`);
+            const options = Array.from(document.querySelectorAll(`#${optionsContainerId} option`)).map(opt => ({
+                value: opt.value,
+                label: opt.value,
+                id: opt.dataset.employeeId || opt.dataset.code || ''
+            }));
+
+            if (!input || !select || !dropdown) {
+                console.warn(`Missing elements for ${inputId}`);
+                return;
+            }
+
+            // Filter and show dropdown
+            input.addEventListener('input', function () {
+                const term = this.value.toLowerCase().trim();
+                dropdown.innerHTML = '';
+
+                if (term === '') {
+                    dropdown.style.display = 'none';
+                    select.value = '';
+                    return;
+                }
+
+                const filtered = options.filter(opt =>
+                    opt.label.toLowerCase().includes(term)
+                );
+
+                if (filtered.length === 0) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+
+                filtered.forEach(opt => {
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-item';
+                    div.style.cursor = 'pointer';
+                    div.style.whiteSpace = 'normal';
+
+                    // Highlight matched text
+                    const regex = new RegExp(`(${term})`, 'gi');
+                    const highlighted = opt.label.replace(regex, '<strong>$1</strong>');
+                    div.innerHTML = highlighted;
+
+                    div.addEventListener('click', () => {
+                        input.value = opt.label;
+                        select.value = opt.id;
+                        dropdown.style.display = 'none';
+                        input.focus();
+                    });
+
+                    dropdown.appendChild(div);
+                });
+
+                dropdown.style.display = 'block';
+            });
+
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+
+            // Navigate with keyboard
+            input.addEventListener('keydown', function (e) {
+                const items = dropdown.querySelectorAll('.dropdown-item');
+                if (items.length === 0) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    let current = Array.from(items).findIndex(item => item.classList.contains('active'));
+                    current = (current + 1) % items.length;
+                    items.forEach(item => item.classList.remove('active'));
+                    items[current].classList.add('active');
+                    items[current].scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    let current = Array.from(items).findIndex(item => item.classList.contains('active'));
+                    current = current <= 0 ? items.length - 1 : current - 1;
+                    items.forEach(item => item.classList.remove('active'));
+                    items[current].classList.add('active');
+                    items[current].scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const active = dropdown.querySelector('.dropdown-item.active');
+                    if (active) {
+                        active.click();
+                    }
+                } else if (e.key === 'Escape') {
+                    dropdown.style.display = 'none';
+                }
+            });
+        }
+
+        function setupTagInput(inputId, tagListId, tagSearchId, selectId, formatDisplay = val => val) {
+            const tagInput = document.getElementById(inputId);
+            const tagList = document.getElementById(tagListId);
+            const tagSearch = document.getElementById(tagSearchId);
+            const hiddenSelect = document.getElementById(selectId);
+
+            if (!tagInput || !tagList || !tagSearch || !hiddenSelect) return;
+
+            function syncSelect() {
+                hiddenSelect.innerHTML = "";
+                Array.from(tagList.querySelectorAll(".tag")).forEach(tag => {
+                    const option = document.createElement("option");
+                    option.value = tag.dataset.value;
+                    option.selected = true;
+                    hiddenSelect.appendChild(option);
+                });
+            }
+
+            function addTag(value, displayText) {
+                if (!value || Array.from(tagList.querySelectorAll(".tag")).some(t => t.dataset.value === value)) return;
+                const tag = document.createElement("div");
+                tag.className = "tag";
+                tag.dataset.value = value;
+                tag.innerHTML = `
+                ${displayText || value}
+                <span class="remove-tag" onclick="window.removeTag(this, '${selectId}', '${tagListId}')">×</span>`;
+                tagList.appendChild(tag);
+                syncSelect();
+            }
+
+            window.removeTag = function (el, selectId, tagListId) {
+                const tag = el.parentElement;
+                const value = tag.dataset.value;
+                tag.remove();
+
+                const select = document.getElementById(selectId);
+                const option = select.querySelector(`option[value="${value}"]`);
+                if (option) option.remove();
+
+                select.dispatchEvent(new Event('change'));
+            };
+
+            // --- INTEGRATE LIVE SEARCH (REPLACES datalist logic) ---
+            const dropdownId = tagSearchId.replace('Search', 'Dropdown') || `${tagSearchId}Dropdown`;
+            let dropdown = document.getElementById(dropdownId);
+
+            // Create dropdown if doesn't exist
+            if (!dropdown) {
+                dropdown = document.createElement('div');
+                dropdown.id = dropdownId;
+                dropdown.className = 'dropdown-menu w-100';
+                Object.assign(dropdown.style, {
+                    position: 'absolute',
+                    zIndex: 1000,
+                    display: 'none',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    border: '1px solid #dee2e6',
+                    borderTop: 'none',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                    backgroundColor: 'white',
+                    width: '100%',
+                    left: '0'
+                });
+                tagSearch.parentElement.appendChild(dropdown);
+            }
+
+            // Prepare options for live search
+            const options = Array.from(document.querySelectorAll("#userOptions option")).map(opt => ({
+                value: opt.value,
+                label: opt.value, // Display text like "John (EMP001)"
+                id: opt.dataset.employeeId || ''
+            }));
+
+            // Attach live search behavior to tagSearch input
+            tagSearch.addEventListener('input', function () {
+                const term = this.value.toLowerCase().trim();
+                dropdown.innerHTML = '';
+
+                if (term === '') {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+
+                const filtered = options.filter(opt =>
+                    opt.label.toLowerCase().includes(term)
+                );
+
+                if (filtered.length === 0) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+
+                filtered.forEach(opt => {
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-item';
+                    div.style.cursor = 'pointer';
+                    div.style.whiteSpace = 'normal';
+
+                    // Highlight matched text
+                    const regex = new RegExp(`(${term})`, 'gi');
+                    const highlighted = opt.label.replace(regex, '<strong>$1</strong>');
+                    div.innerHTML = highlighted;
+
+                    div.addEventListener('click', () => {
+                        // Parse display text to extract name & ID if needed
+                        const match = opt.label.match(/(.+) \((.+)\)/);
+                        const displayText = match ? `${match[1]} (${match[2]})` : opt.label;
+
+                        addTag(opt.id, displayText);
+                        tagSearch.value = '';
+                        dropdown.style.display = 'none';
+                        tagSearch.focus();
+                    });
+
+                    dropdown.appendChild(div);
+                });
+
+                dropdown.style.display = 'block';
+                // Position dropdown under input
+                const rect = tagSearch.getBoundingClientRect();
+                dropdown.style.top = `${rect.height + 2}px`;
+            });
+
+            // Hide dropdown on outside click
+            document.addEventListener('click', function (e) {
+                if (!tagSearch.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+
+            // Keyboard navigation
+            tagSearch.addEventListener('keydown', function (e) {
+                const items = dropdown.querySelectorAll('.dropdown-item');
+                if (items.length === 0) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    let current = Array.from(items).findIndex(item => item.classList.contains('active'));
+                    current = (current + 1) % items.length;
+                    items.forEach(item => item.classList.remove('active'));
+                    items[current].classList.add('active');
+                    items[current].scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    let current = Array.from(items).findIndex(item => item.classList.contains('active'));
+                    current = current <= 0 ? items.length - 1 : current - 1;
+                    items.forEach(item => item.classList.remove('active'));
+                    items[current].classList.add('active');
+                    items[current].scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const active = dropdown.querySelector('.dropdown-item.active');
+                    if (active) {
+                        active.click();
+                    }
+                } else if (e.key === 'Escape') {
+                    dropdown.style.display = 'none';
+                } else if (e.key === ',' || e.key === 'Tab') {
+                    e.preventDefault();
+                    // If dropdown is open and has active item, select it
+                    const active = dropdown.querySelector('.dropdown-item.active');
+                    if (active) {
+                        active.click();
+                    } else {
+                        // Fallback: try to match typed text
+                        const typed = tagSearch.value.trim();
+                        const matched = options.find(opt => opt.label === typed);
+                        if (matched) {
+                            const match = matched.label.match(/(.+) \((.+)\)/);
+                            const displayText = match ? `${match[1]} (${match[2]})` : matched.label;
+                            addTag(matched.id, displayText);
+                            tagSearch.value = '';
+                        }
+                    }
+                }
+            });
+
+            tagInput.addEventListener("click", () => tagSearch.focus());
+        }
+
+        setupLiveSearch('supervisorInput', 'supervisorSelect', 'userOptions', 'Supervisor');
+        setupTagInput('technicianInput', 'technicianTagList', 'technicianTagSearch', 'technicianSelect');
+    </script>
+
+    <!-- <script>
         // 1. Parse datetime string
         function parseDateTime(dateTimeStr) {
             if (!dateTimeStr) return null;
@@ -669,7 +1048,6 @@
             calculateEditTotalTime();
         });
     </script>
-    <!-- SyncSelect JS (Same as Working Complaint Modal) -->
     <script>
         function syncSelect(inputId, selectId, optionsDatalistId) {
             const input = document.getElementById(inputId);
@@ -840,14 +1218,14 @@
             }
 
             setupTagInput(
-                "technicianTagInput",        // container
+                "technicianInput",        // container
                 "technicianTagList",         // tag list
                 "technicianTagSearch",       // search input
                 "technicianSelect"           // hidden select
             );
 
             setupTagInput(
-                "editTechnicianTagInput",   // container
+                "editTechnicianInput",   // container
                 "editTechnicianTagList",    // tag list
                 "editTechnicianSearch",     // search input
                 "editTechnicianSelect"      // hidden select
@@ -865,11 +1243,11 @@
 
             // // Initialize Technician Tag Inputs (NEW)
             // setupTagInput(
-            //     "technicianTagInput", "technicianTagList", "technicianTagSearch", "technicianSelect",
+            //     "technicianInput", "technicianTagList", "technicianTagSearch", "technicianSelect",
             //     userOptions
             // );
             // setupTagInput(
-            //     "editTechnicianTagInput", "editTechnicianTagList", "editTechnicianTagSearch", "editTechnicianSelect",
+            //     "editTechnicianInput", "editTechnicianTagList", "editTechnicianTagSearch", "editTechnicianSelect",
             //     userOptions
             // );
         });
@@ -907,5 +1285,5 @@
                 });
             }
         });
-    </script>
+    </script> -->
 </div>
