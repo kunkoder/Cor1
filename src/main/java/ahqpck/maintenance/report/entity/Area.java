@@ -1,5 +1,6 @@
 package ahqpck.maintenance.report.entity;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -62,8 +63,7 @@ public class Area {
 
     @PrePersist
     public void prePersist() {
-        if (this.id == null) {
-            this.id = Base62.encode(UUID.randomUUID());
-        }
+        this.id = this.id == null ? Base62.encode(UUID.randomUUID()) : this.id;
+        this.status = this.status != null ? this.status : Status.INACTIVE;
     }
 }

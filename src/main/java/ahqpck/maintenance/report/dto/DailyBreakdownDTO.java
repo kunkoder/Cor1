@@ -5,5 +5,5 @@ import java.time.LocalDate;
 public interface DailyBreakdownDTO {
     LocalDate getDate();
     Long getBreakdownCount();
-    Integer getTotalResolutionTimeMinutes();
+    Integer getTotalTimeMinutes();
 }

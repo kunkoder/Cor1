@@ -222,9 +222,9 @@
                                             th:value="${complaint.closeTime != null ? #temporals.format(complaint.closeTime, 'yyyy-MM-dd HH:mm') : '-'}"
                                             th:if="${complaint.closeTime != null}" />
 
-                                        <!-- Resolution Time -->
+                                        <!-- Total Time -->
                                         <p class="mb-2">
-                                            <strong>Resolution Time:</strong>
+                                            <strong>Total Time:</strong>
                                             <span th:id="${'resolution-time-field'}"
                                                 th:data-original="${complaint.totalTimeMinutes != null ? complaint.totalTimeMinutes + ' minutes' : '-'}"
                                                 th:text="${complaint.totalTimeMinutes != null ? complaint.totalTimeMinutes + ' minutes' : '-'}">

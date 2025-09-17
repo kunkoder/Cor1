@@ -1,17 +1,22 @@
 package ahqpck.maintenance.report.controller;
 
 import ahqpck.maintenance.report.dto.AreaDTO;
+import ahqpck.maintenance.report.dto.ComplaintDTO;
 import ahqpck.maintenance.report.dto.EquipmentDTO;
 import ahqpck.maintenance.report.dto.UserDTO;
 import ahqpck.maintenance.report.dto.WorkReportDTO;
+import ahqpck.maintenance.report.entity.Complaint;
+import ahqpck.maintenance.report.entity.WorkReport;
 import ahqpck.maintenance.report.service.AreaService;
 import ahqpck.maintenance.report.service.EquipmentService;
 import ahqpck.maintenance.report.service.UserService;
 import ahqpck.maintenance.report.service.WorkReportService;
 import ahqpck.maintenance.report.util.ImportUtil;
+import ahqpck.maintenance.report.util.WebUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -22,7 +27,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,81 +47,55 @@ public class WorkReportController {
     private final EquipmentService equipmentService;
     private final UserService userService;
 
-    @ModelAttribute("workReportDTO")
-    public WorkReportDTO workReportDTO() {
-        return new WorkReportDTO();
-    }
-
-    // === LIST WORK REPORTS ===
     @GetMapping
     public String listWorkReports(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateTo,
+            @RequestParam(required = false) WorkReport.Category category,
+            @RequestParam(required = false) String equipmentCode,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "10") String size,
             @RequestParam(defaultValue = "reportDate") String sortBy,
             @RequestParam(defaultValue = "false") boolean asc,
             Model model) {
 
-                System.out.println("Timezone: " + TimeZone.getDefault().getDisplayName());
-System.out.println("Now: " + LocalDateTime.now());
-
-        int zeroBasedPage = page - 1;
-            Page<WorkReportDTO> reportPage = workReportService.getAllWorkReports(keyword, zeroBasedPage, size, sortBy,
-                    asc);
-
         try {
-            
 
+            int zeroBasedPage = page - 1;
+            int parsedSize = "All".equalsIgnoreCase(size) ? Integer.MAX_VALUE : Integer.parseInt(size);
+
+            LocalDateTime from = reportDateFrom != null ? reportDateFrom.atStartOfDay() : null;
+            LocalDateTime to = reportDateTo != null ? reportDateTo.atTime(LocalTime.MAX) : null;
+
+            Page<WorkReportDTO> reportPage = workReportService.getAllWorkReports(keyword, from, to,
+                    category, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
             model.addAttribute("workReports", reportPage);
             model.addAttribute("keyword", keyword);
+            model.addAttribute("reportDateFrom", reportDateFrom);
+            model.addAttribute("reportDateTo", reportDateTo);
             model.addAttribute("currentPage", page);
             model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("asc", asc);
 
-            model.addAttribute("title", "Work Report");
-            model.addAttribute("sortFields", new String[] {
-                    "reportDate",
-                    "shift",
-                    "category",
-                    "status",
-                    "startTime",
-                    "stopTime",
-                    "equipment.name",
-                    "area.name",
-                    "technician.name",
-                    "supervisor.name",
-                    "problem",
-                    "solution",
-                    "workType",
-                    "remark"
-            });
+            model.addAttribute("title", "Work Report List");
 
-            // Load dropdown data
-            List<UserDTO> users = userService.getAllUsers(null, 0, Integer.MAX_VALUE, "name", true)
-                    .getContent().stream().collect(Collectors.toList());
-            model.addAttribute("users", users);
+            model.addAttribute("users", getAllUsersForDropdown());
+            model.addAttribute("areas", getAllAreasForDropdown());
+            model.addAttribute("equipments", getAllEquipmentsForDropdown());
 
-            List<AreaDTO> areas = areaService.getAllAreas(null, 0, Integer.MAX_VALUE, "name", true)
-                    .getContent().stream().collect(Collectors.toList());
-            model.addAttribute("areas", areas);
-
-            List<EquipmentDTO> equipments = equipmentService.getAllEquipments(null, 0, Integer.MAX_VALUE, "name", true)
-                    .getContent().stream().collect(Collectors.toList());
-            model.addAttribute("equipments", equipments);
-
-            // Empty DTO for create form
             model.addAttribute("workReportDTO", new WorkReportDTO());
 
         } catch (Exception e) {
             model.addAttribute("error", "Failed to load work reports: " + e.getMessage());
-            e.printStackTrace();
+            return "error/500";
+            // e.printStackTrace();
         }
 
         return "work-report/index";
     }
 
-    // === CREATE WORK REPORT ===
     @PostMapping
     public String createWorkReport(
             @Valid @ModelAttribute WorkReportDTO workReportDTO,
@@ -126,23 +107,18 @@ System.out.println("Now: " + LocalDateTime.now());
                     .map(empId -> {
                         UserDTO userDTO = new UserDTO();
                         userDTO.setEmployeeId(empId);
-                        // Optionally fetch full user from service if needed
-                        // userDTO = userService.findByEmployeeId(empId);
                         return userDTO;
                     })
                     .collect(Collectors.toSet());
             workReportDTO.setTechnicians(technicianDTOs);
         }
 
-        System.out.println("Work Report DTO: " + workReportDTO);
-
-        if (bindingResult.hasErrors()) {
-            handleBindingErrors(bindingResult, ra, workReportDTO);
+        if (WebUtil.hasErrors(bindingResult)) {
+            ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
             return "redirect:/work-reports";
         }
 
         try {
-            // System.out.println(workReportDTO);
             workReportService.createWorkReport(workReportDTO);
             ra.addFlashAttribute("success", "Work report created successfully.");
             return "redirect:/work-reports";
@@ -154,7 +130,6 @@ System.out.println("Now: " + LocalDateTime.now());
         }
     }
 
-    // === UPDATE WORK REPORT ===
     @PostMapping("/update")
     public String updateWorkReport(
             @Valid @ModelAttribute WorkReportDTO workReportDTO,
@@ -166,20 +141,16 @@ System.out.println("Now: " + LocalDateTime.now());
                     .map(empId -> {
                         UserDTO userDTO = new UserDTO();
                         userDTO.setEmployeeId(empId);
-                        // Optionally fetch full user from service if needed
-                        // userDTO = userService.findByEmployeeId(empId);
                         return userDTO;
                     })
                     .collect(Collectors.toSet());
             workReportDTO.setTechnicians(technicianDTOs);
         }
 
-        if (bindingResult.hasErrors()) {
-            handleBindingErrors(bindingResult, ra, workReportDTO);
+        if (WebUtil.hasErrors(bindingResult)) {
+            ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
             return "redirect:/work-reports";
         }
-
-        System.out.println("Work Report DTO: " + workReportDTO);
 
         try {
             workReportService.updateWorkReport(workReportDTO);
@@ -192,8 +163,6 @@ System.out.println("Now: " + LocalDateTime.now());
             return "redirect:/work-reports";
         }
     }
-
-    // === DELETE WORK REPORT ===
     @GetMapping("/delete/{id}")
     public String deleteWorkReport(@PathVariable String id, RedirectAttributes ra) {
         try {
@@ -217,8 +186,6 @@ System.out.println("Now: " + LocalDateTime.now());
             List<Map<String, Object>> data = mapper.readValue(dataJson,
                     new TypeReference<List<Map<String, Object>>>() {
                     });
-
-            // ra.addFlashAttribute("error", data);
 
             ImportUtil.ImportResult result = workReportService.importWorkReportsFromExcel(data);
 
@@ -244,24 +211,25 @@ System.out.println("Now: " + LocalDateTime.now());
 
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Bulk import failed: " + e.getMessage());
-            return "redirect:/WorkReports";
+            return "redirect:/work-reports";
         }
     }
 
-    // === HELPERS ===
+    private List<UserDTO> getAllUsersForDropdown() {
+        return userService.getAllUsers(null, 0, Integer.MAX_VALUE, "name", true)
+                .getContent().stream()
+                .collect(Collectors.toList());
+    }
 
-    private void handleBindingErrors(BindingResult bindingResult, RedirectAttributes ra, WorkReportDTO dto) {
-        String errorMessage = bindingResult.getAllErrors().stream()
-                .map(error -> {
-                    String field = (error instanceof FieldError)
-                            ? ((FieldError) error).getField()
-                            : "Input";
-                    String message = error.getDefaultMessage();
-                    return field + ": " + message;
-                })
-                .collect(Collectors.joining(" | "));
+    private List<AreaDTO> getAllAreasForDropdown() {
+        return areaService.getAllAreas(null, 0, Integer.MAX_VALUE, "name", true)
+                .getContent().stream()
+                .collect(Collectors.toList());
+    }
 
-        ra.addFlashAttribute("error", errorMessage.isEmpty() ? "Invalid input" : errorMessage);
-        ra.addFlashAttribute("workReportDTO", dto);
+    private List<EquipmentDTO> getAllEquipmentsForDropdown() {
+        return equipmentService.getAllEquipments(null, 0, Integer.MAX_VALUE, "name", true)
+                .getContent().stream()
+                .collect(Collectors.toList());
     }
 }

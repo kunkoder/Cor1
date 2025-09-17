@@ -21,6 +21,7 @@ public interface WorkReportRepository extends JpaRepository<WorkReport, String>,
      * Find all work reports by status
      */
     List<WorkReport> findByStatus(WorkReport.Status status);
+    boolean existsByCodeIgnoreCase(String code);
 
     @Query("SELECT COUNT(w) > 0 FROM WorkReport w " +
             "WHERE w.equipment.code = :equipmentCode " +

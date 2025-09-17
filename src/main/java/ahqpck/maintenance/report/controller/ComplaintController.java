@@ -109,7 +109,6 @@ public class ComplaintController {
             model.addAttribute("areas", getAllAreasForDropdown());
             model.addAttribute("equipments", getAllEquipmentsForDropdown());
 
-            System.out.println(complaintDTO);
             return "complaint/detail";
 
         } catch (NotFoundException e) {
@@ -145,7 +144,6 @@ public class ComplaintController {
         }
     }
 
-    // === UPDATE COMPLAINT ===
     @PostMapping("/update")
     public String updateComplaint(
             @Valid @ModelAttribute ComplaintDTO complaintDTO,
@@ -198,8 +196,6 @@ public class ComplaintController {
                     new TypeReference<List<Map<String, Object>>>() {
                     });
 
-            // ra.addFlashAttribute("error", data);
-
             ImportUtil.ImportResult result = complaintService.importComplaintsFromExcel(data);
 
             if (result.getImportedCount() > 0 && !result.hasErrors()) {
@@ -228,23 +224,6 @@ public class ComplaintController {
         }
     }
 
-    // === HELPERS ===
-
-    private void handleBindingErrors(BindingResult bindingResult, RedirectAttributes ra, ComplaintDTO dto) {
-        String errorMessage = bindingResult.getAllErrors().stream()
-                .map(error -> {
-                    String field = (error instanceof org.springframework.validation.FieldError)
-                            ? ((org.springframework.validation.FieldError) error).getField()
-                            : "Input";
-                    String message = error.getDefaultMessage();
-                    return field + ": " + message;
-                })
-                .collect(Collectors.joining(" | "));
-
-        ra.addFlashAttribute("error", errorMessage.isEmpty() ? "Invalid input" : errorMessage);
-        ra.addFlashAttribute("complaintDTO", dto);
-    }
-
     private List<UserDTO> getAllUsersForDropdown() {
         return userService.getAllUsers(null, 0, Integer.MAX_VALUE, "name", true)
                 .getContent().stream()
@@ -263,27 +242,3 @@ public class ComplaintController {
                 .collect(Collectors.toList());
     }
 }
-
-// package ahqpck.maintenance.report.controller;
-
-// import org.springframework.stereotype.Controller;
-// import org.springframework.ui.Model;
-// import org.springframework.web.bind.annotation.GetMapping;
-// import org.springframework.web.bind.annotation.PathVariable;
-
-// @Controller
-// public class ComplaintController {
-
-// @GetMapping("/complaints")
-// public String index(Model model) {
-// model.addAttribute("title", "Complaint List");
-// return "complaint/index";
-// }
-
-// @GetMapping("/complaints/{id}")
-// public String detail(@PathVariable("id") String id, Model model) {
-// model.addAttribute("title", "Complaint Detail");
-// model.addAttribute("complaintId", id);
-// return "complaint/detail";
-// }
-// }

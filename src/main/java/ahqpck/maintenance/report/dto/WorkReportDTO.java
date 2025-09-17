@@ -26,60 +26,47 @@ import lombok.AllArgsConstructor;
 public class WorkReportDTO {
 
     private String id;
-
     private String code;
 
-    private WorkReport.Shift shift;
-
+    @NotNull(message = "Problem is mandatory")
+    private String problem;
+    private String solution;
+    private String workType;
+    private String remark;
+    
+    @NotNull(message = "Report date is mandatory")
     private LocalDate reportDate;
-
     private LocalDateTime updatedAt;
+    
+    @NotNull(message = "Start time is mandatory")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
+    private LocalDateTime startTime;
+    
 
-    private AreaDTO area;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
+    private LocalDateTime stopTime;
+    
+    private Integer totalTimeMinutes;
+    private String totalTimeDisplay;
 
-    // @NotNull(message = "Equipment is mandatory")
-    private EquipmentDTO equipment;
+    @NotNull(message = "Shift is mandatory")
+    private WorkReport.Shift shift;
 
     @NotNull(message = "Category is mandatory")
     private WorkReport.Category category;
 
-    private String problem;
-
-    private String solution;
-
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-    private LocalDateTime startTime;
-
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-    private LocalDateTime stopTime;
-
-    private Set<String> technicianEmpIds = new HashSet<>();
-    private Set<UserDTO> technicians = new HashSet<>();
-
-    private UserDTO supervisor;
-
-    @NotNull(message = "Status is mandatory")
     private WorkReport.Status status;
 
+    @NotNull(message = "Scope is mandatory")
     private WorkReport.Scope scope;
 
-    private String workType;
+    private AreaDTO area;
+    private EquipmentDTO equipment;
+    private UserDTO supervisor;
 
-    private String remark;
+    private Set<String> technicianEmpIds = new HashSet<>();
+    private Set<UserDTO> technicians = new HashSet<>();    
 
     @Valid
     private List<WorkReportPartDTO> partsUsed = new ArrayList<>();
-
-    private Integer totalResolutionTimeMinutes;
-
-    private String resolutionTimeDisplay;
-
-//     public Set<String> getTechnicianEmpIds() {
-//     if (technicians == null) return new HashSet<>();
-//     return technicians.stream()
-//             .map(UserDTO::getEmployeeId)
-//             .filter(id -> id != null && !id.trim().isEmpty())
-//             .map(String::trim)
-//             .collect(Collectors.toSet());
-// }
 }

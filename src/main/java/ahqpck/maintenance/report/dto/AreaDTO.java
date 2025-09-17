@@ -25,5 +25,6 @@ public class AreaDTO {
     private Area.Status status;
     private String description;
 
+    @NotBlank(message = "Responsible person is mandatory")
     private UserDTO responsiblePerson;
 }

@@ -52,15 +52,9 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
-    private final RoleRepository roleRepository; // To populate roles in model
 
     @Value("${app.upload-user-image.dir:src/main/resources/static/upload/user/image}")
     private String uploadDir;
-
-    // @ModelAttribute("userDTO")
-    // public UserDTO userDTO() {
-    //     return new UserDTO();
-    // }
 
     @GetMapping
     public String listUsers(

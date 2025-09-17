@@ -35,7 +35,6 @@ public class EquipmentService {
     private String uploadDir;
 
     private final EquipmentRepository equipmentRepository;
-    private final Validator validator;
 
     private final FileUploadUtil fileUploadUtil;
     private final ImportUtil importUtil;

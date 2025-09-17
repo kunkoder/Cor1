@@ -134,7 +134,7 @@
                                     <div class="position-relative">
                                         <input type="text" class="form-control" id="editResponsiblePersonInput"
                                             placeholder="Search employee by name or ID" autocomplete="off" required />
-                                        <div id="responsiblePersonDropdown" class="dropdown-menu w-100"
+                                        <div id="editResponsiblePersonDropdown" class="dropdown-menu w-100"
                                             style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                         </div>
                                     </div>
@@ -205,37 +205,6 @@
 
     <!-- JavaScript -->
     <script>
-        // document.addEventListener('DOMContentLoaded', function () {
-        //     const input = document.getElementById('responsiblePersonInput');
-        //     const select = document.querySelector('select[name="responsiblePerson.employeeId"]'); // ✅ Works
-        //     const options = document.querySelectorAll('#userOptions option');
-
-        //     if (!select) {
-        //         console.error("Hidden select not found!");
-        //         return;
-        //     }
-
-        //     input.addEventListener('input', () => {
-        //         const selected = [...options].find(opt => opt.value === input.value);
-        //         select.value = selected ? selected.dataset.employeeId : '';
-        //         console.log("respon", selected);
-        //     });
-        // });
-        // function syncSelect(inputId, selectId) {
-        //     const input = document.getElementById(inputId);
-        //     const select = document.getElementById(selectId);
-
-        //     input.addEventListener('input', () => {
-        //         // Find matching option by display text
-        //         const opt = [...document.querySelectorAll('#userOptions option')]
-        //             .find(o => o.value === input.value);
-        //         select.value = opt ? opt.dataset.employeeId : '';
-        //     });
-        // }
-
-        // // Initialize both modals
-        // syncSelect('responsiblePersonInput', 'responsiblePersonSelect');
-        // syncSelect('editResponsiblePersonInput', 'editResponsiblePerson');
 
         function setupLiveSearch(inputId, selectId, optionsContainerId, fieldLabel = 'item') {
             const input = document.getElementById(inputId);
@@ -336,34 +305,5 @@
 
         setupLiveSearch('responsiblePersonInput', 'responsiblePersonSelect', 'userOptions', 'Responsible Person');
         setupLiveSearch('editResponsiblePersonInput', 'editResponsiblePersonSelect', 'userOptions', 'Responsible Person');
-
-        // Image Preview for Add
-        document.getElementById('addImageInput').onchange = function (evt) {
-            const preview = document.getElementById('addImagePreview');
-            const file = evt.target.files[0];
-            if (file && file.type.match('image.*')) {
-                const reader = new FileReader();
-                reader.onload = function () {
-                    preview.src = reader.result;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-
-        // Image Preview for Edit
-        document.getElementById('editImageInput').onchange = function (evt) {
-            const preview = document.getElementById('editImagePreview');
-            const file = evt.target.files[0];
-            if (file && file.type.match('image.*')) {
-                const reader = new FileReader();
-                reader.onload = function () {
-                    preview.src = reader.result;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-
     </script>
 </div>

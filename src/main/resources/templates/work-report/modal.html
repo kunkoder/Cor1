@@ -38,8 +38,12 @@
                                     <select class="form-control" th:field="*{shift}" th:errorclass="is-invalid"
                                         required>
                                         <option value="" disabled selected>Select Shift</option>
-                                        <option value="DAY">Day</option>
-                                        <option value="NIGHT">Night</option>
+                                        <th:block
+                                            th:each="shift : ${T(ahqpck.maintenance.report.entity.WorkReport.Shift).values()}">
+                                            <option th:value="${shift}" th:text="${shift}"
+                                                th:selected="${param.shift == shift}">
+                                            </option>
+                                        </th:block>
                                     </select>
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('shift')}"
                                         th:errors="*{shift}">
@@ -54,61 +58,47 @@
                             <!-- Area -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Area <span class="text-danger">*</span></label>
-
-                                    <!-- Visible Autocomplete Input -->
-                                    <input type="text" class="form-control" list="areaOptions" id="areaInput"
-                                        placeholder="Search area by name or code" autocomplete="off" />
-
-                                    <!-- Datalist for Suggestions -->
+                                    <label>Area</label>
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control" id="areaInput"
+                                            placeholder="Search area by name or code" autocomplete="off" />
+                                        <div id="areaDropdown" class="dropdown-menu w-100"
+                                            style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                        </div>
+                                    </div>
                                     <datalist id="areaOptions">
                                         <option th:each="area : ${areas}"
                                             th:value="${area.name} + ' (' + ${area.code} + ')'"
                                             th:data-code="${area.code}">
                                         </option>
                                     </datalist>
-
-                                    <!-- Hidden Select for Thymeleaf Binding -->
                                     <select class="d-none" th:field="*{area.code}" id="areaSelect">
                                         <option th:each="area : ${areas}" th:value="${area.code}">Area</option>
                                     </select>
-
-                                    <!-- Validation Feedback -->
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('area.code')}"
-                                        th:errors="*{area.code}">
-                                        Please select an area.
-                                    </div>
                                 </div>
                             </div>
 
                             <!-- Equipment -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Equipment <span class="text-danger">*</span></label>
-
-                                    <!-- Visible Autocomplete Input -->
-                                    <input type="text" class="form-control" list="equipmentOptions" id="equipmentInput"
-                                        placeholder="Search equipment by name or code" autocomplete="off" required />
-
-                                    <!-- Datalist for Suggestions -->
+                                    <label>Equipment</label>
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control" id="equipmentInput"
+                                            placeholder="Search equipment by name or code" autocomplete="off" />
+                                        <div id="equipmentDropdown" class="dropdown-menu w-100"
+                                            style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                        </div>
+                                    </div>
                                     <datalist id="equipmentOptions">
                                         <option th:each="equipment : ${equipments}"
                                             th:value="${equipment.name} + ' (' + ${equipment.code} + ')'"
                                             th:data-code="${equipment.code}">
                                         </option>
                                     </datalist>
-
-                                    <!-- Hidden Select for Thymeleaf Binding -->
                                     <select class="d-none" th:field="*{equipment.code}" id="equipmentSelect">
                                         <option th:each="equipment : ${equipments}" th:value="${equipment.code}">
                                             Equipment</option>
                                     </select>
-
-                                    <!-- Validation Feedback -->
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('equipment.code')}"
-                                        th:errors="*{equipment.code}">
-                                        Please select equipment.
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -120,27 +110,16 @@
                                 <div class="form-group">
                                     <label>Technician(s) <span class="text-danger">*</span></label>
 
-                                    <!-- Hidden select for form submission (binds technicianEmpIds) -->
                                     <select id="technicianSelect" name="technicianEmpIds" multiple
                                         style="display: none;">
                                         <option th:each="user : ${users}" th:value="${user.employeeId}"></option>
                                     </select>
 
-                                    <!-- Custom tag input UI -->
                                     <div class="tag-input" id="technicianTagInput">
-                                        <div class="tag-list" id="technicianTagList">
-                                            <!-- Tags will be added here dynamically -->
-                                        </div>
+                                        <div class="tag-list" id="technicianTagList"></div>
                                         <input type="text" id="technicianTagSearch" class="tag-input-field"
-                                            placeholder="Add technician..." list="userOptions">
+                                            placeholder="Add technician..." list="userOptions" required>
                                     </div>
-
-                                    <datalist id="userOptions">
-                                        <option th:each="user : ${users}"
-                                            th:value="${user.name} + ' (' + ${user.employeeId} + ')'"
-                                            th:data-employee-id="${user.employeeId}">
-                                        </option>
-                                    </datalist>
 
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('technicianEmpIds')}"
                                         th:errors="*{technicianEmpIds}">
@@ -150,43 +129,28 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="supervisor">Supervisor</label>
-                                    <!-- Hidden Select for Binding -->
+                                    <label>Supervisor</label>
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control" id="supervisorInput"
+                                            placeholder="Search supervisor by name or ID" autocomplete="off" />
+                                        <div id="supervisorDropdown" class="dropdown-menu w-100"
+                                            style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                        </div>
+                                    </div>
                                     <select class="d-none" th:field="*{supervisor.employeeId}" id="supervisorSelect">
                                         <option th:each="user : ${users}" th:value="${user.employeeId}">User</option>
                                     </select>
-                                    <!-- Autocomplete Input -->
-                                    <input type="text" class="form-control" list="userOptions" id="supervisorInput"
-                                        placeholder="Search supervisor by name or ID" autocomplete="off" />
                                 </div>
                             </div>
-                        </div>
-                        <!-- <div class="form-row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Technician <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" list="userOptions" id="technicianInput"
-                                        placeholder="Search technician by name or ID" autocomplete="off" required />
-                                    <select class="d-none" th:field="*{technician.employeeId}" id="technicianSelect"></select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Supervisor</label>
-                                    <input type="text" class="form-control" list="userOptions" id="supervisorInput"
-                                        placeholder="Search supervisor by name or ID" autocomplete="off" />
-                                    <select class="d-none" th:field="*{supervisor.employeeId}"
-                                        id="supervisorSelect"></select>
-                                </div>
-                            </div>
-                        </div> -->
 
-                        <!-- Datalist for Users -->
-                        <!-- <datalist id="userOptions">
-                            <option th:each="user : ${users}" th:value="${user.name} + ' (' + ${user.employeeId} + ')'"
-                                th:data-employee-id="${user.employeeId}">
-                            </option>
-                        </datalist> -->
+                            <datalist id="userOptions">
+                                <option th:each="user : ${users}"
+                                    th:value="${user.name} + ' (' + ${user.employeeId} + ')'"
+                                    th:data-employee-id="${user.employeeId}">
+                                </option>
+                            </datalist>
+
+                        </div>
 
                         <!-- Row 4: Category & Status -->
                         <div class="form-row">
@@ -196,17 +160,16 @@
                                     <select class="form-control" th:field="*{category}" th:errorclass="is-invalid"
                                         required>
                                         <option value="" disabled selected>Select Category</option>
-                                        <option value="CORRECTIVE_MAINTENANCE">Corrective Maintenance</option>
-                                        <option value="PREVENTIVE_MAINTENANCE">Preventive Maintenance</option>
-                                        <option value="BREAKDOWN">Breakdown</option>
-                                        <option value="INSPECTION">Inspection</option>
-                                        <option value="MODIFICATION">Modification</option>
-                                        <option value="INSTALLATION">Installation</option>
-                                        <option value="OTHER">Other</option>
+                                        <th:block
+                                            th:each="category : ${T(ahqpck.maintenance.report.entity.WorkReport.Category).values()}">
+                                            <option th:value="${category}" th:text="${category}"
+                                                th:selected="${param.category == category}">
+                                            </option>
+                                        </th:block>
                                     </select>
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('category')}"
                                         th:errors="*{category}">
-                                        Category is mandatory.
+                                        Category is required.
                                     </div>
                                 </div>
                             </div>
@@ -216,15 +179,16 @@
                                     <select class="form-control" th:field="*{status}" th:errorclass="is-invalid"
                                         required>
                                         <option value="" disabled selected>Select Status</option>
-                                        <option value="OPEN">Open</option>
-                                        <option value="PENDING">Pending</option>
-                                        <option value="IN_PROGRESS">In Progress</option>
-                                        <option value="DONE">Done</option>
-                                        <option value="CLOSED">Closed</option>
+                                        <th:block
+                                            th:each="status : ${T(ahqpck.maintenance.report.entity.WorkReport.Status).values()}">
+                                            <option th:value="${status}" th:text="${status}"
+                                                th:selected="${param.status == status}">
+                                            </option>
+                                        </th:block>
                                     </select>
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('status')}"
                                         th:errors="*{status}">
-                                        Status is mandatory.
+                                        Status is required.
                                     </div>
                                 </div>
                             </div>
@@ -232,9 +196,13 @@
 
                         <!-- Problem & Solution -->
                         <div class="form-group">
-                            <label>Problem Description</label>
+                            <label>Problem Description <span class="text-danger">*</span></label>
                             <textarea class="form-control" th:field="*{problem}" rows="2"
-                                placeholder="Describe the issue..."></textarea>
+                                placeholder="Describe the issue..." required></textarea>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('problem')}"
+                                th:errors="*{problem}">
+                                Problem description is required.
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Solution</label>
@@ -246,9 +214,13 @@
                         <div class="form-row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>Start Time</label>
+                                    <label>Start Time <span class="text-danger">*</span></label>
                                     <input type="datetime-local" class="form-control" th:field="*{startTime}"
-                                        id="addStartTime" />
+                                        id="addStartTime" required />
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('startTime')}"
+                                        th:errors="*{startTime}">
+                                        Please select a valid datetime.
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -260,10 +232,10 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>Total Resolution Time (min)</label>
-                                    <input type="number" class="form-control" th:field="*{totalResolutionTimeMinutes}"
+                                    <label>Total Time (min)</label>
+                                    <input type="number" class="form-control" th:field="*{totalTimeMinutes}"
                                         id="addTotalTime" readonly />
-                                    <small id="addResolutionTimeDisplay" class="text-muted"></small>
+                                    <small id="addTotalTimeDisplay" class="text-muted"></small>
                                 </div>
                             </div>
                         </div>
@@ -282,14 +254,16 @@
                                     <select class="form-control" th:field="*{scope}" th:errorclass="is-invalid"
                                         required>
                                         <option value="" disabled selected>Select scope</option>
-                                        <option value="MECHANICAL">Mechanical</option>
-                                        <option value="ELECTRICAL">Electrical</option>
-                                        <option value="IT">IT</option>
-                                        <option value="OTHER">Other</option>
+                                        <th:block
+                                            th:each="scope : ${T(ahqpck.maintenance.report.entity.WorkReport.Scope).values()}">
+                                            <option th:value="${scope}" th:text="${scope}"
+                                                th:selected="${param.scope == scope}">
+                                            </option>
+                                        </th:block>
                                     </select>
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('scope')}"
                                         th:errors="*{scope}">
-                                        scope is mandatory.
+                                        Scope is required.
                                     </div>
                                 </div>
                             </div>
@@ -332,7 +306,7 @@
                 </div>
 
                 <div class="modal-body p-4">
-                    <form th:action="@{/work-reports/update}" th:object="${workReport}" method="post" id="formEdit">
+                    <form th:action="@{/work-reports/update}" method="post" id="formEdit">
                         <input type="hidden" name="id" id="editId">
 
                         <!-- Report Date & Shift -->
@@ -340,179 +314,109 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Report Date</label>
-                                    <input type="date" class="form-control" id="editReportDate"
-                                        name="reportDate">
+                                    <input type="date" class="form-control" id="editReportDate" name="reportDate" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Shift</label>
-                                    <select class="form-control" id="editShift" name="shift">
-                                        <option value="DAY">Day</option>
-                                        <option value="NIGHT">Night</option>
+                                    <label>Shift <span class="text-danger">*</span></label>
+                                    <select class="form-control" th:field="*{shift}" id="editShift" name="shift"
+                                        required>
+                                        <option value="" disabled selected>Select Shift</option>
+                                        <th:block
+                                            th:each="shift : ${T(ahqpck.maintenance.report.entity.WorkReport.Shift).values()}">
+                                            <option th:value="${shift}" th:text="${shift}"
+                                                th:selected="${param.shift == shift}">
+                                            </option>
+                                        </th:block>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Area & Equipment -->
-                        <!-- <div class="form-row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Area</label>
-                                    <input type="text" class="form-control" list="areaOptions" id="editAreaInput"
-                                        placeholder="Search area by name or code" autocomplete="off" />
-                                    <datalist id="areaOptions">
-                                        <option th:each="area : ${areas}"
-                                            th:value="${area.name} + ' (' + ${area.code} + ')'"
-                                            th:data-code="${area.code}">
-                                        </option>
-                                    </datalist>
-                                    <select class="d-none" id="editAreaSelect" name="area.code"></select>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Equipment <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" list="equipmentOptions"
-                                        id="editEquipmentInput" placeholder="Search equipment by name or code"
-                                        autocomplete="off" required />
-                                    <datalist id="equipmentOptions">
-                                        <option th:each="equipment : ${equipments}"
-                                            th:value="${equipment.name} + ' (' + ${equipment.code} + ')'"
-                                            th:data-code="${equipment.code}">
-                                        </option>
-                                    </datalist>
-                                    <select class="d-none" id="editEquipmentSelect" name="equipment.code"></select>
-                                    <div class="invalid-feedback">Equipment is required.</div>
-                                </div>
-                            </div>
-                        </div> -->
                         <div class="form-row">
                             <!-- Area -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Area <span class="text-danger">*</span></label>
-
-                                    <!-- Visible Autocomplete Input -->
-                                    <input type="text" class="form-control" list="areaOptions" id="editAreaInput"
-                                        placeholder="Search area by name or code" autocomplete="off" required />
-
-                                    <!-- Datalist for Suggestions -->
+                                    <label>Area</label>
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control" id="editAreaInput"
+                                            placeholder="Search area by name or code" autocomplete="off" />
+                                        <div id="areaDropdown" class="dropdown-menu w-100"
+                                            style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                        </div>
+                                    </div>
                                     <datalist id="areaOptions">
                                         <option th:each="area : ${areas}"
                                             th:value="${area.name} + ' (' + ${area.code} + ')'"
                                             th:data-code="${area.code}">
                                         </option>
                                     </datalist>
-
-                                    <!-- Hidden Select for Thymeleaf Binding -->
                                     <select class="d-none" name="area.code" id="editAreaSelect">
                                         <option th:each="area : ${areas}" th:value="${area.code}">Area</option>
                                     </select>
-
-                                    <!-- Validation Feedback -->
-                                    <!-- <div class="invalid-feedback" th:if="${#fields.hasErrors('area.code')}"
-                                        th:errors="*{area.code}">
-                                        Please select an area.
-                                    </div> -->
                                 </div>
                             </div>
 
                             <!-- Equipment -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Equipment <span class="text-danger">*</span></label>
-
-                                    <!-- Visible Autocomplete Input -->
-                                    <input type="text" class="form-control" list="equipmentOptions"
-                                        id="editEquipmentInput" placeholder="Search equipment by name or code"
-                                        autocomplete="off" required />
-
-                                    <!-- Datalist for Suggestions -->
+                                    <label>Equipment</label>
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control" id="editEquipmentInput"
+                                            placeholder="Search equipment by name or code" autocomplete="off" />
+                                        <div id="equipmentDropdown" class="dropdown-menu w-100"
+                                            style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                        </div>
+                                    </div>
                                     <datalist id="equipmentOptions">
                                         <option th:each="equipment : ${equipments}"
                                             th:value="${equipment.name} + ' (' + ${equipment.code} + ')'"
                                             th:data-code="${equipment.code}">
                                         </option>
                                     </datalist>
-
-                                    <!-- Hidden Select for Thymeleaf Binding -->
                                     <select class="d-none" name="equipment.code" id="editEquipmentSelect">
                                         <option th:each="equipment : ${equipments}" th:value="${equipment.code}">
                                             Equipment</option>
                                     </select>
-
-                                    <!-- Validation Feedback -->
-                                    <!-- <div class="invalid-feedback" th:if="${#fields.hasErrors('equipment.code')}"
-                                        th:errors="*{equipment.code}">
-                                        Please select equipment.
-                                    </div> -->
                                 </div>
                             </div>
                         </div>
                         <!-- Technician & Supervisor -->
                         <div class="form-row">
-                            <!-- Technician(s) -->
                             <div class="col-md-6">
-                                <!-- <div class="form-group">
-                                    <label>Technician(s) <span class="text-danger">*</span></label>
-
-                                    <select id="editTechnicianSelect" name="technicianEmpIds" multiple
-                                        style="display: none;">
-                                    </select>
-
-                                    <div class="tag-input" id="editTechnicianTagInput">
-                                        <div class="tag-list" id="editTechnicianTagList">
-
-                                        </div>
-                                        <input type="text" id="editTechnicianTagSearch" class="tag-input-field"
-                                            placeholder="Add technician..." list="userOptions">
-                                    </div>
-
-                                    <div class="invalid-feedback">
-                                        Please select at least one technician.
-                                    </div>
-                                </div> -->
-                                <!-- Technicians (Multiple) -->
                                 <div class="form-group">
                                     <label>Technician(s) <span class="text-danger">*</span></label>
 
-                                    <!-- Hidden select for form submission -->
                                     <select id="editTechnicianSelect" name="technicianEmpIds" multiple
                                         class="d-none"></select>
 
-                                    <!-- Custom Tag Input UI -->
                                     <div class="tag-input" id="editTechnicianTagInput">
-                                        <div class="tag-list" id="editTechnicianTagList">
-                                            <!-- Tags will be dynamically added here -->
-                                        </div>
+                                        <div class="tag-list" id="editTechnicianTagList"></div>
                                         <input type="text" id="editTechnicianSearch" class="tag-input-field"
                                             placeholder="Search technician by name or ID..." list="userOptions">
                                     </div>
 
-                                    <!-- Datalist is already defined globally -->
-                                    <!-- <datalist id="userOptions"> ... </datalist> -->
-
-                                    <div class="invalid-feedback">Please add at least one technician.</div>
+                                    <div class="invalid-feedback">Please select at least one technician.</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="supervisor">Supervisor</label>
-                                    <!-- Hidden Select for Binding -->
+                                    <label>Supervisor</label>
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control" id="editSupervisorInput"
+                                            placeholder="Search supervisor by name or ID" autocomplete="off" />
+                                        <div id="supervisorDropdown" class="dropdown-menu w-100"
+                                            style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                        </div>
+                                    </div>
                                     <select class="d-none" name="supervisor.employeeId" id="editSupervisorSelect">
                                         <option th:each="user : ${users}" th:value="${user.employeeId}">User</option>
                                     </select>
-                                    <!-- Autocomplete Input -->
-                                    <input type="text" class="form-control" list="userOptions" id="editSupervisorInput"
-                                        placeholder="Search supervisor by name or ID" autocomplete="off" />
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Datalist for Users -->
                         <datalist id="userOptions">
                             <option th:each="user : ${users}" th:value="${user.name} + ' (' + ${user.employeeId} + ')'"
                                 th:data-employee-id="${user.employeeId}">
@@ -523,36 +427,35 @@
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Category</label>
-                                    <select class="form-control" id="editCategory" name="category">
-                                        <option value="CORRECTIVE_MAINTENANCE">Corrective Maintenance</option>
-                                        <option value="PREVENTIVE_MAINTENANCE">Preventive Maintenance</option>
-                                        <option value="BREAKDOWN">Breakdown</option>
-                                        <option value="INSPECTION">Inspection</option>
-                                        <option value="MODIFICATION">Modification</option>
-                                        <option value="INSTALLATION">Installation</option>
-                                        <option value="OTHER">Other</option>
+                                    <label>Category <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="editCategory" name="category" required>
+                                        <th:block
+                                            th:each="category : ${T(ahqpck.maintenance.report.entity.WorkReport.Category).values()}">
+                                            <option th:value="${category}" th:text="${category}"
+                                                th:selected="${param.category == category}">
+                                            </option>
+                                        </th:block>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Status</label>
+                                    <label>Status <span class="text-danger">*</span></label>
                                     <select class="form-control" id="editStatus" name="status" required>
-                                        <option value="OPEN">Open</option>
-                                        <option value="PENDING">Pending</option>
-                                        <option value="IN_PROGRESS">In Progress</option>
-                                        <option value="DONE">Done</option>
-                                        <option value="CLOSED">Closed</option>
+                                        <th:block
+                                            th:each="status : ${T(ahqpck.maintenance.report.entity.WorkReport.Status).values()}">
+                                            <option th:value="${status}" th:text="${status}"
+                                                th:selected="${param.status == status}">
+                                            </option>
+                                        </th:block>
                                     </select>
-                                    <div class="invalid-feedback">Please select a status.</div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Problem & Solution -->
                         <div class="form-group">
-                            <label>Problem Description</label>
+                            <label>Problem Description <span class="text-danger">*</span></label>
                             <textarea class="form-control" id="editProblem" name="problem" rows="2"></textarea>
                         </div>
                         <div class="form-group">
@@ -564,7 +467,7 @@
                         <div class="form-row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>Start Time</label>
+                                    <label>Start Time <span class="text-danger">*</span></label>
                                     <input type="datetime-local" class="form-control" id="editStartTime"
                                         name="startTime">
                                 </div>
@@ -579,8 +482,8 @@
                                 <div class="form-group">
                                     <label>Total Resolution Time (min)</label>
                                     <input type="number" class="form-control" id="editTotalTime"
-                                        name="totalResolutionTimeMinutes" readonly />
-                                    <small id="editResolutionTimeDisplay" class="text-muted"></small>
+                                        name="totalTotalTimeMinutes" readonly />
+                                    <small id="editTotalTimeDisplay" class="text-muted"></small>
                                 </div>
                             </div>
                         </div>
@@ -595,14 +498,15 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Scope</label>
+                                    <label>Scope <span class="text-danger">*</span></label>
                                     <select class="form-control" id="editScope" name="scope" required>
-                                        <option value="MECHANICAL">Mechanical</option>
-                                        <option value="ELECTRICAL">Electrical</option>
-                                        <option value="IT">IT</option>
-                                        <option value="OTHER">Other</option>
+                                        <th:block
+                                            th:each="scope : ${T(ahqpck.maintenance.report.entity.WorkReport.Scope).values()}">
+                                            <option th:value="${scope}" th:text="${scope}"
+                                                th:selected="${param.scope == scope}">
+                                            </option>
+                                        </th:block>
                                     </select>
-                                    <div class="invalid-feedback">Please select a scope.</div>
                                 </div>
                             </div>
                         </div>
@@ -654,187 +558,6 @@
         </div>
     </div>
 
-    <!-- Flash Message Modal (Success or Error) -->
-    <div th:if="${error != null or success != null}" id="flashMessageModalContainer">
-        <div class="modal fade" id="flashMessageModal" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header"
-                        th:classappend="${error} ? 'bg-danger text-white' : 'bg-success text-white'">
-                        <h5 class="modal-title">
-                            <i
-                                th:class="${error} ? 'fas fa-exclamation-triangle mr-2' : 'fas fa-check-circle mr-2'"></i>
-                            <span th:text="${error} ? 'Error' : 'Success'">Status</span>
-                        </h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body py-4">
-                        <div th:if="${error}" class="text-center">
-                            <ul class="list-unstyled">
-                                <li th:each="err : ${#strings.listSplit(error, '|')}">
-                                    <p class="mb-2" th:text="${err.trim()}">Error</p>
-                                </li>
-                            </ul>
-                        </div>
-                        <div th:if="${success}" class="text-center">
-                            <p th:text="${success}">Success</p>
-                        </div>
-                    </div>
-                    <div class="modal-footer mt--3">
-                        <button type="button" class="btn" th:classappend="${error} ? 'btn-danger' : 'btn-success'"
-                            data-dismiss="modal">OK</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <style>
-        /* --- Switch Toggle Styling --- */
-        .switch {
-            position: absolute;
-            width: 0;
-            height: 0;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .switch+.switch-label {
-            position: relative;
-            background: #1a2035;
-            width: 50px;
-            height: 24px;
-            border-radius: 24px;
-            cursor: pointer;
-            transition: background 0.2s ease-in-out;
-            display: inline-block;
-            flex-shrink: 0;
-        }
-
-        .switch+.switch-label::after {
-            content: "";
-            background: #fff;
-            width: 20px;
-            height: 20px;
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            border-radius: 50%;
-            transition: left 0.3s ease-in-out;
-        }
-
-        .switch:checked+.switch-label {
-            background: #6861CE;
-        }
-
-        .switch:checked+.switch-label::after {
-            left: 28px;
-        }
-
-        .switch-text {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin-left: 8px;
-            transition: color 0.2s ease-in-out;
-        }
-
-        .switch:checked~.switch-text {
-            color: #495057;
-            font-weight: 500;
-        }
-
-        .switch:focus+.switch-label {
-            box-shadow: 0 0 0 2px rgba(104, 97, 206, 0.25);
-        }
-
-        /* Tag Input Container - Bootstrap-like */
-        .tag-input {
-            /* Match .form-control */
-            border: 1px solid #ebedf2;
-            border-radius: 0.25rem;
-            /* 6px - Bootstrap default */
-            padding: 0.375rem 0.75rem;
-            /* 6px 12px - Bootstrap padding */
-            min-height: calc(1.5em + 0.75rem + 2px);
-            /* ~42px, matches input height */
-            line-height: 1.5;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.375rem;
-            /* 6px gap between tags */
-            background-color: #fff;
-            background-clip: padding-box;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-            cursor: text;
-            width: 100%;
-        }
-
-        /* Focus style like Bootstrap */
-        .tag-input:focus-within {
-            border-color: #3e93ff;
-            outline: 0;
-        }
-
-        /* Optional: Disabled state */
-        .tag-input:has(input:disabled) {
-            background-color: #e9ecef;
-            opacity: 1;
-            pointer-events: none;
-        }
-
-        /* Tag List */
-        .tag-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        /* Individual Tag */
-        .tag {
-            background: #007bff;
-            color: white;
-            border-radius: 20px;
-            padding: 4px 10px;
-            font-size: 0.875rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 500;
-        }
-
-        .tag .remove-tag {
-            margin-left: 4px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #fff;
-            opacity: 0.8;
-            cursor: pointer;
-            line-height: 1;
-        }
-
-        .tag .remove-tag:hover {
-            opacity: 1;
-        }
-
-        /* Input Field inside Tag Input */
-        .tag-input-field {
-            border: none;
-            outline: none;
-            font-size: 0.9rem;
-            padding: 4px;
-            flex: 1;
-            min-width: 120px;
-        }
-
-        .tag-input-field::placeholder {
-            color: #999;
-        }
-    </style>
     <script>
         // 1. Parse datetime string
         function parseDateTime(dateTimeStr) {

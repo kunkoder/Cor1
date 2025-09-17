@@ -128,17 +128,13 @@ public class Complaint {
 
     @PrePersist
     public void prePersist() {
-        if (this.id == null) {
-            this.id = Base62.encode(UUID.randomUUID());
-        }
-
+        this.id = (this.id == null) ? Base62.encode(UUID.randomUUID()) : this.id;
+        
         LocalDateTime now = LocalDateTime.now();
-        if (this.reportDate == null) {
-            this.reportDate = now;
-        }
+
+        this.reportDate = (this.reportDate == null) ? now : this.reportDate;
         this.updatedAt = now;
         this.status = this.status != null ? this.status : Status.OPEN;
-
         this.priority = this.priority != null ? this.priority : Priority.MEDIUM;
     }
 

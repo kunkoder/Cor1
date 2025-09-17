@@ -191,7 +191,7 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
             SELECT
                 d.day AS date,
                 COALESCE(SUM(CASE WHEN wr.category = 'BREAKDOWN' THEN 1 ELSE 0 END), 0) AS breakdownCount,
-                COALESCE(SUM(CASE WHEN wr.category = 'BREAKDOWN' THEN wr.total_resolution_time_minutes ELSE 0 END), 0) AS totalResolutionTimeMinutes
+                COALESCE(SUM(CASE WHEN wr.category = 'BREAKDOWN' THEN wr.total_time_minutes ELSE 0 END), 0) AS totalTimeMinutes
             FROM (
                 -- Generate date range: from :from to :to
                 SELECT DATE_SUB(:to, INTERVAL (units.a + tens.a * 10) DAY) AS day
@@ -221,7 +221,7 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
                 YEAR(d.month_start) AS year,
                 MONTH(d.month_start) AS month,
                 COALESCE(SUM(CASE WHEN wr.category = 'BREAKDOWN' THEN 1 ELSE 0 END), 0) AS breakdownCount,
-                COALESCE(SUM(CASE WHEN wr.category = 'BREAKDOWN' THEN wr.total_resolution_time_minutes ELSE 0 END), 0) AS totalResolutionTimeMinutes
+                COALESCE(SUM(CASE WHEN wr.category = 'BREAKDOWN' THEN wr.total_time_minutes ELSE 0 END), 0) AS totalTimeMinutes
             FROM (
                 -- Generate 12 months of the year
                 SELECT DATE_ADD(

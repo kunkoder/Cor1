@@ -23,8 +23,6 @@ import ahqpck.maintenance.report.specification.ComplaintSpecification;
 import ahqpck.maintenance.report.util.FileUploadUtil;
 import ahqpck.maintenance.report.util.ImportUtil;
 import ahqpck.maintenance.report.util.ZeroPaddedCodeGenerator;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -41,7 +39,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -221,6 +218,19 @@ public class ComplaintService {
 
                 // === OPTIONAL FIELDS ===
 
+                String code = importUtil.toString(row.get("code"));
+                if (code != null && !code.trim().isEmpty()) {
+                    dto.setCode(code.trim());
+                    if (complaintRepository.existsByCodeIgnoreCase(dto.getCode())) {
+                        throw new IllegalArgumentException("Duplicate complaint code: " + dto.getCode());
+                    }
+                }
+                dto.setSubject(importUtil.toString(row.get("subject")));
+                dto.setDescription(importUtil.toString(row.get("description")));
+                dto.setActionTaken(importUtil.toString(row.get("actionTaken")));
+                dto.setCloseTime(importUtil.toLocalDateTime(row.get("closeTime")));
+                dto.setTotalTimeMinutes(importUtil.toDurationInMinutes(row.get("totalTimeMinutes")));
+
                 String assigneeEmpId = importUtil.toString(row.get("assignee"));
                 if (assigneeEmpId != null && !assigneeEmpId.trim().isEmpty()) {
                     UserDTO assigneeDTO = new UserDTO();
@@ -247,18 +257,9 @@ public class ComplaintService {
                     try {
                         dto.setStatus(Complaint.Status.valueOf(statusStr.trim().toUpperCase()));
                     } catch (Exception ignored) {
-                        throw new IllegalArgumentException("Invalid Status: " + statusStr);
+                        throw new IllegalArgumentException(
+                                "Invalid Status: " + statusStr + ". Use: OPEN, PENDING, CLOSED");
                     }
-                }
-
-                dto.setSubject(importUtil.toString(row.get("subject")));
-                dto.setDescription(importUtil.toString(row.get("description")));
-                dto.setActionTaken(importUtil.toString(row.get("actionTaken")));
-                dto.setCloseTime(importUtil.toLocalDateTime(row.get("closeTime")));
-                dto.setTotalTimeMinutes(importUtil.toDurationInMinutes(row.get("totalTimeMinutes")));
-
-                if (complaintRepository.existsByCodeIgnoreCase(dto.getCode())) {
-                    throw new IllegalArgumentException("Duplicate complaint code: " + dto.getCode());
                 }
 
                 createComplaint(dto, null);
@@ -299,7 +300,7 @@ public class ComplaintService {
             complaint.setTotalTimeMinutes(null);
             complaint.setStatus(newStatus); // Allow transition to any non-CLOSED
         }
-        // For other transitions (e.g. OPEN → IN_PROGRESS), no side effects
+        // For other transitions (e.g. OPEN → PENDING), no side effects
     }
 
     /**
@@ -333,10 +334,10 @@ public class ComplaintService {
     private void mapToEntity(Complaint complaint, ComplaintDTO dto) {
         complaint.setSubject(dto.getSubject());
         complaint.setDescription(dto.getDescription());
-        complaint.setPriority(dto.getPriority()); // @NotNull → guaranteed not null
-        complaint.setCategory(dto.getCategory()); // @NotNull → guaranteed not null
+        complaint.setPriority(dto.getPriority());
+        complaint.setCategory(dto.getCategory());
         complaint.setStatus(dto.getStatus());
-        complaint.setReportDate(dto.getReportDate()); // @NotNull → guaranteed not null
+        complaint.setReportDate(dto.getReportDate());
         complaint.setCloseTime(dto.getCloseTime());
         complaint.setTotalTimeMinutes(dto.getTotalTimeMinutes());
 
@@ -383,7 +384,7 @@ public class ComplaintService {
             complaint.setAssignee(null);
         }
 
-        // ✅ PARTS HANDLING: Use merge/update pattern
+        // PARTS HANDLING: Use merge/update pattern
         if (dto.getPartsUsed() != null) {
             // Create a copy of current parts to allow safe iteration
             List<ComplaintPart> existingParts = new ArrayList<>(complaint.getPartsUsed());
@@ -489,7 +490,7 @@ public class ComplaintService {
 
         return dto;
     }
-    
+
     private UserDTO mapToUserDTO(User user) {
         if (user == null)
             return null;
@@ -501,7 +502,7 @@ public class ComplaintService {
         dto.setEmail(user.getEmail());
         return dto;
     }
-    
+
     private PartDTO mapToPartDTO(Part part) {
         if (part == null)
             return null;

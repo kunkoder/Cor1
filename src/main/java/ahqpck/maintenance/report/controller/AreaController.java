@@ -9,6 +9,7 @@ import ahqpck.maintenance.report.repository.UserRepository;
 import ahqpck.maintenance.report.service.AreaService;
 import ahqpck.maintenance.report.service.UserService;
 import ahqpck.maintenance.report.util.ImportUtil;
+import ahqpck.maintenance.report.util.WebUtil;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -35,25 +36,22 @@ import java.util.stream.Collectors;
 public class AreaController {
 
     private final AreaService areaService;
-    private final UserRepository userRepository; // For populating responsiblePerson dropdown
     private final UserService userService;
 
-    @Value("${app.upload-area-image.dir:src/main/resources/static/upload/area/image}")
-    private String uploadDir; // Not used now, but reserved for future
-
-    // === LIST AREAS ===
     @GetMapping
     public String listAreas(
             @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "10") @Min(1) int size,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") String size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "true") boolean asc,
             Model model) {
 
         try {
             int zeroBasedPage = page - 1;
-            Page<AreaDTO> areaPage = areaService.getAllAreas(keyword, zeroBasedPage, size, sortBy, asc);
+            int parsedSize = "All".equalsIgnoreCase(size) ? Integer.MAX_VALUE : Integer.parseInt(size);
+
+            Page<AreaDTO> areaPage = areaService.getAllAreas(keyword, zeroBasedPage, parsedSize, sortBy, asc);
 
             model.addAttribute("areas", areaPage);
             model.addAttribute("keyword", keyword);
@@ -61,37 +59,19 @@ public class AreaController {
             model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("asc", asc);
-
             model.addAttribute("title", "Areas");
-            model.addAttribute("sortFields", new String[]{
-                    "code", "name", "status", "description"
-            });
+            model.addAttribute("users", getAllUsersForDropdown());
 
-            // Load users for responsiblePerson dropdown
-            // List<UserDTO> users = userRepository.findAll().stream()
-            //         .map(this::mapToUserDTO)
-            //         .collect(Collectors.toList());
-
-
-            List<UserDTO> users =  userService.getAllUsers(null, 0, Integer.MAX_VALUE, "name", true)
-                .getContent().stream()
-                .collect(Collectors.toList());
-    
-            
-
-            model.addAttribute("users", users);
-
-            // Empty DTO for create form
             model.addAttribute("areaDTO", new AreaDTO());
 
         } catch (Exception e) {
             model.addAttribute("error", "Failed to load areas: " + e.getMessage());
+            return "error/500";
         }
 
         return "area/index";
     }
 
-    // === CREATE AREA ===
     @PostMapping
     public String createArea(
             @Valid @ModelAttribute AreaDTO areaDTO,
@@ -100,18 +80,9 @@ public class AreaController {
 
                 System.out.println("Area" + areaDTO);
 
-        if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getAllErrors().stream()
-                    .map(error -> {
-                        String field = (error instanceof FieldError) ? ((FieldError) error).getField() : "Input";
-                        String message = error.getDefaultMessage();
-                        return field + ": " + message;
-                    })
-                    .collect(Collectors.joining(" | "));
-
-            ra.addFlashAttribute("error", errorMessage.isEmpty() ? "Invalid input" : errorMessage);
-            ra.addFlashAttribute("areaDTO", areaDTO);
-            return "redirect:/areas";
+        if (WebUtil.hasErrors(bindingResult)) {
+            ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
+            return "redirect:/complaints";
         }
 
         try {
@@ -126,7 +97,6 @@ public class AreaController {
         }
     }
 
-    // === UPDATE AREA ===
     @PostMapping("/update")
     public String updateArea(
             @Valid @ModelAttribute AreaDTO areaDTO,
@@ -134,18 +104,9 @@ public class AreaController {
             RedirectAttributes ra) {
                 System.out.println("Area" + areaDTO);
 
-        if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getAllErrors().stream()
-                    .map(error -> {
-                        String field = (error instanceof FieldError) ? ((FieldError) error).getField() : "Input";
-                        String message = error.getDefaultMessage();
-                        return field + ": " + message;
-                    })
-                    .collect(Collectors.joining(" | "));
-
-            ra.addFlashAttribute("error", errorMessage.isEmpty() ? "Invalid input" : errorMessage);
-            ra.addFlashAttribute("areaDTO", areaDTO);
-            return "redirect:/areas";
+        if (WebUtil.hasErrors(bindingResult)) {
+            ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
+            return "redirect:/complaints";
         }
 
         try {
@@ -160,7 +121,6 @@ public class AreaController {
         }
     }
 
-    // === DELETE AREA ===
     @GetMapping("/delete/{id}")
     public String deleteArea(@PathVariable String id, RedirectAttributes ra) {
         try {
@@ -184,8 +144,6 @@ public class AreaController {
             List<Map<String, Object>> data = mapper.readValue(dataJson,
                     new TypeReference<List<Map<String, Object>>>() {
                     });
-
-            // ra.addFlashAttribute("error", data);
 
             ImportUtil.ImportResult result = areaService.importAreasFromExcel(data);
 
@@ -215,31 +173,9 @@ public class AreaController {
         }
     }
 
-    // === HELPERS ===
-
-    private void handleBindingErrors(BindingResult bindingResult, RedirectAttributes ra, ComplaintDTO dto) {
-        String errorMessage = bindingResult.getAllErrors().stream()
-                .map(error -> {
-                    String field = (error instanceof org.springframework.validation.FieldError)
-                            ? ((org.springframework.validation.FieldError) error).getField()
-                            : "Input";
-                    String message = error.getDefaultMessage();
-                    return field + ": " + message;
-                })
-                .collect(Collectors.joining(" | "));
-
-        ra.addFlashAttribute("error", errorMessage.isEmpty() ? "Invalid input" : errorMessage);
-        ra.addFlashAttribute("complaintDTO", dto);
-    }
-
-    // Map User → UserDTO for dropdown
-    private UserDTO mapToUserDTO(User user) {
-        UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
-        dto.setName(user.getName());
-        dto.setEmployeeId(user.getEmployeeId());
-        dto.setEmail(user.getEmail());
-        dto.setStatus(user.getStatus());
-        return dto;
+    private List<UserDTO> getAllUsersForDropdown() {
+        return userService.getAllUsers(null, 0, Integer.MAX_VALUE, "name", true)
+                .getContent().stream()
+                .collect(Collectors.toList());
     }
 }

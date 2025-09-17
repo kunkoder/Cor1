@@ -4,5 +4,5 @@ public interface MonthlyBreakdownDTO {
     int getYear();
     int getMonth();
     Long getBreakdownCount();
-    Integer getTotalResolutionTimeMinutes();
+    Integer getTotalTimeMinutes();
 }
