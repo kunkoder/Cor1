@@ -28,7 +28,6 @@
                                         th:errorclass="is-invalid" required />
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('reportDate')}"
                                         th:errors="*{reportDate}">
-                                        Please select a valid date.
                                     </div>
                                 </div>
                             </div>
@@ -47,7 +46,6 @@
                                     </select>
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('shift')}"
                                         th:errors="*{shift}">
-                                        Shift is required.
                                     </div>
                                 </div>
                             </div>
@@ -122,7 +120,7 @@
                                         <div class="tag-list" id="technicianTagList"></div>
                                         <div class="position-relative w-100">
                                             <input type="text" id="technicianTagSearch" class="tag-input-field"
-                                                placeholder="Add technician..." autocomplete="off" required>
+                                                placeholder="Add technician..." autocomplete="off">
                                             <div id="technicianTagSearchDropdown" class="dropdown-menu w-100"
                                                 style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                             </div>
@@ -131,7 +129,6 @@
 
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('technicianEmpIds')}"
                                         th:errors="*{technicianEmpIds}">
-                                        Please select at least one technician.
                                     </div>
                                 </div>
                             </div>
@@ -177,7 +174,6 @@
                                     </select>
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('category')}"
                                         th:errors="*{category}">
-                                        Category is required.
                                     </div>
                                 </div>
                             </div>
@@ -196,7 +192,6 @@
                                     </select>
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('status')}"
                                         th:errors="*{status}">
-                                        Status is required.
                                     </div>
                                 </div>
                             </div>
@@ -209,13 +204,12 @@
                                 placeholder="Describe the issue..." required></textarea>
                             <div class="invalid-feedback" th:if="${#fields.hasErrors('problem')}"
                                 th:errors="*{problem}">
-                                Problem description is required.
                             </div>
                         </div>
                         <div class="form-group">
                             <label>Solution</label>
                             <textarea class="form-control" th:field="*{solution}" rows="2"
-                                placeholder="Describe the resolution..."></textarea>
+                                placeholder="Describe the solution..."></textarea>
                         </div>
 
                         <!-- Start & Stop Time -->
@@ -227,7 +221,6 @@
                                         id="addStartTime" required />
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('startTime')}"
                                         th:errors="*{startTime}">
-                                        Please select a valid datetime.
                                     </div>
                                 </div>
                             </div>
@@ -271,7 +264,6 @@
                                     </select>
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('scope')}"
                                         th:errors="*{scope}">
-                                        Scope is required.
                                     </div>
                                 </div>
                             </div>
@@ -350,16 +342,10 @@
                                     <div class="position-relative">
                                         <input type="text" class="form-control" id="editAreaInput"
                                             placeholder="Search area by name or code" autocomplete="off" />
-                                        <div id="areaDropdown" class="dropdown-menu w-100"
+                                        <div id="editAreaDropdown" class="dropdown-menu w-100"
                                             style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                         </div>
                                     </div>
-                                    <datalist id="areaOptions">
-                                        <option th:each="area : ${areas}"
-                                            th:value="${area.name} + ' (' + ${area.code} + ')'"
-                                            th:data-code="${area.code}">
-                                        </option>
-                                    </datalist>
                                     <select class="d-none" name="area.code" id="editAreaSelect">
                                         <option th:each="area : ${areas}" th:value="${area.code}">Area</option>
                                     </select>
@@ -373,16 +359,10 @@
                                     <div class="position-relative">
                                         <input type="text" class="form-control" id="editEquipmentInput"
                                             placeholder="Search equipment by name or code" autocomplete="off" />
-                                        <div id="equipmentDropdown" class="dropdown-menu w-100"
+                                        <div id="editEquipmentDropdown" class="dropdown-menu w-100"
                                             style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                         </div>
                                     </div>
-                                    <datalist id="equipmentOptions">
-                                        <option th:each="equipment : ${equipments}"
-                                            th:value="${equipment.name} + ' (' + ${equipment.code} + ')'"
-                                            th:data-code="${equipment.code}">
-                                        </option>
-                                    </datalist>
                                     <select class="d-none" name="equipment.code" id="editEquipmentSelect">
                                         <option th:each="equipment : ${equipments}" th:value="${equipment.code}">
                                             Equipment</option>
@@ -404,8 +384,6 @@
                                         <input type="text" id="editTechnicianSearch" class="tag-input-field"
                                             placeholder="Search technician by name or ID..." list="userOptions">
                                     </div>
-
-                                    <div class="invalid-feedback">Please select at least one technician.</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -414,7 +392,7 @@
                                     <div class="position-relative">
                                         <input type="text" class="form-control" id="editSupervisorInput"
                                             placeholder="Search supervisor by name or ID" autocomplete="off" />
-                                        <div id="supervisorDropdown" class="dropdown-menu w-100"
+                                        <div id="editSupervisorDropdown" class="dropdown-menu w-100"
                                             style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                         </div>
                                     </div>
@@ -424,12 +402,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <datalist id="userOptions">
-                            <option th:each="user : ${users}" th:value="${user.name} + ' (' + ${user.employeeId} + ')'"
-                                th:data-employee-id="${user.employeeId}">
-                            </option>
-                        </datalist>
 
                         <!-- Category & Status -->
                         <div class="form-row">
@@ -488,7 +460,7 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>Total Resolution Time (min)</label>
+                                    <label>Total Time Time (min)</label>
                                     <input type="number" class="form-control" id="editTotalTime"
                                         name="totalTotalTimeMinutes" readonly />
                                     <small id="editTotalTimeDisplay" class="text-muted"></small>
@@ -525,6 +497,39 @@
                                     <textarea class="form-control" id="editRemark" name="remark" rows="2"></textarea>
                                 </div>
                             </div>
+                        </div>
+                        <!-- Parts Used Table + Modal -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="d-flex align-items-center mb-0">
+                                    <i class="fas fa-cogs mr-2 text-secondary"></i> Parts Used
+                                </h5>
+                                <button type="button" class="btn btn-primary btn-sm btn-round" data-toggle="modal"
+                                    data-target="#addPartModal">
+                                    <i class="fas fa-plus"></i> Add Part
+                                </button>
+                            </div>
+                            <span id=""></span>
+
+                            <div th:replace="~{fragments/part-modal :: part-modal}"></div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm" id="partsTable">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Part Code</th>
+                                            <th>Name</th>
+                                            <th>Category</th>
+                                            <th class="text-center">Qty</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Rows will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="partsUsedInputs"></div>
                         </div>
                     </form>
                 </div>
@@ -565,6 +570,8 @@
             </div>
         </div>
     </div>
+
+    <div th:replace="~{fragments/error-modal :: error-modal}"></div>
 
     <style>
         .tag-input {
@@ -752,6 +759,15 @@
             });
         }
 
+        setupLiveSearch('areaInput', 'areaSelect', 'areaOptions', 'Area');
+        setupLiveSearch('editAreaInput', 'editAreaSelect', 'areaOptions', 'Area');
+
+        setupLiveSearch('equipmentInput', 'equipmentSelect', 'equipmentOptions', 'Equipment');
+        setupLiveSearch('editEquipmentInput', 'editEquipmentSelect', 'equipmentOptions', 'Equipment');
+
+        setupLiveSearch('supervisorInput', 'supervisorSelect', 'userOptions', 'Supervisor');
+        setupLiveSearch('editSupervisorInput', 'editSupervisorSelect', 'userOptions', 'Supervisor');
+
         function setupTagInput(inputId, tagListId, tagSearchId, selectId, formatDisplay = val => val) {
             const tagInput = document.getElementById(inputId);
             const tagList = document.getElementById(tagListId);
@@ -933,338 +949,103 @@
             tagInput.addEventListener("click", () => tagSearch.focus());
         }
 
-        setupLiveSearch('supervisorInput', 'supervisorSelect', 'userOptions', 'Supervisor');
         setupTagInput('technicianInput', 'technicianTagList', 'technicianTagSearch', 'technicianSelect');
+        setupTagInput('editTechnicianInput', 'editTechnicianTagList', 'editTechnicianSearch', 'editTechnicianSelect');
     </script>
 
-    <!-- <script>
-        // 1. Parse datetime string
-        function parseDateTime(dateTimeStr) {
-            if (!dateTimeStr) return null;
-            const date = new Date(dateTimeStr);
-            return isNaN(date.getTime()) ? null : date;
+    <script>
+        // Parse ISO datetime string to Date object
+        function parseDateTime(str) {
+            if (!str) return null;
+            const d = new Date(str);
+            return isNaN(d.getTime()) ? null : d;
         }
 
-        // 2. Calculate duration in minutes
-        function calculateDurationInMinutes(startStr, endStr) {
+        // Calculate duration in minutes between two datetime strings
+        function getDurationMinutes(startStr, endStr) {
             const start = parseDateTime(startStr);
             const end = parseDateTime(endStr);
-
             if (!start || !end || end < start) return 0;
-
-            return Math.floor((end - start) / (1000 * 60));
+            return Math.floor((end - start) / 60000); // 60 * 1000
         }
 
-        // 3. Format minutes to "Xd Xh Xm"
-        function formatResolutionTime(totalMinutes) {
-            const minutes = parseInt(totalMinutes, 10);
-            if (isNaN(minutes) || minutes <= 0) return '0m';
+        // Format minutes as "Xd Xh Xm" (e.g., "1d 2h 30m")
+        function formatDuration(mins) {
+            mins = parseInt(mins, 10);
+            if (isNaN(mins) || mins <= 0) return '0m';
 
-            const days = Math.floor(minutes / (24 * 60));
-            const remainingAfterDays = minutes % (24 * 60);
-            const hours = Math.floor(remainingAfterDays / 60);
-            const mins = remainingAfterDays % 60;
+            const days = Math.floor(mins / 1440); // 24*60
+            const hours = Math.floor((mins % 1440) / 60);
+            const minutes = mins % 60;
 
-            let display = '';
-            if (days > 0) display += days + 'd ';
-            if (hours > 0) display += hours + 'h ';
-            if (mins > 0 || display === '') display += mins + 'm';
+            let parts = [];
+            if (days > 0) parts.push(`${days}d`);
+            if (hours > 0) parts.push(`${hours}h`);
+            if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
 
-            return display.trim();
+            return parts.join(' ');
         }
 
-        // 4. Update both value and display
-        function updateResolutionTime(startId, endId, totalMinutesId, displayId) {
+        // Generic updater for any form (Add/Edit)
+        function updateDuration(startId, stopId, totalInputId, displayId) {
             const start = document.getElementById(startId)?.value;
-            const end = document.getElementById(endId)?.value;
-            const totalMinutes = calculateDurationInMinutes(start, end);
+            const stop = document.getElementById(stopId)?.value;
+            const totalMins = getDurationMinutes(start, stop);
 
-            const totalInput = document.getElementById(totalMinutesId);
-            if (totalInput) {
-                totalInput.value = totalMinutes > 0 ? totalMinutes : '';
-            }
+            const display = document.getElementById(displayId);
+            if (display) display.textContent = formatDuration(totalMins);
 
-            const displayEl = document.getElementById(displayId);
-            if (displayEl) {
-                displayEl.textContent = formatResolutionTime(totalMinutes);
-            }
+            const input = document.getElementById(totalInputId);
+            if (input) input.value = totalMins > 0 ? totalMins : '';
         }
 
-        // 5. Modal-specific functions
+        // Specific wrappers (keep these — you call them externally)
         function calculateAddTotalTime() {
-            updateResolutionTime('addStartTime', 'addStopTime', 'addTotalTime', 'addResolutionTimeDisplay');
+            updateDuration('addStartTime', 'addStopTime', 'addTotalTime', 'addTotalTimeDisplay');
         }
 
-        // 5. Calculate and update resolution time for Edit modal (improved)
         function calculateEditTotalTime() {
-            const startStr = document.getElementById('editStartTime')?.value;
-            const endStr = document.getElementById('editStopTime')?.value;
-            const totalMinutesInput = document.getElementById('editTotalTime');
-            const displayEl = document.getElementById('editResolutionTimeDisplay');
-
-            if (!displayEl) return;
-
-            const totalMinutes = calculateDurationInMinutes(startStr, endStr);
-
-            // Always update the displayed text
-            displayEl.textContent = formatResolutionTime(totalMinutes);
-
-            // Optionally: Sync hidden input if you want to auto-correct
-            if (totalMinutesInput && totalMinutes > 0) {
-                totalMinutesInput.value = totalMinutes;
-            }
+            updateDuration('editStartTime', 'editStopTime', 'editTotalTime', 'editTotalTimeDisplay');
         }
 
-        // 6. Event Listeners
+        // Setup event listeners on DOM ready
         document.addEventListener("DOMContentLoaded", function () {
+            // Add modal
             const addStart = document.getElementById('addStartTime');
             const addStop = document.getElementById('addStopTime');
-            const editStart = document.getElementById('editStartTime');
-            const editStop = document.getElementById('editStopTime');
-
             if (addStart && addStop) {
                 addStart.addEventListener('change', calculateAddTotalTime);
                 addStop.addEventListener('change', calculateAddTotalTime);
             }
 
+            // Edit modal
+            const editStart = document.getElementById('editStartTime');
+            const editStop = document.getElementById('editStopTime');
             if (editStart && editStop) {
                 editStart.addEventListener('change', calculateEditTotalTime);
                 editStop.addEventListener('change', calculateEditTotalTime);
             }
 
-            // Recalculate on modal open
+            // Recalculate on modal open (optional safety net)
             const addModal = document.getElementById('addRowModal');
-            if (addModal) {
-                addModal.addEventListener('shown.bs.modal', calculateAddTotalTime);
-            }
-
             const editModal = document.getElementById('editRowModal');
-            if (editModal) {
-                editModal.addEventListener('shown.bs.modal', calculateEditTotalTime);
-            }
+            if (addModal) addModal.addEventListener('shown.bs.modal', calculateAddTotalTime);
+            if (editModal) editModal.addEventListener('shown.bs.modal', calculateEditTotalTime);
 
-            // Initial call
             calculateAddTotalTime();
-            calculateEditTotalTime();
         });
     </script>
-    <script>
-        function syncSelect(inputId, selectId, optionsDatalistId) {
-            const input = document.getElementById(inputId);
-            const select = document.getElementById(selectId);
-
-            input.addEventListener('input', function () {
-                const value = input.value.trim();
-                if (!value) {
-                    select.value = '';
-                    return;
-                }
-
-                // Find matching option in datalist
-                const options = document.querySelectorAll(`#${optionsDatalistId} option`);
-                for (let opt of options) {
-                    if (opt.value === value) {
-                        // Extract code or employeeId depending on field
-                        const code = opt.dataset.code || opt.dataset.employeeId;
-                        if (code) {
-                            select.value = code;
-                        }
-                        return;
-                    }
-                }
-                // No match
-                select.value = '';
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            syncSelect('editAreaInput', 'editAreaSelect', 'areaOptions');
-            syncSelect('editEquipmentInput', 'editEquipmentSelect', 'equipmentOptions');
-            syncSelect('editSupervisorInput', 'editSupervisorSelect', 'userOptions');
-        });
-
-
-        // function syncSelect(inputId, selectId) {
-        //     const input = document.getElementById(inputId);
-        //     const select = document.getElementById(selectId);
-
-        //     if (!input || !select) {
-        //         console.warn(`Missing input or select: ${inputId}, ${selectId}`);
-        //         return;
-        //     }
-
-        //     // input.addEventListener('input', () => {
-        //     //     const options = document.querySelectorAll(`#${selectId === 'technicianSelect' || selectId === 'supervisorSelect' || selectId === 'editTechnicianSelect' || selectId === 'editSupervisorSelect'
-        //     //         ? 'userOptions'
-        //     //         : selectId === 'areaSelect' || selectId === 'editAreaSelect'
-        //     //             ? 'areaOptions'
-        //     //             : 'equipmentOptions'} option`);
-
-        //     //     const opt = [...options].find(o => o.value === input.value);
-        //     //     select.value = opt ? (opt.dataset.employeeId || opt.dataset.code) : '';
-        //     // });
-
-        //     input.addEventListener('input', () => {
-        //         const selectedOption = [...document.querySelectorAll(optionsSelector + ' option')]
-        //             .find(opt => opt.value === input.value.trim());
-
-        //         select.value = selectedOption ? selectedOption.dataset[dataAttr] || selectedOption.value : '';
-        //     });
-        // }
-
-        // // Initialize all fields
-        // syncSelect('areaInput', 'areaSelect');
-        // syncSelect('equipmentInput', 'equipmentSelect');
-        // syncSelect('technicianInput', 'technicianSelect');
-        // syncSelect('supervisorInput', 'supervisorSelect');
-        // syncSelect('editAreaInput', 'editAreaSelect');
-        // syncSelect('editEquipmentInput', 'editEquipmentSelect');
-        // syncSelect('editTechnicianInput', 'editTechnicianSelect');
-        // syncSelect('editSupervisorInput', 'editSupervisorSelect');
-    </script>
-    <script>
+    <!-- <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Extract user options as { value: "Name (ID)", id: "ID" }
-            const userOptions = Array.from(document.querySelectorAll("#userOptions option")).map(opt => ({
-                display: opt.value,
-                id: opt.dataset.employeeId
-            }));
-
-            function setupTagInput(inputId, tagListId, tagSearchId, selectId, formatDisplay = val => val) {
-                const tagInput = document.getElementById(inputId);
-                const tagList = document.getElementById(tagListId);
-                const tagSearch = document.getElementById(tagSearchId);
-                const hiddenSelect = document.getElementById(selectId);
-
-                if (!tagInput || !tagList || !tagSearch || !hiddenSelect) return;
-
-                function syncSelect() {
-                    hiddenSelect.innerHTML = "";
-                    Array.from(tagList.querySelectorAll(".tag")).forEach(tag => {
-                        const option = document.createElement("option");
-                        option.value = tag.dataset.value;
-                        option.selected = true;
-                        hiddenSelect.appendChild(option);
-                    });
-                }
-
-                function addTag(value, displayText) {
-                    if (!value || Array.from(tagList.querySelectorAll(".tag")).some(t => t.dataset.value === value)) return;
-                    const tag = document.createElement("div");
-                    tag.className = "tag";
-                    tag.dataset.value = value;
-                    tag.innerHTML = `
-            ${displayText || value}
-            <span class="remove-tag" onclick="window.removeTag(this, '${selectId}', '${tagListId}')">×</span>
-        `;
-                    tagList.appendChild(tag);
-                    syncSelect();
-                }
-
-                window.removeTag = function (el, selectId, tagListId) {
-                    const tag = el.parentElement;
-                    const value = tag.dataset.value;
-                    tag.remove();
-
-                    const select = document.getElementById(selectId);
-                    const option = select.querySelector(`option[value="${value}"]`);
-                    if (option) option.remove();
-
-                    select.dispatchEvent(new Event('change'));
-                };
-
-                // Autocomplete from datalist
-                const datalist = document.getElementById('userOptions');
-                const options = Array.from(datalist?.options || []).map(opt => ({
-                    value: opt.value,
-                    employeeId: opt.dataset.employeeId
-                }));
-
-                tagSearch.addEventListener("keydown", e => {
-                    if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
-                        e.preventDefault();
-                        const input = tagSearch.value.trim().replace(/,$/, "");
-                        if (!input) return;
-
-                        // Match by display text: "John (EMP001)"
-                        const matched = options.find(opt => opt.value === input);
-                        if (matched) {
-                            const match = matched.value.match(/(.+) \((.+)\)/);
-                            if (match) {
-                                const name = match[1];
-                                const empId = match[2];
-                                addTag(empId, `${name} (${empId})`);
-                                tagSearch.value = "";
-                            }
-                        }
-                    }
-                });
-
-                tagSearch.addEventListener("change", () => {
-                    const input = tagSearch.value.trim();
-                    const matched = options.find(opt => opt.value === input);
-                    if (matched) {
-                        const match = matched.value.match(/(.+) \((.+)\)/);
-                        if (match) {
-                            const name = match[1];
-                            const empId = match[2];
-                            addTag(empId, `${name} (${empId})`);
-                            tagSearch.value = "";
-                        }
-                    }
-                });
-
-                tagInput.addEventListener("click", () => tagSearch.focus());
-            }
-
-            setupTagInput(
-                "technicianInput",        // container
-                "technicianTagList",         // tag list
-                "technicianTagSearch",       // search input
-                "technicianSelect"           // hidden select
-            );
-
-            setupTagInput(
-                "editTechnicianInput",   // container
-                "editTechnicianTagList",    // tag list
-                "editTechnicianSearch",     // search input
-                "editTechnicianSelect"      // hidden select
-            );
-
-            // Initialize Role Tag Inputs
-            // setupTagInput(
-            //     "tagInput", "tagList", "tagSearch", "roleSelect",
-            //     Array.from(document.querySelectorAll("#roleOptions option")).map(o => o.value)
-            // );
-            // setupTagInput(
-            //     "editTagInput", "editTagList", "editTagSearch", "editRoleSelect",
-            //     Array.from(document.querySelectorAll("#roleOptions option")).map(o => o.value)
-            // );
-
-            // // Initialize Technician Tag Inputs (NEW)
-            // setupTagInput(
-            //     "technicianInput", "technicianTagList", "technicianTagSearch", "technicianSelect",
-            //     userOptions
-            // );
-            // setupTagInput(
-            //     "editTechnicianInput", "editTechnicianTagList", "editTechnicianTagSearch", "editTechnicianSelect",
-            //     userOptions
-            // );
-        });
-    </script>
-    <script>
-        // Debug: Print form data before submission
-        document.addEventListener("DOMContentLoaded", function () {
-            const formEdit = document.getElementById("formAdd");
-            if (formEdit) {
-                formEdit.addEventListener("submit", function (event) {
+            const formInput = document.getElementById("formAdd");
+            if (formInput) {
+                formInput.addEventListener("submit", function (event) {
                     event.preventDefault();
 
-                    console.log("📋 DEBUG: Form Submission Data (Add Work Report)");
+                    console.log("DEBUG: Form Submission Data (Add Work Report)");
                     console.log("=".repeat(50));
 
-                    const formData = new FormData(formEdit);
-
+                    const formData = new FormData(formInput);
                     const entries = {};
                     for (let [key, value] of formData.entries()) {
                         if (value === "") {
@@ -1273,15 +1054,9 @@
                             entries[key] = value;
                         }
                     }
-
-                    // Pretty print to console
                     console.table(entries);
-
-                    console.log("📦 Full FormData object:", Object.fromEntries(formData));
-
-                    // Optional: Submit the form after debug
-                    // Uncomment the line below when ready
-                    formEdit.submit();
+                    console.log("ull FormData object:", Object.fromEntries(formData));
+                    formInput.submit();
                 });
             }
         });

@@ -52,7 +52,7 @@ public class WorkReportController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateTo,
-            @RequestParam(required = false) WorkReport.Category category,
+            @RequestParam(required = false) WorkReport.Category group,
             @RequestParam(required = false) String equipmentCode,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") String size,
@@ -69,7 +69,7 @@ public class WorkReportController {
             LocalDateTime to = reportDateTo != null ? reportDateTo.atTime(LocalTime.MAX) : null;
 
             Page<WorkReportDTO> reportPage = workReportService.getAllWorkReports(keyword, from, to,
-                    category, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
+                    group, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
             model.addAttribute("workReports", reportPage);
             model.addAttribute("keyword", keyword);
             model.addAttribute("reportDateFrom", reportDateFrom);
@@ -79,7 +79,7 @@ public class WorkReportController {
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("asc", asc);
 
-            model.addAttribute("title", "Work Report List");
+            model.addAttribute("title", "Work Report");
 
             model.addAttribute("users", getAllUsersForDropdown());
             model.addAttribute("areas", getAllAreasForDropdown());
@@ -89,8 +89,8 @@ public class WorkReportController {
 
         } catch (Exception e) {
             model.addAttribute("error", "Failed to load work reports: " + e.getMessage());
-            return "error/500";
-            // e.printStackTrace();
+            // return "error/500";
+            e.printStackTrace();
         }
 
         return "work-report/index";

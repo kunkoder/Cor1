@@ -111,7 +111,7 @@
                                         </div>
                                         <div class="form-group">
                                             <label class="form-label small d-block">Category</label>
-                                            <select name="category" class="form-control form-control-sm w-100">
+                                            <select name="group" class="form-control form-control-sm w-100">
                                                 <option value="">All Category</option>
                                                 <th:block
                                                     th:each="category : ${T(ahqpck.maintenance.report.entity.WorkReport.Category).values()}">
@@ -218,8 +218,14 @@
                                             <td data-field="equipment"
                                                 th:data-equipment-code="${report.equipment?.code ?: ''}"
                                                 th:text="${report.equipment?.name ?: '-'}">-</td>
-                                            <td data-field="category"
-                                                th:text="${report.category?.name != null ? #strings.replace(report.category.name, '_', ' ') : '-'}">
+                                            <td data-field="category">
+                                                <span class="badge badge-pill px-3 py-2" th:classappend="${
+                                                        report.category == report.category.CORRECTIVE_MAINTENANCE ? 'badge-warning' :
+                                                        report.category == report.category.PREVENTIVE_MAINTENANCE ? 'badge-info' :
+                                                        report.category == report.category.BREAKDOWN ? 'badge-danger' :
+                                                        'badge-dark'
+                                                    }" th:text="${report.category ?: '-'}">
+                                                </span>
                                             </td>
                                             <td data-field="problem" th:text="${report.problem ?: '-'}"></td>
                                             <td data-field="solution" th:text="${report.solution ?: '-'}"></td>
@@ -259,9 +265,9 @@
                                             </td>
                                             <td data-field="scope">
                                                 <span class="badge badge-pill px-3 py-2" th:classappend="${
-                                                        report.category == report.category.MECHANICAL ? 'badge-info' :
-                                                        report.category == report.category.ELECTRICAL ? 'badge-danger' :
-                                                        report.category == report.category.IT ? 'badge-success' :
+                                                        report.scope == report.scope.MECHANICAL ? 'badge-info' :
+                                                        report.scope == report.scope.ELECTRICAL ? 'badge-danger' :
+                                                        report.scope == report.scope.IT ? 'badge-success' :
                                                         'badge-dark'
                                                     }" th:text="${report.scope ?: '-'}">
                                                 </span>
@@ -270,6 +276,7 @@
                                             <td data-field="remark" th:text="${report.remark ?: '-'}"></td>
                                             <td>
                                                 <div class="form-button-action">
+                                                    <span data-field="parts" th:text="${report.partsUsed}"></span>
                                                     <button type="button"
                                                         class="btn btn-link btn-primary btn-lg edit-row"
                                                         th:data-id="${report.id}">
@@ -308,7 +315,7 @@
                                             <li class="page-item"
                                                 th:classappend="${!workReports.hasPrevious} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/workReports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, category=${param.category}, page=${workReports.number}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, group=${param.group}, page=${workReports.number}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
                                                     th:if="${workReports.hasPrevious}">Prev</a>
                                                 <span class="page-link" th:if="${!workReports.hasPrevious}">Prev</span>
                                             </li>
@@ -316,7 +323,7 @@
                                             <li class="page-item" th:if="${workReports.number > 0}"
                                                 th:classappend="${!workReports.hasPrevious} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/workReports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, category=${param.category}, page=1, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">1</a>
+                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, group=${param.group}, page=1, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">1</a>
                                             </li>
 
                                             <li class="page-item"
@@ -337,14 +344,14 @@
                                                 th:if="${workReports.number + 1 < workReports.totalPages}"
                                                 th:classappend="${!workReports.hasNext} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/workReports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, category=${param.category}, page=${workReports.totalPages}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">
+                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, group=${param.group}, page=${workReports.totalPages}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">
                                                     <span th:text="${workReports.totalPages}">20</span>
                                                 </a>
                                             </li>
 
                                             <li class="page-item" th:classappend="${!workReports.hasNext} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/workReports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, category=${param.category}, page=${workReports.number + 2}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, group=${param.group}, page=${workReports.number + 2}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
                                                     th:if="${workReports.hasNext}">Next</a>
                                                 <span class="page-link" th:if="${!workReports.hasNext}">Next</span>
                                             </li>
@@ -361,6 +368,12 @@
 
     <!-- Scripts -->
     <th:block layout:fragment="scripts">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        <script src="/assets/js/import-wizard.js"></script>
+        <script src="/assets/js/export-wizard.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
 
@@ -451,13 +464,13 @@
 
                         // Populate simple fields
                         document.getElementById('editId').value = currentId;
-                        document.getElementById('editCode').value = row.querySelector('[data-field="code"]')?.textContent.trim() || '';
                         document.getElementById('editReportDate').value = toIsoDate(row.querySelector('[data-field="reportDate"]')?.textContent.trim() || '');
                         document.getElementById('editShift').value = row.querySelector('[data-field="shift"]')?.textContent.trim() || '';
 
                         // Category
-                        const categoryText = row.querySelector('[data-field="category"]')?.textContent.trim() || '';
-                        document.getElementById('editCategory').value = categoryText.toUpperCase().replace(/\s+/g, '_');
+                        const categoryBadge = row.querySelector('[data-field="category"] .badge');
+                        const categoryText = categoryBadge?.textContent.trim().toUpperCase() || '';
+                        document.getElementById('editCategory').value = categoryText;
 
                         // Status
                         const statusBadge = row.querySelector('[data-field="status"] .badge');
@@ -481,6 +494,7 @@
                         const totalTimeText = row.querySelector('[data-field="totalTimeMinutes"]')?.textContent.trim() || '';
                         const minutes = totalTimeText.match(/\d+/);
                         document.getElementById('editTotalTime').value = minutes ? minutes[0] : '';
+                        calculateEditTotalTime()
 
                         // Work Type & Remark
                         document.getElementById('editWorkType').value = row.querySelector('[data-field="workType"]')?.textContent.trim() || '';
@@ -511,6 +525,33 @@
                         const supId = supCell?.dataset.employeeId || '';
                         document.getElementById('editSupervisorInput').value = supName && supId ? `${supName} (${supId})` : '-';
                         document.getElementById('editSupervisorSelect').value = supId;
+
+                        // --- Populate Parts Used Table ---
+                        const partsUsedSpan = row.querySelector('[data-field="workType"]');
+                        const partsUsedData = partsUsedSpan ? JSON.parse(partsUsedSpan.dataset.parts) : [];
+
+                        console.log("part span", partsUsedSpan);
+                        console.log("part data", partsUsedData);
+                        const partsTableBody = document.querySelector('#partsTable tbody');
+                        partsTableBody.innerHTML = ''; // Clear existing rows
+
+                        partsUsedData.forEach(partDto => {
+                            const tr = document.createElement('tr');
+                            tr.dataset.partId = partDto.part.id;
+                            tr.dataset.partCode = partDto.part.code;
+
+                            tr.innerHTML = `
+                            <td><code class="bg-light px-2 py-1 rounded">${partDto.part.code || '-'}</code></td>
+                            <td>${partDto.part.name || '-'}</td>
+                            <td>${partDto.part.category || '-'}</td>
+                            <td class="text-center font-weight-bold" contenteditable="true" data-original="${partDto.quantity || 0}">${partDto.quantity || 0}</td>
+                            <td class="text-center">
+                                <button class="btn btn-link text-danger btn-sm delete-row" type="button">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>`;
+                            partsTableBody.appendChild(tr);
+                        });
 
                         // Show modal
                         const modal = new bootstrap.Modal(document.getElementById('editRowModal'));
@@ -686,9 +727,9 @@
                     window.location.href = url.toString();
                 });
 
-                document.getElementById('applyFilters').addEventListener('click', () => {
+                document.getElementById('applyFilters').addEventListener('click', (e) => {
                     const u = new URL(window.location);
-                    ['keyword', 'reportDateFrom', 'reportDateTo', 'equipmentCode', 'category'].forEach(k => {
+                    ['keyword', 'reportDateFrom', 'reportDateTo', 'equipmentCode', 'group'].forEach(k => {
                         const v = document.querySelector(`[name="${k}"]`)?.value;
                         u.searchParams.set(k, v || '');
                     });

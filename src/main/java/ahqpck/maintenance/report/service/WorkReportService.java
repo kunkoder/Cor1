@@ -224,7 +224,7 @@ public class WorkReportService {
                             "Invalid Scope value: '" + scopeStr + ". Use: MECHANICAL, ELECTRICAL, IT");
                 }
 
-                String technicianEmpIds = importUtil.toString(row.get("technician"));
+                String technicianEmpIds = importUtil.toString(row.get("technicians"));
                 if (technicianEmpIds == null || technicianEmpIds.trim().isEmpty()) {
                     throw new IllegalArgumentException("At least one technician is required");
                 }
@@ -273,7 +273,7 @@ public class WorkReportService {
                 if (code != null && !code.trim().isEmpty()) {
                     dto.setCode(code.trim());
                     if (workReportRepository.existsByCodeIgnoreCase(dto.getCode())) {
-                        throw new IllegalArgumentException("Duplicate complaint code: " + dto.getCode());
+                        throw new IllegalArgumentException("Duplicate work report code: " + dto.getCode());
                     }
                 }
                 dto.setSolution(importUtil.toString(row.get("solution")));

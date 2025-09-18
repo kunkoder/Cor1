@@ -142,12 +142,6 @@
                                         id="editResponsiblePersonSelect">
                                         <option th:each="user : ${users}" th:value="${user.employeeId}">User</option>
                                     </select>
-                                    <datalist id="userOptions">
-                                        <option th:each="user : ${users}"
-                                            th:value="${user.name} + ' (' + ${user.employeeId} + ')'"
-                                            th:data-employee-id="${user.employeeId}">
-                                        </option>
-                                    </datalist>
                                 </div>
                             </div>
                         </div>
