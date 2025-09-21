@@ -1,10 +1,14 @@
 package ahqpck.maintenance.report.service;
 
 import ahqpck.maintenance.report.dto.UserDTO;
+import ahqpck.maintenance.report.dto.WorkReportDTO;
+import ahqpck.maintenance.report.dto.AreaDTO;
+import ahqpck.maintenance.report.dto.EquipmentDTO;
 import ahqpck.maintenance.report.dto.RoleDTO;
 import ahqpck.maintenance.report.entity.Role;
 import ahqpck.maintenance.report.entity.User;
 import ahqpck.maintenance.report.entity.User.Status;
+import ahqpck.maintenance.report.entity.WorkReport;
 import ahqpck.maintenance.report.exception.NotFoundException;
 import ahqpck.maintenance.report.repository.RoleRepository;
 import ahqpck.maintenance.report.repository.UserRepository;
@@ -30,10 +34,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,7 +53,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+
     private final FileUploadUtil fileUploadUtil;
+    private final ImportUtil importUtil;
     private final EmailUtil emailUtil;
 
     public Page<UserDTO> getAllUsers(String keyword, int page, int size, String sortBy, boolean asc) {
@@ -61,8 +70,8 @@ public class UserService {
 
     public List<RoleDTO> getAllRoles() {
         List<RoleDTO> roles = roleRepository.findAll().stream()
-                    .map(RoleDTO::new)
-                    .collect(Collectors.toList());
+                .map(RoleDTO::new)
+                .collect(Collectors.toList());
         return roles;
     }
 
@@ -113,12 +122,13 @@ public class UserService {
         userRepository.save(user);
 
         // try {
-        //     emailUtil.sendAccountActivationEmail(user.getEmail(), token);
-        //     userRepository.save(user);
+        // emailUtil.sendAccountActivationEmail(user.getEmail(), token);
+        // userRepository.save(user);
         // } catch (Exception e) {
-        //     // Optional: delete user if email fails?
-        //     // Or mark as "email_failed" and retry later
-        //     throw new RuntimeException("Failed to send activation email to " + user.getEmail(), e);
+        // // Optional: delete user if email fails?
+        // // Or mark as "email_failed" and retry later
+        // throw new RuntimeException("Failed to send activation email to " +
+        // user.getEmail(), e);
         // }
     }
 
@@ -187,6 +197,105 @@ public class UserService {
             fileUploadUtil.deleteFile(uploadDir, user.getImage());
         }
         userRepository.delete(user);
+    }
+
+    public ImportUtil.ImportResult importUsersFromExcel(List<Map<String, Object>> data) {
+        List<String> errorMessages = new ArrayList<>();
+        int importedCount = 0;
+
+        if (data == null || data.isEmpty()) {
+            throw new IllegalArgumentException("No data to import.");
+        }
+
+        for (int i = 0; i < data.size(); i++) {
+            Map<String, Object> row = data.get(i);
+            try {
+                UserDTO dto = new UserDTO();
+
+                dto.setName(importUtil.toString(row.get("name")));
+                if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+                    throw new IllegalArgumentException("Name is mandatory");
+                }
+
+                dto.setEmployeeId(importUtil.toString(row.get("employeeId")));
+                if (dto.getEmployeeId() == null || dto.getEmployeeId().trim().isEmpty()) {
+                    throw new IllegalArgumentException("Employee id is mandatory");
+                }
+
+                String email = importUtil.toString(row.get("email"));
+                if (email == null || email.trim().isEmpty()) {
+                    throw new IllegalArgumentException("Email is mandatory");
+                }
+                if (!isValidEmail(email)) {
+                    throw new IllegalArgumentException("Email should be valid");
+                }
+                dto.setEmail(email.trim());
+
+                dto.setPassword(importUtil.toString(row.get("password")));
+                dto.setImage(importUtil.toString(row.get("image")));
+                dto.setCreatedAt(importUtil.toLocalDateTime(row.get("createdAt")));
+                dto.setActivatedAt(importUtil.toLocalDateTime(row.get("activatedAt")));
+
+                String statusStr = importUtil.toString(row.get("status"));
+                if (statusStr != null && !statusStr.trim().isEmpty()) {
+                    try {
+                        dto.setStatus(User.Status.valueOf(statusStr.trim().toUpperCase()));
+                    } catch (IllegalArgumentException e) {
+                        throw new IllegalArgumentException("Invalid Status: " + statusStr + ". Use valid enum values.");
+                    }
+                }
+
+                dto.setDesignation(importUtil.toString(row.get("designation")));
+                dto.setNationality(importUtil.toString(row.get("nationality")));
+                dto.setJoinDate(importUtil.toLocalDate(row.get("joinDate")));
+                dto.setPhoneNumber(importUtil.toString(row.get("phoneNumber")));
+
+                Set<RoleDTO> roles = new HashSet<>();
+
+                String rolesStr = importUtil.toString(row.get("roles"));
+                if (rolesStr != null && !rolesStr.trim().isEmpty()) {
+                    for (String roleName : rolesStr.split(",")) {
+                        String trimmed = roleName.trim();
+                        if (trimmed.isEmpty())
+                            continue;
+
+                        try {
+                            Role.Name nameEnum = Role.Name.valueOf(trimmed.toUpperCase());
+                            Role role = roleRepository.findByName(nameEnum)
+                                    .orElseThrow(() -> new IllegalArgumentException("Role not found: " + trimmed));
+
+                            RoleDTO roleDTO = new RoleDTO();
+                            roleDTO.setId(role.getId());
+                            roleDTO.setName(role.getName());
+                            roles.add(roleDTO);
+                        } catch (IllegalArgumentException e) {
+                            throw new IllegalArgumentException("Invalid or missing role: " + trimmed);
+                        }
+                    }
+                }
+
+                dto.setRoles(roles);
+
+                createUser(dto, null);
+                importedCount++;
+
+            } catch (Exception e) {
+                String message = e.getMessage() != null ? e.getMessage() : "Unknown error";
+                errorMessages.add("Row " + (i + 1) + ": " + message);
+            }
+        }
+
+        return new ImportUtil.ImportResult(importedCount, errorMessages);
+    }
+
+    private boolean isValidEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        email = email.trim();
+        int at = email.indexOf('@');
+        int dot = email.lastIndexOf('.');
+        return at > 0 && dot > at + 1 && dot < email.length() - 1;
     }
 
     private void mapToEntity(User user, UserDTO dto) {

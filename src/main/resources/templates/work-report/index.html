@@ -276,7 +276,7 @@
                                             <td data-field="remark" th:text="${report.remark ?: '-'}"></td>
                                             <td>
                                                 <div class="form-button-action">
-                                                    <span data-field="parts" th:text="${report.partsUsed}"></span>
+                                                    <span data-field="parts" th:data-parts="${report.partsUsed}"></span>
                                                     <button type="button"
                                                         class="btn btn-link btn-primary btn-lg edit-row"
                                                         th:data-id="${report.id}">
@@ -527,11 +527,48 @@
                         document.getElementById('editSupervisorSelect').value = supId;
 
                         // --- Populate Parts Used Table ---
-                        const partsUsedSpan = row.querySelector('[data-field="workType"]');
-                        const partsUsedData = partsUsedSpan ? JSON.parse(partsUsedSpan.dataset.parts) : [];
+                        function parseJavaDTOString(str) {
+                            if (!str || str === "undefined" || str.trim() === "") return [];
 
-                        console.log("part span", partsUsedSpan);
-                        console.log("part data", partsUsedData);
+                            const startPart = str.indexOf("part=PartDTO(");
+                            const startQty = str.indexOf("quantity=");
+
+                            if (startPart === -1 || startQty === -1) return [];
+
+                            let depth = 1;
+                            let endPart = -1;
+
+                            for (let i = startPart + "part=PartDTO(".length; i < str.length; i++) {
+                                if (str[i] === '(') depth++;
+                                if (str[i] === ')') depth--;
+                                if (depth === 0) {
+                                    endPart = i;
+                                    break;
+                                }
+                            }
+
+                            if (endPart === -1) return [];
+
+                            const partContent = str.slice(startPart + "part=PartDTO(".length, endPart);
+
+                            const qtyMatch = str.slice(startQty).match(/quantity=(\d+)/);
+                            if (!qtyMatch) return [];
+                            const quantity = parseInt(qtyMatch[1], 10);
+
+                            const partFields = partContent.split(',').reduce((acc, pair) => {
+                                const [key, value] = pair.split('=').map(s => s.trim());
+                                if (key) {
+                                    acc[key] = value === 'null' ? null : value === '' ? '' : isNaN(value) ? value : Number(value);
+                                }
+                                return acc;
+                            }, {});
+
+                            return [{ part: partFields, quantity }];
+                        }
+
+                        const partsUsedSpan = row.querySelector('[data-field="parts"]');
+                        const rawPartsData = partsUsedSpan?.dataset.parts;
+                        const partsUsedData = rawPartsData ? parseJavaDTOString(rawPartsData) : [];
                         const partsTableBody = document.querySelector('#partsTable tbody');
                         partsTableBody.innerHTML = ''; // Clear existing rows
 
@@ -766,7 +803,7 @@
                     "Start Time": "startTime",
                     "Stop Time": "stopTime",
                     "Total Time": "totalTimeMinutes",
-                    "Technicians": "technicians",
+                    "Technician(s)": "technicians",
                     "Supervisor": "supervisor",
                     "Status": "status",
                     "Scope": "scope",

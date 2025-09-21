@@ -179,4 +179,45 @@ public class UserController {
         }
         return "redirect:/users";
     }
+
+    @PostMapping("/import")
+    public String importWorkReports(
+            @RequestParam("data") String dataJson,
+            @RequestParam(value = "sheet", required = false) String sheet,
+            @RequestParam(value = "headerRow", required = false) Integer headerRow,
+            RedirectAttributes ra) {
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            List<Map<String, Object>> data = mapper.readValue(dataJson,
+                    new TypeReference<List<Map<String, Object>>>() {
+                    });
+
+            ImportUtil.ImportResult result = userService.importUsersFromExcel(data);
+
+            if (result.getImportedCount() > 0 && !result.hasErrors()) {
+                ra.addFlashAttribute("success",
+                        "Successfully imported " + result.getImportedCount() + " work report record(s).");
+            } else if (result.getImportedCount() > 0) {
+                StringBuilder msg = new StringBuilder("Imported ").append(result.getImportedCount())
+                        .append(" record(s), but ").append(result.getErrorMessages().size()).append(" error(s):");
+                for (String err : result.getErrorMessages()) {
+                    msg.append("|").append(err);
+                }
+                ra.addFlashAttribute("error", msg.toString());
+            } else {
+                StringBuilder msg = new StringBuilder("Failed to import any work report:");
+                for (String err : result.getErrorMessages()) {
+                    msg.append("|").append(err);
+                }
+                ra.addFlashAttribute("error", msg.toString());
+            }
+
+            return "redirect:/users";
+
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Bulk import failed: " + e.getMessage());
+            return "redirect:/users";
+        }
+    }
 }

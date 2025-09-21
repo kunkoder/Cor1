@@ -63,7 +63,7 @@ class ExportWizard {
             // Build row by matching data-field
             const row = visibleFields.map(field => {
                 const td = Array.from(tds).find(td => td.dataset.field === field);
-                if (!td) return '-';
+                if (!td) return '';
 
                 // Handle badge text for priority/category/status
                 // Handle multiple badges (e.g., roles, technicians)
@@ -72,15 +72,15 @@ class ExportWizard {
                     return Array.from(badges)
                         .map(b => b.textContent.trim())
                         .filter(t => t)
-                        .join(", ") || '-';
+                        .join(", ") || '';
                 }
 
                 // Handle link in Code column
                 if (field === 'code' && td.querySelector('a')) {
-                    return td.querySelector('a').textContent.trim() || '-';
+                    return td.querySelector('a').textContent.trim() || '';
                 }
 
-                return td.textContent.trim() || '-';
+                return td.textContent.trim() || '';
             });
 
             // Add ID columns for Excel (only if exporting Excel)

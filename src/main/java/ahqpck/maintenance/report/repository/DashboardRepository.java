@@ -250,12 +250,12 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
             SELECT
                 e.name AS equipment_name,
                 e.code AS equipment_code,
-                COALESCE(SUM(wr.total_resolution_time_minutes), 0) AS total_resolution_time,
+                COALESCE(SUM(wr.total_time_minutes), 0) AS total_time,
                 COUNT(wr.id) AS total_work_reports
             FROM equipments e
             LEFT JOIN work_reports wr ON e.code = wr.equipment_code
             GROUP BY e.id, e.code, e.name
-            ORDER BY total_resolution_time DESC
+            ORDER BY total_time DESC
             """, nativeQuery = true)
     List<EquipmentWorkReportDTO> getEquipmentWorkReport();
 
@@ -391,7 +391,7 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
             SELECT
                 e.name AS equipment_name,
                 e.code AS equipment_code,
-                COALESCE(SUM(wr.total_resolution_time_minutes), 0) +
+                COALESCE(SUM(wr.total_time_minutes), 0) +
                 COALESCE(SUM(c.total_time_minutes), 0) AS total_time,
                 COUNT(DISTINCT wr.id) AS total_work_reports,
                 COUNT(DISTINCT c.id) AS total_complaints,

@@ -50,7 +50,7 @@ public class DataInitializer {
         try {
             initDefaultRoles();
             initDefaultUser();
-            initBulkUsers(); // ← New bulk user creation
+            // initBulkUsers(); // ← New bulk user creation
         } catch (Exception e) {
             log.error("Error during data initialization", e);
         }

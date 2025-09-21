@@ -229,42 +229,28 @@ public class WorkReportService {
                     throw new IllegalArgumentException("At least one technician is required");
                 }
 
-                // Split by comma and trim each ID (support multiple: "0905, 1221")
                 Set<UserDTO> technicianDTOs = new HashSet<>();
-                List<String> invalidTechnicians = new ArrayList<>();
+                Set<String> empIds = new HashSet<>();
 
-                String[] empIdArray = technicianEmpIds.split(",");
-                for (String empId : empIdArray) {
-                    String trimmedEmpId = empId.trim();
-                    if (trimmedEmpId.isEmpty())
-                        continue; // Skip empty parts
+                for (String empId : technicianEmpIds.split(",")) {
+                    String trimmed = empId.trim();
+                    if (trimmed.isEmpty())
+                        continue;
 
-                    Optional<User> userOpt = userRepository.findByEmployeeId(trimmedEmpId);
-                    if (userOpt.isPresent()) {
-                        User user = userOpt.get();
-                        UserDTO dtoTechnician = new UserDTO();
-                        dtoTechnician.setId(user.getId());
-                        dtoTechnician.setName(user.getName());
-                        dtoTechnician.setEmployeeId(user.getEmployeeId());
-                        dtoTechnician.setEmail(user.getEmail());
-                        technicianDTOs.add(dtoTechnician);
-                    } else {
-                        invalidTechnicians.add(trimmedEmpId); // Report trimmed ID
-                    }
-                }
+                    User user = userRepository.findByEmployeeId(trimmed)
+                            .orElseThrow(() -> new IllegalArgumentException("Technician not found: " + trimmed));
 
-                if (!invalidTechnicians.isEmpty()) {
-                    throw new IllegalArgumentException(
-                            "Technician(s) not found: " + String.join(", ", invalidTechnicians));
+                    UserDTO dtoTechnician = new UserDTO();
+                    dtoTechnician.setId(user.getId());
+                    dtoTechnician.setName(user.getName());
+                    dtoTechnician.setEmployeeId(user.getEmployeeId());
+                    dtoTechnician.setEmail(user.getEmail());
+
+                    technicianDTOs.add(dtoTechnician);
+                    empIds.add(trimmed);
                 }
 
                 dto.setTechnicians(technicianDTOs);
-
-                Set<String> empIds = technicianDTOs.stream()
-                        .map(UserDTO::getEmployeeId)
-                        .filter(id -> id != null && !id.trim().isEmpty())
-                        .collect(Collectors.toSet());
-
                 dto.setTechnicianEmpIds(empIds);
 
                 // === OPTIONAL FIELDS ===
@@ -331,7 +317,8 @@ public class WorkReportService {
      * - Reopening: clear closeTime, restock parts
      */
 
-    protected void handleStatusTransition(WorkReport workReport, WorkReport.Status oldStatus, WorkReport.Status newStatus) {
+    protected void handleStatusTransition(WorkReport workReport, WorkReport.Status oldStatus,
+            WorkReport.Status newStatus) {
         if (newStatus == WorkReport.Status.CLOSED && oldStatus != WorkReport.Status.CLOSED) {
             // Transitioning TO CLOSED
 
