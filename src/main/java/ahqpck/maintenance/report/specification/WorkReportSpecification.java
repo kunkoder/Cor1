@@ -8,7 +8,9 @@ import ahqpck.maintenance.report.entity.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.data.jpa.domain.Specification;
 
@@ -80,12 +82,23 @@ public class WorkReportSpecification {
     }
 
     public static Specification<WorkReport> withEquipment(String equipmentCode) {
-        return (root, query, cb) -> {
-            if (equipmentCode == null || equipmentCode.trim().isEmpty()) {
-                return cb.conjunction();
-            }
-            Join<WorkReport, Equipment> equipment = root.join("equipment", JoinType.LEFT);
-            return cb.equal(equipment.get("code"), equipmentCode);
-        };
-    }
+    return (root, query, cb) -> {
+        if (equipmentCode == null || equipmentCode.trim().isEmpty()) {
+            return cb.conjunction();
+        }
+
+        // Split, trim, and filter
+        List<String> codes = Arrays.stream(equipmentCode.split(","))
+                .map(String::trim)
+                .filter(code -> !code.isEmpty())
+                .collect(Collectors.toList());
+
+        if (codes.isEmpty()) {
+            return cb.conjunction();
+        }
+
+        Join<WorkReport, Equipment> equipment = root.join("equipment", JoinType.LEFT);
+        return equipment.get("code").in(codes);
+    };
+}
 }

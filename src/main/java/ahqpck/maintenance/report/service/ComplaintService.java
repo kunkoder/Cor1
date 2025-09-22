@@ -281,27 +281,37 @@ public class ComplaintService {
      */
 
     protected void handleStatusTransition(Complaint complaint, Complaint.Status oldStatus, Complaint.Status newStatus) {
-        if (newStatus == Complaint.Status.CLOSED && oldStatus != Complaint.Status.CLOSED) {
-            // Transitioning TO CLOSED
-            LocalDateTime now = LocalDateTime.now();
-            complaint.setCloseTime(now);
-            // totalResolutionTimeMinutes will be calculated in @PreUpdate or @PrePersist
+    if (newStatus == null) return;
 
-            log.info("Complaint {} CLOSED: Deducting {} parts from inventory",
-                    complaint.getId(), complaint.getPartsUsed().size());
-            deductPartsFromInventory(complaint);
+    // Transitioning TO CLOSED
+    if (newStatus == Complaint.Status.CLOSED && oldStatus != Complaint.Status.CLOSED) {
+        LocalDateTime now = LocalDateTime.now();
+        complaint.setCloseTime(now);
 
-        } else if (oldStatus == Complaint.Status.CLOSED && newStatus != Complaint.Status.CLOSED) {
-            // Reopening a CLOSED complaint
-            log.warn("Reopening CLOSED complaint: {}", complaint.getId());
-            restockParts(complaint);
-
-            complaint.setCloseTime(null);
-            complaint.setTotalTimeMinutes(null);
-            complaint.setStatus(newStatus); // Allow transition to any non-CLOSED
+        // Calculate total time from reportDate to now
+        if (complaint.getReportDate() != null) {
+            long minutes = java.time.Duration.between(complaint.getReportDate(), now).toMinutes();
+            complaint.setTotalTimeMinutes((int) minutes);
         }
-        // For other transitions (e.g. OPEN → PENDING), no side effects
+
+        // Deduct parts from inventory
+        log.info("Complaint {} CLOSED: Deducting {} parts from inventory",
+                complaint.getId(), complaint.getPartsUsed().size());
+        deductPartsFromInventory(complaint);
     }
+    // Reopening a CLOSED complaint
+    else if (oldStatus == Complaint.Status.CLOSED && newStatus != Complaint.Status.CLOSED) {
+        log.warn("Reopening CLOSED complaint: {}", complaint.getId());
+
+        // Restock parts
+        restockParts(complaint);
+
+        // Clear close time & total time
+        complaint.setCloseTime(null);
+        complaint.setTotalTimeMinutes(null);
+    }
+    // For other transitions (OPEN ↔ PENDING), do nothing
+}
 
     /**
      * Deduct all parts used in this complaint from stock
@@ -332,165 +342,172 @@ public class ComplaintService {
     // ================== MAPPING METHODS ==================
 
     private void mapToEntity(Complaint complaint, ComplaintDTO dto) {
-        complaint.setCode(dto.getCode());
-        complaint.setSubject(dto.getSubject());
-        complaint.setDescription(dto.getDescription());
-        complaint.setPriority(dto.getPriority());
-        complaint.setCategory(dto.getCategory());
-        complaint.setStatus(dto.getStatus());
-        complaint.setReportDate(dto.getReportDate());
-        complaint.setCloseTime(dto.getCloseTime());
-        complaint.setTotalTimeMinutes(dto.getTotalTimeMinutes());
+    // Basic fields
+    complaint.setSubject(dto.getSubject());
+    complaint.setDescription(dto.getDescription());
+    complaint.setPriority(dto.getPriority());
+    complaint.setCategory(dto.getCategory());
+    complaint.setReportDate(dto.getReportDate());
+    complaint.setActionTaken(dto.getActionTaken());
 
-        // === Optional: Area ===
-        if (dto.getArea() != null && dto.getArea().getCode() != null && !dto.getArea().getCode().trim().isEmpty()) {
-            String areaCode = dto.getArea().getCode().trim();
-            Area area = areaRepository.findByCode(areaCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Area not found with code: " + areaCode));
-            complaint.setArea(area);
-        } else {
-            complaint.setArea(null);
-        }
+    // Status — handle transition
+    Complaint.Status oldStatus = complaint.getStatus();
+    Complaint.Status newStatus = dto.getStatus();
+    complaint.setStatus(newStatus); // Set first
 
-        // === Optional: Equipment ===
-        if (dto.getEquipment() != null && dto.getEquipment().getCode() != null
-                && !dto.getEquipment().getCode().trim().isEmpty()) {
-            String equipmentCode = dto.getEquipment().getCode().trim();
-            Equipment equipment = equipmentRepository.findByCode(equipmentCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Equipment not found with code: " + equipmentCode));
-            complaint.setEquipment(equipment);
-        } else {
-            complaint.setEquipment(null);
-        }
-
-        // === Mandatory: Reporter ===
-        if (dto.getReporter() == null || dto.getReporter().getEmployeeId() == null) {
-            throw new IllegalArgumentException("Reporter is mandatory");
-        }
-        String reporterEmpId = dto.getReporter().getEmployeeId().trim();
-        User reporter = userRepository.findByEmployeeId4Roles(reporterEmpId)
-                .orElseThrow(
-                        () -> new IllegalArgumentException("Reporter not found with employeeId: " + reporterEmpId));
-        complaint.setReporter(reporter);
-
-        // === Optional: Assignee ===
-        if (dto.getAssignee() != null && dto.getAssignee().getEmployeeId() != null
-                && !dto.getAssignee().getEmployeeId().trim().isEmpty()) {
-            String assigneeEmpId = dto.getAssignee().getEmployeeId().trim();
-            User assignee = userRepository.findByEmployeeId4Roles(assigneeEmpId)
-                    .orElseThrow(
-                            () -> new IllegalArgumentException("Assignee not found with employeeId: " + assigneeEmpId));
-            complaint.setAssignee(assignee);
-        } else {
-            complaint.setAssignee(null);
-        }
-
-        // PARTS HANDLING: Use merge/update pattern
-        if (dto.getPartsUsed() != null) {
-            // Create a copy of current parts to allow safe iteration
-            List<ComplaintPart> existingParts = new ArrayList<>(complaint.getPartsUsed());
-
-            // Clear the list — thanks to orphanRemoval, old entries will be deleted
-            complaint.getPartsUsed().clear();
-
-            for (ComplaintPartDTO partDto : dto.getPartsUsed()) {
-                Part part = partRepository.findById(partDto.getPart().getId())
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                "Part not found with ID: " + partDto.getPart().getId()));
-
-                // Try to reuse an existing ComplaintPart if possible
-                ComplaintPart existing = existingParts.stream()
-                        .filter(cp -> cp.getPart().getId().equals(part.getId()))
-                        .findFirst()
-                        .orElse(null);
-
-                ComplaintPart cp;
-                if (existing != null) {
-                    // Reuse and update quantity
-                    existing.setQuantity(partDto.getQuantity());
-                    cp = existing;
-                } else {
-                    // Create new
-                    cp = new ComplaintPart();
-                    cp.setComplaint(complaint);
-                    cp.setPart(part);
-                    cp.setQuantity(partDto.getQuantity());
-                    cp.setId(new ComplaintPartId(complaint.getId(), part.getId()));
-                }
-
-                complaint.getPartsUsed().add(cp);
-            }
-        } else {
-            // If DTO has no parts, just clear
-            complaint.getPartsUsed().clear();
-        }
+    // Handle side effects AFTER setting new status
+    if (oldStatus != newStatus) {
+        handleStatusTransition(complaint, oldStatus, newStatus);
     }
+
+    // Area
+    if (dto.getArea() != null && dto.getArea().getCode() != null && !dto.getArea().getCode().trim().isEmpty()) {
+        String areaCode = dto.getArea().getCode().trim();
+        Area area = areaRepository.findByCode(areaCode)
+                .orElseThrow(() -> new IllegalArgumentException("Area not found with code: " + areaCode));
+        complaint.setArea(area);
+    } else {
+        complaint.setArea(null);
+    }
+
+    // Equipment
+    if (dto.getEquipment() != null && dto.getEquipment().getCode() != null && !dto.getEquipment().getCode().trim().isEmpty()) {
+        String equipmentCode = dto.getEquipment().getCode().trim();
+        Equipment equipment = equipmentRepository.findByCode(equipmentCode)
+                .orElseThrow(() -> new IllegalArgumentException("Equipment not found with code: " + equipmentCode));
+        complaint.setEquipment(equipment);
+    } else {
+        complaint.setEquipment(null);
+    }
+
+    // Reporter (mandatory)
+    if (dto.getReporter() == null || dto.getReporter().getEmployeeId() == null) {
+        throw new IllegalArgumentException("Reporter is mandatory");
+    }
+    String reporterEmpId = dto.getReporter().getEmployeeId().trim();
+    User reporter = userRepository.findByEmployeeId4Roles(reporterEmpId)
+            .orElseThrow(() -> new IllegalArgumentException("Reporter not found with employeeId: " + reporterEmpId));
+    complaint.setReporter(reporter);
+
+    // Assignee (optional)
+    if (dto.getAssignee() != null && dto.getAssignee().getEmployeeId() != null && !dto.getAssignee().getEmployeeId().trim().isEmpty()) {
+        String assigneeEmpId = dto.getAssignee().getEmployeeId().trim();
+        User assignee = userRepository.findByEmployeeId4Roles(assigneeEmpId)
+                .orElseThrow(() -> new IllegalArgumentException("Assignee not found with employeeId: " + assigneeEmpId));
+        complaint.setAssignee(assignee);
+    } else {
+        complaint.setAssignee(null);
+    }
+
+    // Parts — Merge/Update pattern
+    if (dto.getPartsUsed() != null) {
+        List<ComplaintPart> existingParts = new ArrayList<>(complaint.getPartsUsed());
+        complaint.getPartsUsed().clear(); // Triggers orphan removal
+
+        for (ComplaintPartDTO partDto : dto.getPartsUsed()) {
+            Part part = partRepository.findById(partDto.getPart().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Part not found with ID: " + partDto.getPart().getId()));
+
+            ComplaintPart existing = existingParts.stream()
+                    .filter(cp -> cp.getPart().getId().equals(part.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            ComplaintPart cp;
+            if (existing != null) {
+                existing.setQuantity(partDto.getQuantity());
+                cp = existing;
+            } else {
+                cp = new ComplaintPart();
+                cp.setComplaint(complaint);
+                cp.setPart(part);
+                cp.setQuantity(partDto.getQuantity());
+                cp.setId(new ComplaintPartId(complaint.getId(), part.getId()));
+            }
+
+            complaint.getPartsUsed().add(cp);
+        }
+    } else {
+        complaint.getPartsUsed().clear();
+    }
+}
 
     // HELPER: DTO Conversion
     private ComplaintDTO toDTO(Complaint complaint) {
-        ComplaintDTO dto = new ComplaintDTO();
+    ComplaintDTO dto = new ComplaintDTO();
 
-        dto.setId(complaint.getId());
-        dto.setCode(complaint.getCode());
-        dto.setReportDate(complaint.getReportDate());
-        dto.setUpdatedAt(complaint.getUpdatedAt());
-        dto.setSubject(complaint.getSubject());
-        dto.setDescription(complaint.getDescription());
-        dto.setPriority(complaint.getPriority());
-        dto.setCategory(complaint.getCategory());
-        dto.setStatus(complaint.getStatus());
-        dto.setActionTaken(complaint.getActionTaken());
-        dto.setImageBefore(complaint.getImageBefore());
-        dto.setImageAfter(complaint.getImageAfter());
-        dto.setCloseTime(complaint.getCloseTime());
-        dto.setTotalTimeMinutes(complaint.getTotalTimeMinutes());
+    dto.setId(complaint.getId());
+    dto.setCode(complaint.getCode());
+    dto.setReportDate(complaint.getReportDate());
+    dto.setUpdatedAt(complaint.getUpdatedAt());
+    dto.setSubject(complaint.getSubject());
+    dto.setDescription(complaint.getDescription());
+    dto.setPriority(complaint.getPriority());
+    dto.setCategory(complaint.getCategory());
+    dto.setStatus(complaint.getStatus());
+    dto.setActionTaken(complaint.getActionTaken());
+    dto.setImageBefore(complaint.getImageBefore());
+    dto.setImageAfter(complaint.getImageAfter());
+    dto.setCloseTime(complaint.getCloseTime());
+    dto.setTotalTimeMinutes(complaint.getTotalTimeMinutes());
 
-        if (complaint.getTotalTimeMinutes() != null) {
-            int total = complaint.getTotalTimeMinutes();
-            int days = total / 1440;
-            int hours = (total % 1440) / 60;
-            int mins = total % 60;
+    // Format total time display
+    if (complaint.getTotalTimeMinutes() != null) {
+        int total = complaint.getTotalTimeMinutes();
+        int days = total / 1440;
+        int hours = (total % 1440) / 60;
+        int mins = total % 60;
 
-            String display = (days > 0 ? days + "d " : "") +
-                    (hours > 0 ? hours + "h " : "") +
-                    (mins > 0 || (days == 0 && hours == 0) ? mins + "m" : "");
-            dto.setTotalTimeDisplay(display.trim());
-        } else {
-            dto.setTotalTimeDisplay("-");
-        }
-
-        if (complaint.getArea() != null) {
-            AreaDTO areaDTO = new AreaDTO();
-            areaDTO.setId(complaint.getArea().getId());
-            areaDTO.setCode(complaint.getArea().getCode());
-            areaDTO.setName(complaint.getArea().getName());
-            dto.setArea(areaDTO);
-        }
-
-        if (complaint.getEquipment() != null) {
-            EquipmentDTO equipmentDTO = new EquipmentDTO();
-            equipmentDTO.setId(complaint.getEquipment().getId());
-            equipmentDTO.setName(complaint.getEquipment().getName());
-            equipmentDTO.setCode(complaint.getEquipment().getCode());
-            dto.setEquipment(equipmentDTO);
-        }
-
-        dto.setReporter(mapToUserDTO(complaint.getReporter()));
-        dto.setAssignee(mapToUserDTO(complaint.getAssignee()));
-
-        if (complaint.getPartsUsed() != null) {
-            dto.setPartsUsed(complaint.getPartsUsed().stream()
-                    .map(cp -> {
-                        ComplaintPartDTO partDto = new ComplaintPartDTO();
-                        partDto.setPart(mapToPartDTO(cp.getPart()));
-                        partDto.setQuantity(cp.getQuantity());
-                        return partDto;
-                    })
-                    .collect(Collectors.toList()));
-        }
-
-        return dto;
+        String display = (days > 0 ? days + "d " : "") +
+                (hours > 0 ? hours + "h " : "") +
+                (mins > 0 || (days == 0 && hours == 0) ? mins + "m" : "");
+        dto.setTotalTimeDisplay(display.trim());
+    } else {
+        dto.setTotalTimeDisplay("-");
     }
+
+    // Area
+    if (complaint.getArea() != null) {
+        AreaDTO areaDTO = new AreaDTO();
+        areaDTO.setId(complaint.getArea().getId());
+        areaDTO.setCode(complaint.getArea().getCode());
+        areaDTO.setName(complaint.getArea().getName());
+        dto.setArea(areaDTO);
+    }
+
+    // Equipment
+    if (complaint.getEquipment() != null) {
+        EquipmentDTO equipmentDTO = new EquipmentDTO();
+        equipmentDTO.setId(complaint.getEquipment().getId());
+        equipmentDTO.setName(complaint.getEquipment().getName());
+        equipmentDTO.setCode(complaint.getEquipment().getCode());
+        dto.setEquipment(equipmentDTO);
+    }
+
+    // Reporter
+    if (complaint.getReporter() != null) {
+        dto.setReporter(mapToUserDTO(complaint.getReporter()));
+    }
+
+    // Assignee
+    if (complaint.getAssignee() != null) {
+        dto.setAssignee(mapToUserDTO(complaint.getAssignee()));
+    }
+
+    // Parts Used
+    if (complaint.getPartsUsed() != null && !complaint.getPartsUsed().isEmpty()) {
+        dto.setPartsUsed(complaint.getPartsUsed().stream()
+                .map(cp -> {
+                    ComplaintPartDTO partDto = new ComplaintPartDTO();
+                    partDto.setPart(mapToPartDTO(cp.getPart()));
+                    partDto.setQuantity(cp.getQuantity());
+                    return partDto;
+                })
+                .collect(Collectors.toList()));
+    }
+
+    return dto;
+}
 
     private UserDTO mapToUserDTO(User user) {
         if (user == null)

@@ -412,7 +412,7 @@ function initComplaintChartForm() {
     });
 
     // Only keep monthly/yearly buttons
-    document.querySelectorAll('.dropdown-menu .btn[data-range]').forEach(btn => {
+    document.querySelectorAll('.complaint-filter').forEach(btn => {
         btn.addEventListener('click', () => {
             const range = btn.getAttribute('data-range');
             const year = document.getElementById('complaint-year-select').value;
@@ -1180,7 +1180,7 @@ function initWrChartForm() {
             updateWrChart('daily', formatDate(from), formatDate(now), null, initialEquipment);
         });
 
-    document.querySelectorAll('.dropdown-menu .btn[data-range]').forEach(btn => {
+    document.querySelectorAll('.wr-filter').forEach(btn => {
         btn.addEventListener('click', () => {
             const range = btn.getAttribute('data-range');
             const now = new Date();
@@ -1422,7 +1422,7 @@ function initBreakdownChartForm() {
         }
     });
 
-    document.querySelectorAll('.dropdown-menu .btn[data-range]').forEach(btn => {
+    ddocument.querySelectorAll('.breakdown-filter').forEach(btn => {
         btn.addEventListener('click', () => {
             const range = btn.getAttribute('data-range');
             const now = new Date();

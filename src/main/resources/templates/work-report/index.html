@@ -87,7 +87,7 @@
                                                     class="form-control form-control-sm" placeholder="To">
                                             </div>
                                         </div>
-                                        <div class="form-group pb-0">
+                                        <!-- <div class="form-group pb-0">
                                             <label class="form-label small d-block">Equipment</label>
                                             <div class="position-relative w-100">
                                                 <input type="text" class="form-control form-control-sm w-100"
@@ -108,6 +108,28 @@
                                                 <option th:each="equip : ${equipments}" th:value="${equip.code}">
                                                 </option>
                                             </select>
+                                        </div> -->
+                                        <div class="form-group pb-0">
+                                            <label class="form-label small d-block">Equipment(s)</label>
+
+                                            <select id="equipmentSelect" name="equipments" multiple
+                                                style="display: none;">
+                                                <option th:each="equipment : ${equipments}" th:value="${equipment.code}"
+                                                    th:data-employee-id="${equipment.code}"
+                                                    th:text="${equipment.name} + ' (' + ${equipment.code} + ')'">
+                                                </option>
+                                            </select>
+
+                                            <div class="tag-input" id="equipmentInput">
+                                                <div class="tag-list" id="equipmentTagList"></div>
+                                                <div class="position-relative w-100">
+                                                    <input type="text" id="equipmentTagSearch" class="tag-input-field"
+                                                        placeholder="Add equipment..." autocomplete="off">
+                                                    <div id="equipmentTagSearchDropdown" class="dropdown-menu w-100"
+                                                        style="position: absolute; z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-top: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="form-group">
                                             <label class="form-label small d-block">Category</label>
@@ -775,7 +797,8 @@
                 });
 
                 // Keeps hidden <select> in sync with text <input> for filtering
-                setupLiveSearch('filter-equipmentInput', 'filter-equipmentSelect', 'filter-equipmentOptions', 'Equipment');
+                // setupLiveSearch('filter-equipmentInput', 'filter-equipmentSelect', 'filter-equipmentOptions', 'Equipment');
+                setupTagInput('equipmentInput', 'equipmentTagList', 'equipmentTagSearch', 'equipmentSelect');
 
                 // Keep dropdown open while selecting filters, close only on "Apply"
                 const filterDropdown = document.getElementById('filterDropdownBtn');

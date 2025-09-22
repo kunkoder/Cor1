@@ -84,6 +84,7 @@ public class WorkReportService {
 
     @Transactional
     public void createWorkReport(WorkReportDTO dto) {
+        System.out.println("dto wk: " + dto);
         try {
             WorkReport workReport = new WorkReport();
 

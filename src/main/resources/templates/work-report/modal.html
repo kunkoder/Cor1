@@ -71,6 +71,7 @@
                                         </option>
                                     </datalist>
                                     <select class="d-none" th:field="*{area.code}" id="areaSelect">
+                                        <option value="">Select Area</option>
                                         <option th:each="area : ${areas}" th:value="${area.code}">Area</option>
                                     </select>
                                 </div>
@@ -94,6 +95,7 @@
                                         </option>
                                     </datalist>
                                     <select class="d-none" th:field="*{equipment.code}" id="equipmentSelect">
+                                        <option value="">Select Equipment</option>
                                         <option th:each="equipment : ${equipments}" th:value="${equipment.code}">
                                             Equipment</option>
                                     </select>
@@ -143,6 +145,7 @@
                                         </div>
                                     </div>
                                     <select class="d-none" th:field="*{supervisor.employeeId}" id="supervisorSelect">
+                                        <option value="">Select Supervisor</option>
                                         <option th:each="user : ${users}" th:value="${user.employeeId}">User</option>
                                     </select>
                                 </div>
@@ -322,7 +325,6 @@
                                 <div class="form-group">
                                     <label>Shift <span class="text-danger">*</span></label>
                                     <select class="form-control" id="editShift" name="shift" required>
-                                        <option value="" disabled selected>Select Shift</option>
                                         <th:block
                                             th:each="shift : ${T(ahqpck.maintenance.report.entity.WorkReport.Shift).values()}">
                                             <option th:value="${shift}" th:text="${shift}"
@@ -347,6 +349,7 @@
                                         </div>
                                     </div>
                                     <select class="d-none" name="area.code" id="editAreaSelect">
+                                        <option value="">Select Area</option>
                                         <option th:each="area : ${areas}" th:value="${area.code}">Area</option>
                                     </select>
                                 </div>
@@ -364,6 +367,7 @@
                                         </div>
                                     </div>
                                     <select class="d-none" name="equipment.code" id="editEquipmentSelect">
+                                        <option value="">Select Equipment</option>
                                         <option th:each="equipment : ${equipments}" th:value="${equipment.code}">
                                             Equipment</option>
                                     </select>
@@ -381,7 +385,7 @@
 
                                     <div class="tag-input" id="editTechnicianInput">
                                         <div class="tag-list" id="editTechnicianTagList"></div>
-                                        <input type="text" id="editTechnicianSearch" class="tag-input-field"
+                                        <input type="text" id="editTechnicianTagSearch" class="tag-input-field"
                                             placeholder="Search technician by name or ID..." list="userOptions">
                                     </div>
                                 </div>
@@ -397,6 +401,7 @@
                                         </div>
                                     </div>
                                     <select class="d-none" name="supervisor.employeeId" id="editSupervisorSelect">
+                                        <option value="">Select Supervisor</option>
                                         <option th:each="user : ${users}" th:value="${user.employeeId}">User</option>
                                     </select>
                                 </div>
@@ -462,7 +467,7 @@
                                 <div class="form-group">
                                     <label>Total Time Time (min)</label>
                                     <input type="number" class="form-control" id="editTotalTime"
-                                        name="totalTotalTimeMinutes" readonly />
+                                        name="totalTimeMinutes" readonly />
                                     <small id="editTotalTimeDisplay" class="text-muted"></small>
                                 </div>
                             </div>
@@ -952,7 +957,8 @@
         }
 
         setupTagInput('technicianInput', 'technicianTagList', 'technicianTagSearch', 'technicianSelect');
-        setupTagInput('editTechnicianInput', 'editTechnicianTagList', 'editTechnicianSearch', 'editTechnicianSelect');
+        setupTagInput('editTechnicianInput', 'editTechnicianTagList', 'editTechnicianTagSearch', 'editTechnicianSelect');
+        
     </script>
 
     <script>
