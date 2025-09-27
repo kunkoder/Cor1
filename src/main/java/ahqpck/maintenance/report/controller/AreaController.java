@@ -86,6 +86,7 @@ public class AreaController {
         }
 
         try {
+            System.out.println("Area" + areaDTO);
             areaService.createArea(areaDTO);
             ra.addFlashAttribute("success", "Area created successfully.");
             return "redirect:/areas";

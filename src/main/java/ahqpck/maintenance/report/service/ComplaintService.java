@@ -96,6 +96,8 @@ public class ComplaintService {
             complaint.setCode(generatedCode);
         }
 
+        System.out.println("check dto " + dto);
+
         mapToEntity(complaint, dto);
 
         if (imageBefore != null && !imageBefore.isEmpty()) {
@@ -332,7 +334,6 @@ public class ComplaintService {
     // ================== MAPPING METHODS ==================
 
     private void mapToEntity(Complaint complaint, ComplaintDTO dto) {
-        complaint.setCode(dto.getCode());
         complaint.setSubject(dto.getSubject());
         complaint.setDescription(dto.getDescription());
         complaint.setPriority(dto.getPriority());

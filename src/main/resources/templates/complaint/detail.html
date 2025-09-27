@@ -375,7 +375,8 @@
                                         </button>
                                     </div>
 
-                                    <!-- Include Parts Modal -->
+                                    <!-- Include Modal -->
+                                    <div th:replace="~{fragments/delete-modal :: delete-modal}"></div>
                                     <div th:replace="~{fragments/part-modal :: part-modal}"></div>
 
                                     <!-- Parts Table -->
@@ -401,7 +402,7 @@
                                                         th:data-original="${partDto.quantity ?: 0}"
                                                         th:text="${partDto.quantity ?: 0}"></td>
                                                     <td class="text-center">
-                                                        <button class="btn btn-link text-danger btn-sm delete-row"
+                                                        <button class="btn btn-link text-danger btn-sm delete-part-row"
                                                             type="button">
                                                             <i class="fas fa-trash-alt"></i>
                                                         </button>
@@ -453,16 +454,6 @@
         </script>
 
         <script>
-            // Delete modal trigger
-            $('.delete-row').on('click', function () {
-                const name = $(this).data('name');
-                const id = $(this).data('id');
-
-                $('#deleteDocName').text(name);
-                $('#confirmDeleteButton').attr('href', '/complaints/delete/' + encodeURIComponent(id));
-                $('#deleteRowModal').modal('show');
-            });
-
             function setupLiveSearchInput(inputId, dropdownId, hiddenNameId, hiddenIdId, datalistId, labelField = 'item', dataAttr) {
                 const input = document.getElementById(inputId);
                 const dropdown = document.getElementById(dropdownId);
@@ -542,8 +533,7 @@
 
                         div.innerHTML = `
                 ${highlightedLabel}
-                <small class="text-muted ms-1">(${highlightedId})</small>
-            `;
+                <small class="text-muted ms-1">(${highlightedId})</small>`;
 
                         div.addEventListener('click', () => {
                             input.value = opt.fullText;
@@ -612,9 +602,22 @@
                 input.setAttribute('list', '');
             }
 
-
-
             document.addEventListener("DOMContentLoaded", function () {
+                // --- Delete Modal Trigger ---
+                document.querySelectorAll('.delete-row').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const name = this.dataset.name;
+                        const id = this.dataset.id;
+
+                        console.log(name, id)
+                        document.getElementById('deleteDocName').textContent = name;
+                        document.getElementById('confirmDeleteButton').href = '/complaints/delete/' + encodeURIComponent(id);
+
+                        const modal = new bootstrap.Modal(document.getElementById('deleteRowModal'));
+                        modal.show();
+                    });
+                });
+
                 setupLiveSearchInput('assigneeInput', 'assigneeDropdown', 'assigneeName', 'assigneeEmployeeId', 'userOptions', 'Assignee', 'employeeId');
                 setupLiveSearchInput('areaInput', 'areaDropdown', 'areaName', 'areaCode', 'areaOptions', 'Area', 'code');
                 setupLiveSearchInput('equipmentInput', 'equipmentDropdown', 'equipmentName', 'equipmentCode', 'equipmentOptions', 'Equipment', 'code');
@@ -811,14 +814,13 @@
                         input.type = format;
                         input.className = 'form-control form-control-sm';
                         input.style.cssText = `
-            width: auto;
-            display: inline-block;
-            padding: 0.3em 0.6em;
-            font-size: ${window.getComputedStyle(field).fontSize};
-            border: 1px solid #007bff;
-            border-radius: 4px;
-            background: white;
-        `;
+                        width: auto;
+                        display: inline-block;
+                        padding: 0.3em 0.6em;
+                        font-size: ${window.getComputedStyle(field).fontSize};
+                        border: 1px solid #007bff;
+                        border-radius: 4px;
+                        background: white;`;
 
                         // Convert "MMM d, yyyy HH:mm" → "yyyy-MM-ddTHH:mm"
                         if (originalValue) {
@@ -998,7 +1000,7 @@
                     if (typeof updatePartsUsedInputs === 'function') {
                         updatePartsUsedInputs();
                     }
-                    
+
                     complaintForm.submit();
                 });
             });
