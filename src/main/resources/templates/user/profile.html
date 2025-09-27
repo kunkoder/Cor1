@@ -65,43 +65,91 @@
                             <div class="tab-pane fade show active" id="profile" role="tabpanel"
                                 aria-labelledby="profile-tab">
                                 <div class="card-body pt-4">
-                                    <form class="contact-form" action="/icbsstaff/profile" method="POST"
+                                    <form class="contact-form" th:action="@{/icbsstaff/profile}" method="POST"
                                         enctype="multipart/form-data">
-                                        <input type="hidden" name="pk" id="pk" value="12345">
+                                        <!-- Hidden ID (use 'id' from UserDTO) -->
+                                        <input type="hidden" name="id" th:value="${user.id}">
 
                                         <div class="form-row">
+                                            <!-- Name -->
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="name">Nama <span class="text-danger">*</span></label>
-                                                    <input name="name" id="name" type="text" class="form-control"
-                                                        value="John Doe" required>
+                                                    <input type="text" class="form-control" id="name" name="name"
+                                                        th:value="${user.name}" required>
                                                 </div>
                                             </div>
+
+                                            <!-- Employee ID -->
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="employeeId">Employee ID <span
                                                             class="text-danger">*</span></label>
-                                                    <input name="employeeId" id="employeeId" type="text"
-                                                        class="form-control" value="12345" required>
+                                                    <input type="text" class="form-control" id="employeeId"
+                                                        name="employeeId" th:value="${user.employeeId}" required>
                                                 </div>
                                             </div>
+
+                                            <!-- Email -->
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="email">Email <span class="text-danger">*</span></label>
-                                                    <input name="email" id="email" type="email" class="form-control"
-                                                        value="john@example.com" required>
+                                                    <input type="email" class="form-control" id="email" name="email"
+                                                        th:value="${user.email}" required>
                                                 </div>
                                             </div>
+
+                                            <!-- Role (display only — disabled) -->
+                                            <div class="col-md-12">
+    <div class="form-group">
+        <label>Role <span class="text-danger">*</span></label>
+        <div class="mt-1">
+            <span th:if="${#sets.isEmpty(user.roles)}" class="text-muted">No roles assigned</span>
+            <span th:unless="${#sets.isEmpty(user.roles)}">
+                <span th:each="role : ${user.roles}"
+                      class="badge badge-primary rounded-pill px-3 py-2 mr-2 mb-1"
+                      th:text="${role.name}">
+                </span>
+            </span>
+        </div>
+    </div>
+</div>
+
+                                            <!-- Optional: Add more fields if needed (e.g., phone, designation) -->
                                             <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="role">Role <span class="text-danger">*</span></label>
-                                                    <select name="role" class="form-control" id="role" disabled>
-                                                        <option value="Staff">Staff</option>
-                                                        <option value="Admin" selected>Admin</option>
-                                                        <option value="Librarian">Librarian</option>
-                                                    </select>
+                                                    <label for="phoneNumber">Phone Number</label>
+                                                    <input type="text" class="form-control" id="phoneNumber"
+                                                        name="phoneNumber" th:value="${user.phoneNumber}">
                                                 </div>
                                             </div>
+
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="designation">Designation</label>
+                                                    <input type="text" class="form-control" id="designation"
+                                                        name="designation" th:value="${user.designation}">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="joinDate">Join Date</label>
+                                                    <input type="date" class="form-control" id="joinDate"
+                                                        name="joinDate"
+                                                        th:value="${#temporals.format(user.joinDate, 'yyyy-MM-dd')}">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="nationality">Nationality</label>
+                                                    <input type="text" class="form-control" id="nationality"
+                                                        name="nationality" th:value="${user.nationality}">
+                                                </div>
+                                            </div>
+
+                                            <!-- Profile Picture -->
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="avatar">Foto Profil</label>
@@ -109,6 +157,12 @@
                                                         <input type="file" class="custom-file-input" id="avatar"
                                                             name="avatar" accept="image/*">
                                                         <label class="custom-file-label" for="avatar">Pilih file</label>
+                                                    </div>
+                                                    <!-- Show current image if exists -->
+                                                    <div th:if="${user.image}" class="mt-2">
+                                                        <img th:src="@{'/assets/uploads/' + ${user.image}}"
+                                                            alt="Profile Picture" class="img-thumbnail"
+                                                            style="max-height: 150px;">
                                                     </div>
                                                     <small class="form-text text-muted mt-1">Maksimal ukuran file
                                                         5MB</small>

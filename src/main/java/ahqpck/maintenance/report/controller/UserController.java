@@ -1,9 +1,11 @@
 package ahqpck.maintenance.report.controller;
 
+import ahqpck.maintenance.report.dto.ComplaintDTO;
 import ahqpck.maintenance.report.dto.RoleDTO;
 import ahqpck.maintenance.report.dto.UserDTO;
 import ahqpck.maintenance.report.entity.Role;
 import ahqpck.maintenance.report.exception.ImportException;
+import ahqpck.maintenance.report.exception.NotFoundException;
 import ahqpck.maintenance.report.exception.ValidationException;
 import ahqpck.maintenance.report.repository.RoleRepository;
 import ahqpck.maintenance.report.service.UserService;
@@ -36,6 +38,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -89,6 +92,24 @@ public class UserController {
         }
 
         return "user/index";
+    }
+
+    @GetMapping("/profile")
+    public String getUserDetail(Principal principal, Model model) {
+        try {
+            UserDTO userDTO = userService.getUserByEmail(principal.getName());
+            model.addAttribute("user", userDTO);
+            model.addAttribute("title", "User Detail");
+
+            return "user/profile";
+
+        } catch (NotFoundException e) {
+            model.addAttribute("error", "User not found: " + e.getMessage());
+            return "error/404";
+        } catch (Exception e) {
+            model.addAttribute("error", "Failed to load user: " + e.getMessage());
+            return "error/500";
+        }
     }
 
     // === CREATE USER ===

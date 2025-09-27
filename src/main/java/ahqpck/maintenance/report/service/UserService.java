@@ -81,6 +81,12 @@ public class UserService {
         return toDTO(user);
     }
 
+    public UserDTO getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+        return toDTO(user);
+    }
+
     public void createUser(UserDTO dto, MultipartFile imageFile) {
         if (userRepository.existsByEmployeeIdIgnoringCase(dto.getEmployeeId())) {
             throw new IllegalArgumentException("User with this employee ID already exists.");

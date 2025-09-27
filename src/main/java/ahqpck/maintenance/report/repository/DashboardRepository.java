@@ -262,10 +262,10 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
     @Query(value = """
             SELECT
                 d.day AS date,
-                COALESCE(SUM(CASE WHEN wr.category = 'CORRECTIVE_MAINTENANCE' THEN 1 ELSE 0 END), 0) AS correctiveMaintenanceCount,
-                COALESCE(SUM(CASE WHEN wr.category = 'PREVENTIVE_MAINTENANCE' THEN 1 ELSE 0 END), 0) AS preventiveMaintenanceCount,
-                COALESCE(SUM(CASE WHEN wr.category = 'BREAKDOWN' THEN 1 ELSE 0 END), 0) AS breakdownCount,
-                COALESCE(SUM(CASE WHEN wr.category = 'OTHER' THEN 1 ELSE 0 END), 0) AS otherCount
+                COALESCE(SUM(CASE WHEN wr.category = 'CORRECTIVE_MAINTENANCE' THEN 1 ELSE 0 END), 0) AS correctiveMaintenance,
+                COALESCE(SUM(CASE WHEN wr.category = 'PREVENTIVE_MAINTENANCE' THEN 1 ELSE 0 END), 0) AS preventiveMaintenance,
+                COALESCE(SUM(CASE WHEN wr.category = 'BREAKDOWN' THEN 1 ELSE 0 END), 0) AS breakdown,
+                COALESCE(SUM(CASE WHEN wr.category = 'OTHER' THEN 1 ELSE 0 END), 0) AS other
             FROM (
                 -- Generate continuous date range from :from to :to
                 SELECT DATE_SUB(:to, INTERVAL (units.a + tens.a * 10) DAY) AS day
@@ -293,10 +293,10 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
             SELECT
                 YEAR(d.month_start) AS year,
                 MONTH(d.month_start) AS month,
-                COALESCE(SUM(CASE WHEN wr.category = 'CORRECTIVE_MAINTENANCE' THEN 1 ELSE 0 END), 0) AS correctiveMaintenanceCount,
-                COALESCE(SUM(CASE WHEN wr.category = 'PREVENTIVE_MAINTENANCE' THEN 1 ELSE 0 END), 0) AS preventiveMaintenanceCount,
-                COALESCE(SUM(CASE WHEN wr.category = 'BREAKDOWN' THEN 1 ELSE 0 END), 0) AS breakdownCount,
-                COALESCE(SUM(CASE WHEN wr.category = 'OTHER' THEN 1 ELSE 0 END), 0) AS otherCount
+                COALESCE(SUM(CASE WHEN wr.category = 'CORRECTIVE_MAINTENANCE' THEN 1 ELSE 0 END), 0) AS correctiveMaintenance,
+                COALESCE(SUM(CASE WHEN wr.category = 'PREVENTIVE_MAINTENANCE' THEN 1 ELSE 0 END), 0) AS preventiveMaintenance,
+                COALESCE(SUM(CASE WHEN wr.category = 'BREAKDOWN' THEN 1 ELSE 0 END), 0) AS breakdown,
+                COALESCE(SUM(CASE WHEN wr.category = 'OTHER' THEN 1 ELSE 0 END), 0) AS other
             FROM (
                 -- Generate 12 months of the target year
                 SELECT DATE_ADD(

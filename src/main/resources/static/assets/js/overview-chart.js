@@ -195,6 +195,7 @@ function updateComplaintChart(mode, from = null, to = null, year = null, month =
         const toApi = toApiDateTime(to, true);
         const url = `/api/dashboards/daily-complaint?from=${fromApi}&to=${toApi}`;
 
+        console.log("Daily fetch:", url);
         fetch(url)
             .then(r => r.json())
             .then(data => {
@@ -495,335 +496,8 @@ function initComplaintChartForm() {
     });
 }
 
-
-// let complaintChart = null;
-
-// function updateComplaintChart(mode, from = null, to = null, year = null, month = null) {
-//     if (mode === 'yearly') {
-//         // Yearly: Show 12 months summary
-//         let url = `/api/dashboards/monthly-complaint`;
-//         const params = [];
-
-//         if (year) params.push(`year=${year}`);
-
-//         if (params.length > 0) url += '?' + params.join('&');
-
-//         fetch(url)
-//             .then(r => r.json())
-//             .then(data => {
-//                 if (!Array.isArray(data) || data.length === 0) return;
-
-//                 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-//                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-//                 const labels = Array(12).fill('');
-//                 const openData = Array(12).fill(0);
-//                 const closedData = Array(12).fill(0);
-//                 const pendingData = Array(12).fill(0);
-
-//                 data.forEach(d => {
-//                     const monthIndex = parseInt(d.date.split('-')[1]) - 1;
-//                     if (monthIndex >= 0 && monthIndex < 12) {
-//                         labels[monthIndex] = months[monthIndex];
-//                         openData[monthIndex] = d.open || 0;
-//                         closedData[monthIndex] = d.closed || 0;
-//                         pendingData[monthIndex] = d.pending || 0;
-//                     }
-//                 });
-
-//                 for (let i = 0; i < 12; i++) {
-//                     if (!labels[i]) labels[i] = months[i];
-//                 }
-
-//                 renderComplaintChart(labels, openData, closedData, pendingData, 'Monthly Ticket Summary');
-//             })
-//             .catch(err => console.error('Monthly fetch error:', err));
-
-//     } else if (mode === 'monthly') {
-//         // Monthly: Show DAILY data for the entire selected month (up to today if future)
-//         if (!year) return; // Safety
-
-//         const monthNum = month || new Date().getMonth() + 1; // default to current month
-//         const yearNum = year;
-
-//         const firstDay = new Date(Date.UTC(yearNum, monthNum - 1, 1));
-//         const lastDay = new Date(Date.UTC(yearNum, monthNum, 0)); // Last day of month
-
-//         // Cap to today if future month
-//         const today = new Date();
-//         today.setHours(0, 0, 0, 0);
-//         const effectiveLastDay = new Date(Math.min(lastDay, today));
-
-//         const fromApi = toApiDateTime(formatDate(firstDay), false);   // T00:00
-//         const toApi = toApiDateTime(formatDate(effectiveLastDay), true); // T23:59
-
-//         console.log("Monthly fetch:", fromApi, toApi);
-//         const url = `/api/dashboards/daily-complaint?from=${fromApi}&to=${toApi}`;
-
-//         fetch(url)
-//             .then(r => r.json())
-//             .then(data => {
-//                 if (!Array.isArray(data)) return;
-
-//                 const labels = data.map(d => d.date);
-//                 const openData = data.map(d => d.open || 0);
-//                 const closedData = data.map(d => d.closed || 0);
-//                 const pendingData = data.map(d => d.pending || 0);
-
-//                 renderComplaintChart(labels, openData, closedData, pendingData, `Daily Tickets for ${new Date(yearNum, monthNum - 1).toLocaleString('default', { month: 'long' })} ${yearNum}`);
-//             })
-//             .catch(err => console.error('Daily fetch error:', err));
-
-//     } else {
-//         // Weekly or custom date range
-//         const fromApi = toApiDateTime(from, false);
-//         const toApi = toApiDateTime(to, true);
-//         const url = `/api/dashboards/daily-complaint?from=${fromApi}&to=${toApi}`;
-
-//         fetch(url)
-//             .then(r => r.json())
-//             .then(data => {
-//                 if (!Array.isArray(data)) return;
-
-//                 const labels = data.map(d => d.date);
-//                 const openData = data.map(d => d.open || 0);
-//                 const closedData = data.map(d => d.closed || 0);
-//                 const pendingData = data.map(d => d.pending || 0);
-
-//                 renderComplaintChart(labels, openData, closedData, pendingData, 'Daily Ticket Summary');
-//             })
-//             .catch(err => console.error('Daily fetch error:', err));
-//     }
-// }
-
-// function renderComplaintChart(labels, open, closed, pending, title) {
-//     const ctx = document.getElementById('complaint-bar-chart').getContext('2d');
-
-//     // Destroy previous chart if exists
-//     if (complaintChart) {
-//         complaintChart.destroy();
-//     }
-
-//     // Calculate max for Y-axis scaling
-//     const stackedValues = labels.map((_, i) => (open[i] || 0) + (closed[i] || 0) + (pending[i] || 0));
-//     const totalMax = Math.max(...stackedValues, 0);
-
-//     let stepSize;
-//     if (totalMax <= 20) stepSize = 5;
-//     else if (totalMax <= 50) stepSize = 10;
-//     else if (totalMax <= 100) stepSize = 20;
-//     else if (totalMax <= 200) stepSize = 25;
-//     else if (totalMax <= 500) stepSize = 50;
-//     else stepSize = Math.ceil(totalMax / 10 / 10) * 10;
-
-//     const yAxisMax = Math.ceil(totalMax / stepSize) * stepSize;
-
-//     // Create the chart — CHART.JS V3 ONLY
-//     complaintChart = new Chart(ctx, {
-//         type: 'bar',
-//         data: {
-//             labels: labels,
-//             datasets: [
-//                 { label: "Open", backgroundColor: '#fdaf4b', data: open },
-//                 { label: "Closed", backgroundColor: '#59d05d', data: closed },
-//                 { label: "Pending", backgroundColor: '#d9534f', data: pending }
-//             ]
-//         },
-//         options: {
-//             responsive: true,
-//             maintainAspectRatio: false,
-//             plugins: {
-//                 title: {
-//                     display: true,
-//                     text: title,
-//                     font: { size: 16 },
-//                     padding: { top: 10, bottom: 20 }
-//                 },
-//                 tooltip: {
-//                     enabled: true,
-//                     mode: 'index',           // Show all datasets at same X
-//                     intersect: true,         // ✅ CRITICAL FIX: Only show if hovering OVER a segment
-//                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
-//                     titleColor: '#fff',
-//                     bodyColor: '#fff',
-//                     borderColor: '#ccc',
-//                     borderWidth: 1,
-//                     cornerRadius: 6,
-//                     padding: 10,
-//                     displayColors: true,
-//                     callbacks: {
-//                         title: (tooltipItems) => {
-//                             return tooltipItems[0].label; // e.g., "Jan" or "2024-03-15"
-//                         },
-//                         label: (tooltipItem) => {
-//                             const datasetLabel = tooltipItem.dataset.label;
-//                             const value = tooltipItem.raw;
-//                             return `${datasetLabel}: ${value}`;
-//                         },
-//                         afterLabel: () => ''
-//                     },
-//                     // Optional: Add slight delay to avoid flicker on edge movements
-//                     animation: {
-//                         duration: 0 // Disable tooltip animations (prevents jump/flicker)
-//                     }
-//                 }
-//             },
-//             scales: {
-//                 x: {
-//                     stacked: true,
-//                     ticks: { autoSkip: true }
-//                 },
-//                 y: {
-//                     stacked: true,
-//                     beginAtZero: true,
-//                     max: yAxisMax,
-//                     ticks: {
-//                         stepSize: stepSize,
-//                         callback: function(value) {
-//                             return Number.isInteger(value) ? value : '';
-//                         }
-//                     }
-//                 }
-//             },
-//             onClick: (event, elements) => {
-//                 if (elements.length === 0) return;
-
-//                 const element = elements[0];
-//                 const dataIndex = element.index;
-//                 const datasetIndex = element.datasetIndex;
-
-//                 const statusMap = ["OPEN", "CLOSED", "PENDING"];
-//                 const status = statusMap[datasetIndex];
-
-//                 const label = labels[dataIndex];
-
-//                 let from, to;
-
-//                 if (label.length === 3) { // e.g., "Jan", "Feb"
-//                     const year = document.getElementById('complaint-year-select')?.value || new Date().getFullYear();
-//                     const monthMap = {
-//                         "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
-//                         "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
-//                     };
-//                     const monthIndex = monthMap[label];
-//                     if (monthIndex !== undefined) {
-//                         const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-//                         from = `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`;
-//                         to = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${daysInMonth}`;
-//                     } else {
-//                         from = to = label;
-//                     }
-//                 } else {
-//                     // Daily format: "YYYY-MM-DD"
-//                     from = to = label;
-//                 }
-
-//                 const url = new URL('/complaints', window.location.origin);
-//                 url.searchParams.set('reportDateFrom', encodeURIComponent(from));
-//                 url.searchParams.set('reportDateTo', encodeURIComponent(to));
-//                 url.searchParams.set('status', encodeURIComponent(status));
-//                 url.searchParams.set('sortBy', 'reportDate');
-//                 url.searchParams.set('asc', 'false');
-//                 url.searchParams.set('size', '10');
-
-//                 window.location.href = url.toString();
-//             }
-//         }
-//     });
-// }
-
-// function initComplaintChartForm() {
-//     const now = new Date();
-//     const from = new Date(now);
-//     from.setDate(now.getDate() - 6);
-
-//     document.getElementById('complaint-from').value = formatDate(from);
-//     document.getElementById('complaint-to').value = formatDate(now);
-
-//     populateYearSelector('complaint-year-select', now.getFullYear());
-
-//     // Initialize month selector to current month
-//     const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
-//     document.getElementById('complaint-month-select').value = currentMonth;
-
-//     // Hide both selectors initially
-//     document.getElementById('complaint-year-selector').style.display = 'none';
-//     document.getElementById('complaint-month-selector').style.display = 'none';
-
-//     document.querySelector('.dropdown-menu').addEventListener('click', function (e) {
-//         if (e.target.closest('select, input, .btn, .input-group')) {
-//             e.stopPropagation(); // Keep dropdown open
-//         }
-//     });
-
-//     document.querySelectorAll('.dropdown-menu .btn[data-range]').forEach(btn => {
-//         btn.addEventListener('click', () => {
-//             const range = btn.getAttribute('data-range');
-//             const now = new Date();
-//             const year = document.getElementById('complaint-year-select').value;
-
-//             // Reset visibility
-//             document.getElementById('complaint-year-selector').style.display = 'none';
-//             document.getElementById('complaint-month-selector').style.display = 'none';
-
-//             if (range === 'weekly') {
-//                 const from = new Date(now);
-//                 console.log('Weekly range selected', from, now);
-//                 from.setDate(now.getDate() - 6);
-//                 document.getElementById('complaint-from').value = formatDate(from);
-//                 document.getElementById('complaint-to').value = formatDate(now);
-//                 updateComplaintChart('daily', formatDate(from), formatDate(now));
-//             } else if (range === 'monthly') {
-//                 document.getElementById('complaint-month-selector').style.display = 'block';
-//                 const month = document.getElementById('complaint-month-select').value;
-//                 updateComplaintChart('monthly', null, null, year, month);
-//             } else if (range === 'yearly') {
-//                 document.getElementById('complaint-year-selector').style.display = 'block';
-//                 updateComplaintChart('yearly', null, null, year);
-//             }
-//         });
-//     });
-
-//     // 👇 Handle month selection — triggers update based on current year
-//     document.getElementById('complaint-month-select').addEventListener('change', () => {
-//         const year = document.getElementById('complaint-year-select').value;
-//         const month = document.getElementById('complaint-month-select').value;
-//         updateComplaintChart('monthly', null, null, year, month);
-//     });
-
-//     // 👇 Handle year selection — update both yearly and monthly views
-//     document.getElementById('complaint-year-select').addEventListener('change', () => {
-//         const year = document.getElementById('complaint-year-select').value;
-//         const currentMode = document.querySelector('.btn.active[data-range]')?.getAttribute('data-range') ||
-//             document.querySelector('.btn[data-range]:nth-child(2)').getAttribute('data-range'); // default to monthly
-
-//         if (currentMode === 'monthly') {
-//             const month = document.getElementById('complaint-month-select').value;
-//             updateComplaintChart('monthly', null, null, year, month);
-//         } else if (currentMode === 'yearly') {
-//             updateComplaintChart('yearly', null, null, year);
-//         }
-//     });
-
-//     document.getElementById('apply-complaint-filters').addEventListener('click', () => {
-//         const from = document.getElementById('complaint-from').value;
-//         const to = document.getElementById('complaint-to').value;
-//         const year = document.getElementById('complaint-year-select').value;
-//         const month = document.getElementById('complaint-month-select').value;
-
-//         if (document.getElementById('complaint-year-selector').style.display === 'block') {
-//             updateComplaintChart('yearly', null, null, year);
-//         } else if (document.getElementById('complaint-month-selector').style.display === 'block') {
-//             updateComplaintChart('monthly', null, null, year, month);
-//         } else {
-//             updateComplaintChart('daily', from, to);
-//         }
-//     });
-
-//     // Initial load
-//     updateComplaintChart('daily', formatDate(from), formatDate(now));
-// }
-
 // Engineers Responsibility
+
 let currentFrom = null;
 let currentTo = null;
 
@@ -966,33 +640,108 @@ document.getElementById('refreshEngineerBtn').addEventListener('click', () => {
 // Work Report Chart
 let wrChart = null;
 
+function updateWrChart(mode, from = null, to = null, year = null, month = null) {
+    if (mode === 'yearly') {
+        const url = `/api/dashboards/monthly-work-report?year=${year}`;
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                if (!Array.isArray(data)) return;
+
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const labels = Array(12).fill('');
+                const correctiveData = Array(12).fill(0);
+                const preventiveData = Array(12).fill(0);
+                const breakdownData = Array(12).fill(0);
+                const otherData = Array(12).fill(0);
+
+                data.forEach(d => {
+                    const i = d.month - 1;
+                    if (i >= 0 && i < 12) {
+                        labels[i] = months[i];
+                        correctiveData[i] = d.correctiveMaintenance || 0;
+                        preventiveData[i] = d.preventiveMaintenance || 0;
+                        breakdownData[i] = d.breakdown || 0;
+                        otherData[i] = d.other || 0;
+                    }
+                });
+
+                for (let i = 0; i < 12; i++) {
+                    if (!labels[i]) labels[i] = months[i];
+                }
+
+                renderWrChart(labels, correctiveData, preventiveData, breakdownData, otherData, 'Monthly Work Report');
+            })
+            .catch(err => console.error('Work Report yearly fetch error:', err));
+
+    } else if (mode === 'monthly') {
+        if (!year) return;
+
+        const monthNum = month || new Date().getMonth() + 1;
+        const yearNum = year;
+
+        const firstDay = new Date(Date.UTC(yearNum, monthNum - 1, 1));
+        const lastDay = new Date(Date.UTC(yearNum, monthNum, 0));
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const effectiveLastDay = new Date(Math.min(lastDay, today));
+
+        const fromStr = formatDate(firstDay);
+        const toStr = formatDate(effectiveLastDay);
+        const url = `/api/dashboards/daily-work-report?from=${fromStr}&to=${toStr}`;
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                if (!Array.isArray(data)) return;
+
+                const labels = data.map(d => d.date);
+                const correctiveData = data.map(d => d.correctiveMaintenance || 0);
+                const preventiveData = data.map(d => d.preventiveMaintenance || 0);
+                const breakdownData = data.map(d => d.breakdown || 0);
+                const otherData = data.map(d => d.other || 0);
+
+                renderWrChart(labels, correctiveData, preventiveData, breakdownData, otherData,
+                    `Daily Work Reports for ${new Date(yearNum, monthNum - 1).toLocaleString('default', { month: 'long' })} ${yearNum}`);
+            })
+            .catch(err => console.error('Work Report monthly fetch error:', err));
+
+    } else {
+        const url = `/api/dashboards/daily-work-report?from=${from}&to=${to}`;
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                if (!Array.isArray(data)) return;
+
+                const labels = data.map(d => d.date);
+                const correctiveData = data.map(d => d.correctiveMaintenance || 0);
+                const preventiveData = data.map(d => d.preventiveMaintenance || 0);
+                const breakdownData = data.map(d => d.breakdown || 0);
+                const otherData = data.map(d => d.other || 0);
+
+                renderWrChart(labels, correctiveData, preventiveData, breakdownData, otherData, 'Daily Work Report');
+            })
+            .catch(err => console.error('Work Report daily fetch error:', err));
+    }
+}
+
 function renderWrChart(labels, corrective, preventive, breakdown, other, title) {
     const ctx = document.getElementById('wr-equipment-line-chart').getContext('2d');
     if (wrChart) wrChart.destroy();
 
-    // Calculate stacked totals for dynamic y-axis
     const stackedValues = labels.map((_, i) =>
-        (corrective[i] || 0) +
-        (preventive[i] || 0) +
-        (breakdown[i] || 0) +
-        (other[i] || 0)
+        (corrective[i] || 0) + (preventive[i] || 0) + (breakdown[i] || 0) + (other[i] || 0)
     );
     const totalMax = Math.max(...stackedValues, 0);
 
     let stepSize;
-    if (totalMax <= 20) {
-        stepSize = 5;
-    } else if (totalMax <= 50) {
-        stepSize = 10;
-    } else if (totalMax <= 100) {
-        stepSize = 20;
-    } else if (totalMax <= 200) {
-        stepSize = 25;
-    } else if (totalMax <= 500) {
-        stepSize = 50;
-    } else {
-        stepSize = Math.ceil(totalMax / 10 / 10) * 10;
-    }
+    if (totalMax <= 20) stepSize = 5;
+    else if (totalMax <= 50) stepSize = 10;
+    else if (totalMax <= 100) stepSize = 20;
+    else if (totalMax <= 200) stepSize = 25;
+    else if (totalMax <= 500) stepSize = 50;
+    else stepSize = Math.ceil(totalMax / 10 / 10) * 10;
 
     const yAxisMax = Math.ceil(totalMax / stepSize) * stepSize;
 
@@ -1001,153 +750,88 @@ function renderWrChart(labels, corrective, preventive, breakdown, other, title) 
         data: {
             labels: labels,
             datasets: [
-                {
-                    label: "Corrective Maintenance",
-                    backgroundColor: '#d9534f',
-                    data: corrective
-                },
-                {
-                    label: "Preventive Maintenance",
-                    backgroundColor: '#59d05d',
-                    data: preventive
-                },
-                {
-                    label: "Breakdown",
-                    backgroundColor: '#fdaf4b',
-                    data: breakdown
-                },
-                {
-                    label: "Other",
-                    backgroundColor: '#95a5a6',
-                    data: other
-                }
+                { label: "Corrective Maintenance", backgroundColor: '#fdaf4b', data: corrective },
+                { label: "Preventive Maintenance", backgroundColor: '#59d05d', data: preventive },
+                { label: "Breakdown", backgroundColor: '#d9534f', data: breakdown },
+                { label: "Other", backgroundColor: '#95a5a6', data: other }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                title: {
-                    display: true,
-                    text: title,
-                    font: {
-                        size: 16
-                    }
-                },
                 tooltip: {
+                    enabled: true,
                     mode: 'index',
-                    intersect: false,
+                    intersect: true,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#ccc',
+                    borderWidth: 1,
+                    cornerRadius: 6,
+                    padding: 10,
+                    displayColors: true,
                     callbacks: {
-                        label: function (context) {
-                            return `${context.dataset.label}: ${context.parsed.y}`;
+                        title: (tooltipItems) => tooltipItems[0].label,
+                        label: (tooltipItem) => {
+                            const datasetLabel = tooltipItem.dataset.label;
+                            const value = tooltipItem.raw;
+                            return `${datasetLabel}: ${value}`;
                         }
-                    }
-                },
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#333', // Chart.js v3 uses 'color'
-                        padding: 15
                     }
                 }
             },
             scales: {
-                x: {
-                    stacked: true
-                },
+                x: { stacked: true, ticks: { autoSkip: true } },
                 y: {
                     stacked: true,
                     beginAtZero: true,
                     max: yAxisMax,
                     ticks: {
                         stepSize: stepSize,
-                        callback: function (value) {
-                            return Number.isInteger(value) ? value : null;
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: 'Number of Reports'
+                        callback: v => Number.isInteger(v) ? v : ''
                     }
                 }
+            },
+            onClick: (event, elements) => {
+                if (elements.length === 0) return;
+
+                const element = elements[0];
+                const dataIndex = element.index;
+                const datasetIndex = element.datasetIndex;
+
+                const groupMap = ["CORRECTIVE_MAINTENANCE", "PREVENTIVE_MAINTENANCE", "BREAKDOWN", "OTHER"];
+                const group = groupMap[datasetIndex];
+                const label = labels[dataIndex];
+
+                let from, to;
+                if (label.length === 3) {
+                    const year = document.getElementById('wr-year-select')?.value || new Date().getFullYear();
+                    const monthMap = { "Jan":0,"Feb":1,"Mar":2,"Apr":3,"May":4,"Jun":5,"Jul":6,"Aug":7,"Sep":8,"Oct":9,"Nov":10,"Dec":11 };
+                    const monthIndex = monthMap[label];
+                    if (monthIndex !== undefined) {
+                        const days = new Date(year, monthIndex + 1, 0).getDate();
+                        from = `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+                        to = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${days}`;
+                    } else {
+                        from = to = label;
+                    }
+                } else {
+                    from = to = label;
+                }
+
+                const url = new URL('/work-reports', window.location.origin);
+                url.searchParams.set('reportDateFrom', from);
+                url.searchParams.set('reportDateTo', to);
+                url.searchParams.set('group', group);
+                url.searchParams.set('sortBy', 'reportDate');
+                url.searchParams.set('asc', 'true');
+                url.searchParams.set('page', '1');
+                window.location.href = url.toString();
             }
         }
     });
-}
-
-function updateWrChart(mode, from = null, to = null, year = null, equipmentCode = null) {
-    let url = '';
-    if (mode === 'yearly') {
-        url = `/api/dashboards/monthly-work-report-equipment?year=${year}`;
-        if (equipmentCode) url += `&equipmentCode=${encodeURIComponent(equipmentCode)}`;
-    } else {
-        const fromApi = toApiDateTime(from, false);
-        const toApi = toApiDateTime(to, true);
-        url = `/api/dashboards/daily-work-report-equipment?from=${from}&to=${to}`;
-        if (equipmentCode) url += `&equipmentCode=${encodeURIComponent(equipmentCode)}`;
-    }
-
-    console.log("Fetching:", url);
-
-    fetch(url)
-        .then(r => {
-            if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
-            return r.json();
-        })
-        .then(data => {
-            if (!Array.isArray(data)) {
-                console.warn("Expected array, got:", data);
-                return;
-            }
-
-            let labels, correctiveData, preventiveData, breakdownData, otherData;
-
-            if (mode === 'yearly') {
-                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                labels = Array(12).fill('');
-                correctiveData = Array(12).fill(0);
-                preventiveData = Array(12).fill(0);
-                breakdownData = Array(12).fill(0);
-                otherData = Array(12).fill(0);
-
-                data.forEach(d => {
-                    const i = d.month - 1;
-                    if (i >= 0 && i < 12) {
-                        labels[i] = months[i];
-                        correctiveData[i] = d.correctiveMaintenanceCount || 0;
-                        preventiveData[i] = d.preventiveMaintenanceCount || 0;
-                        breakdownData[i] = d.breakdownCount || 0;
-                        otherData[i] = d.otherCount || 0;
-                    }
-                });
-
-                // Fill in any missing months
-                for (let i = 0; i < 12; i++) {
-                    if (!labels[i]) labels[i] = months[i];
-                }
-
-                renderWrChart(labels, correctiveData, preventiveData, breakdownData, otherData, 'Monthly Work Report');
-            } else {
-                labels = data.map(d => d.date);
-                correctiveData = data.map(d => d.correctiveMaintenanceCount || 0);
-                preventiveData = data.map(d => d.preventiveMaintenanceCount || 0);
-                breakdownData = data.map(d => d.breakdownCount || 0);
-                otherData = data.map(d => d.otherCount || 0);
-
-                renderWrChart(labels, correctiveData, preventiveData, breakdownData, otherData, 'Daily Work Report');
-            }
-        })
-        .catch(err => {
-            console.error("Error loading chart data:", err);
-            const ctx = document.getElementById('wr-equipment-line-chart').getContext('2d');
-            ctx.save();
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.font = "16px Arial";
-            ctx.fillText("Failed to load data", ctx.canvas.width / 2, ctx.canvas.height / 2);
-            ctx.restore();
-        });
 }
 
 function initWrChartForm() {
@@ -1159,104 +843,118 @@ function initWrChartForm() {
     document.getElementById('wr-to').value = formatDate(now);
 
     populateYearSelector('wr-year-select', now.getFullYear());
+    document.getElementById('wr-month-select').value = String(now.getMonth() + 1).padStart(2, '0');
 
-    fetch('/api/dashboards/equipment-complaint-count')
-        .then(r => r.json())
-        .then(equipmentList => {
-            const select = document.getElementById('wr-equipment');
-            equipmentList
-                .sort((a, b) => a.equipmentName.localeCompare(b.equipmentName))
-                .forEach(item => {
-                    const opt = new Option(item.equipmentName, item.equipmentCode);
-                    select.appendChild(opt);
-                });
+    document.getElementById('wr-year-selector').style.display = 'none';
+    document.getElementById('wr-month-selector').style.display = 'none';
+    document.getElementById('wr-weekly-nav').style.display = 'flex';
 
-            const initialEquipment = document.getElementById('wr-equipment').value;
-            updateWrChart('daily', formatDate(from), formatDate(now), null, initialEquipment);
-        })
-        .catch(err => {
-            console.warn("Failed to load equipment list:", err);
-            const initialEquipment = document.getElementById('wr-equipment').value;
-            updateWrChart('daily', formatDate(from), formatDate(now), null, initialEquipment);
-        });
+    updateWrWeekNav(formatDate(from), formatDate(now));
+    updateWrChart('daily', formatDate(from), formatDate(now));
 
+    // Keep dropdown open
+    document.querySelector('#wrFilterDropdown + .dropdown-menu').addEventListener('click', e => {
+        if (e.target.closest('select, input, .btn, .input-group')) e.stopPropagation();
+    });
+
+    // Filter buttons
     document.querySelectorAll('.wr-filter').forEach(btn => {
         btn.addEventListener('click', () => {
             const range = btn.getAttribute('data-range');
-            const now = new Date();
-            const equipmentCode = document.getElementById('wr-equipment').value;
+            const year = document.getElementById('wr-year-select').value;
 
-            if (range === 'weekly') {
-                document.getElementById('wr-year-selector').style.display = 'none';
-                const from = new Date(now);
-                from.setDate(now.getDate() - 6);
-                document.getElementById('wr-from').value = formatDate(from);
-                document.getElementById('wr-to').value = formatDate(now);
-                updateWrChart('daily', formatDate(from), formatDate(now), null, equipmentCode);
-            } else if (range === 'monthly') {
-                document.getElementById('wr-year-selector').style.display = 'none';
-                const from = new Date(now.getFullYear(), now.getMonth(), 1);
-                document.getElementById('wr-from').value = formatDate(from);
-                document.getElementById('wr-to').value = formatDate(now);
-                updateWrChart('daily', formatDate(from), formatDate(now), null, equipmentCode);
+            document.getElementById('wr-year-selector').style.display = 'none';
+            document.getElementById('wr-month-selector').style.display = 'none';
+
+            if (range === 'monthly') {
+                document.getElementById('wr-month-selector').style.display = 'block';
+                const month = document.getElementById('wr-month-select').value;
+                updateWrChart('monthly', null, null, year, month);
             } else if (range === 'yearly') {
                 document.getElementById('wr-year-selector').style.display = 'block';
-                const year = document.getElementById('wr-year-select').value;
-                updateWrChart('yearly', null, null, year, equipmentCode);
+                updateWrChart('yearly', null, null, year);
             }
         });
     });
 
-    document.getElementById('wr-year-select').addEventListener('change', () => {
+    document.getElementById('wr-month-select').addEventListener('change', () => {
         const year = document.getElementById('wr-year-select').value;
-        const equipmentCode = document.getElementById('wr-equipment').value;
-        updateWrChart('yearly', null, null, year, equipmentCode);
+        const month = document.getElementById('wr-month-select').value;
+        updateWrChart('monthly', null, null, year, month);
     });
 
-    document.getElementById('apply-filters-btn').addEventListener('click', () => {
+    document.getElementById('wr-year-select').addEventListener('change', () => {
+        const year = document.getElementById('wr-year-select').value;
+        const currentMode = document.querySelector('.wr-filter[data-range="monthly"]')?.classList.contains('active') ? 'monthly' : 'yearly';
+        if (currentMode === 'monthly') {
+            const month = document.getElementById('wr-month-select').value;
+            updateWrChart('monthly', null, null, year, month);
+        } else {
+            updateWrChart('yearly', null, null, year);
+        }
+    });
+
+    document.getElementById('apply-wr-filters').addEventListener('click', () => {
         const from = document.getElementById('wr-from').value;
         const to = document.getElementById('wr-to').value;
-        const equipmentCode = document.getElementById('wr-equipment').value;
         const year = document.getElementById('wr-year-select').value;
+        const month = document.getElementById('wr-month-select').value;
 
         if (document.getElementById('wr-year-selector').style.display === 'block') {
-            updateWrChart('yearly', null, null, year, equipmentCode);
+            updateWrChart('yearly', null, null, year);
+        } else if (document.getElementById('wr-month-selector').style.display === 'block') {
+            updateWrChart('monthly', null, null, year, month);
         } else {
-            document.getElementById('wr-year-selector').style.display = 'none';
-            updateWrChart('daily', from, to, null, equipmentCode);
+            updateWrChart('daily', from, to);
         }
+    });
+
+    // Weekly nav
+    document.getElementById('wr-prevWeekBtn').addEventListener('click', () => {
+        const from = new Date(document.getElementById('wr-from').value);
+        const to = new Date(document.getElementById('wr-to').value);
+        from.setDate(from.getDate() - 7);
+        to.setDate(to.getDate() - 7);
+        const f = formatDate(from), t = formatDate(to);
+        document.getElementById('wr-from').value = f;
+        document.getElementById('wr-to').value = t;
+        updateWrWeekNav(f, t);
+        updateWrChart('daily', f, t);
+    });
+
+    document.getElementById('wr-nextWeekBtn').addEventListener('click', () => {
+        const from = new Date(document.getElementById('wr-from').value);
+        const to = new Date(document.getElementById('wr-to').value);
+        from.setDate(from.getDate() + 7);
+        to.setDate(to.getDate() + 7);
+        const f = formatDate(from), t = formatDate(to);
+        document.getElementById('wr-from').value = f;
+        document.getElementById('wr-to').value = t;
+        updateWrWeekNav(f, t);
+        updateWrChart('daily', f, t);
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const equipmentSelect = document.getElementById('wr-equipment');
+// Utility
+function updateWrWeekNav(fromDate, toDate) {
+    const label = document.getElementById('wr-weekRangeLabel');
+    const start = new Date(fromDate), end = new Date(toDate);
+    const startMonth = start.toLocaleString('default', { month: 'short' });
+    const endMonth = end.toLocaleString('default', { month: 'short' });
+    const monthPart = startMonth === endMonth ? startMonth : `${startMonth}–${endMonth}`;
+    label.textContent = `Week of ${monthPart} ${start.getDate()}–${end.getDate()}, ${start.getFullYear()}`;
+    document.getElementById('wr-prevWeekBtn').disabled = false;
+    const today = new Date(); today.setHours(0,0,0,0);
+    document.getElementById('wr-nextWeekBtn').disabled = end >= today;
+}
 
-    if (!equipmentSelect) {
-        console.error("Element #wr-equipment not found");
-        return;
-    }
-
-    ['mousedown', 'click', 'focusin'].forEach(eventType => {
-        equipmentSelect.addEventListener(eventType, (e) => {
-            e.stopPropagation();
-        });
-    });
-    initWrChartForm();
-});
-
-// Breakdown Chart
 let breakdownChart = null;
 
-function updateBreakdownChart(mode, from = null, to = null, year = null) {
-    const ctx = document.getElementById('breakdown-line-chart').getContext('2d');
-    if (breakdownChart) breakdownChart.destroy();
-
+function updateBreakdownChart(mode, from = null, to = null, year = null, month = null) {
     if (mode === 'yearly') {
-        fetch(`/api/dashboards/monthly-breakdown?year=${year}`)
-            .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.json();
-            })
+        const url = `/api/dashboards/monthly-breakdown?year=${year}`;
+        fetch(url)
+            .then(r => r.json())
             .then(data => {
                 if (!Array.isArray(data)) return;
 
@@ -1273,71 +971,29 @@ function updateBreakdownChart(mode, from = null, to = null, year = null) {
                     }
                 });
 
-                breakdownChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: months,
-                        datasets: [{
-                            label: "Total Time (min)",
-                            borderColor: "#1d7af3",
-                            pointBorderColor: "#FFF",
-                            pointBackgroundColor: "#1d7af3",
-                            pointBorderWidth: 2,
-                            pointHoverRadius: 4,
-                            pointRadius: 4,
-                            backgroundColor: 'transparent',
-                            fill: true,
-                            borderWidth: 2,
-                            data: values,
-                            breakdownCounts: counts // Attach count for tooltip
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        legend: {
-                            position: 'bottom',
-                            labels: { fontColor: '#1d7af3', padding: 15 }
-                        },
-                        tooltips: {
-                            mode: "nearest",
-                            intersect: false,
-                            callbacks: {
-                                label: function (tooltipItem, data) {
-                                    const dataset = data.datasets[0];
-                                    const value = dataset.data[tooltipItem.index];
-                                    const count = dataset.breakdownCounts[tooltipItem.index];
-                                    return [
-                                        `Total Time: ${value} min`,
-                                        `Breakdown Count: ${count}`
-                                    ];
-                                }
-                            }
-                        },
-                        scales: {
-                            x: { stacked: false },
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Total Time (minutes)'
-                                },
-                                ticks: {
-                                    stepSize: Math.max(1, Math.round(Math.max(...values) / 10) || 1)
-                                }
-                            }
-                        }
-                    }
-                });
+                renderBreakdownChart(months, values, counts, 'Monthly Breakdown Summary');
             })
-            .catch(err => console.error('Monthly breakdown fetch error:', err));
+            .catch(err => console.error('Breakdown yearly error:', err));
+            console.log("url", url);
 
-    } else {
-        fetch(`/api/dashboards/daily-breakdown?from=${from}&to=${to}`)
-            .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.json();
-            })
+    } else if (mode === 'monthly') {
+        if (!year) return;
+
+        const monthNum = month || new Date().getMonth() + 1;
+        const yearNum = year;
+
+        const firstDay = new Date(Date.UTC(yearNum, monthNum - 1, 1));
+        const lastDay = new Date(Date.UTC(yearNum, monthNum, 0));
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const effectiveLastDay = new Date(Math.min(lastDay, today));
+
+        const fromStr = formatDate(firstDay);
+        const toStr = formatDate(effectiveLastDay);
+        const url = `/api/dashboards/daily-breakdown?from=${fromStr}&to=${toStr}`;
+
+        fetch(url)
+            .then(r => r.json())
             .then(data => {
                 if (!Array.isArray(data)) return;
 
@@ -1345,65 +1001,105 @@ function updateBreakdownChart(mode, from = null, to = null, year = null) {
                 const values = data.map(d => d.totalTimeMinutes || 0);
                 const counts = data.map(d => d.breakdownCount || 0);
 
-                breakdownChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Total Time (min)",
-                            borderColor: "#1d7af3",
-                            pointBorderColor: "#FFF",
-                            pointBackgroundColor: "#1d7af3",
-                            pointBorderWidth: 2,
-                            pointHoverRadius: 4,
-                            pointRadius: 4,
-                            backgroundColor: 'transparent',
-                            fill: true,
-                            borderWidth: 2,
-                            data: values,
-                            breakdownCounts: counts
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        legend: {
-                            position: 'bottom',
-                            labels: { fontColor: '#1d7af3', padding: 15 }
-                        },
-                        tooltips: {
-                            mode: "nearest",
-                            intersect: false,
-                            callbacks: {
-                                label: function (tooltipItem, data) {
-                                    const dataset = data.datasets[0];
-                                    const value = dataset.data[tooltipItem.index];
-                                    const count = dataset.breakdownCounts[tooltipItem.index];
-                                    return [
-                                        `Total Time: ${value} min`,
-                                        `Breakdown Count: ${count}`
-                                    ];
-                                }
-                            }
-                        },
-                        scales: {
-                            x: { stacked: false },
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Total Time (minutes)'
-                                },
-                                ticks: {
-                                    stepSize: Math.max(1, Math.round(Math.max(...values) / 10) || 1)
-                                }
-                            }
-                        }
-                    }
-                });
+                renderBreakdownChart(labels, values, counts,
+                    `Daily Breakdown for ${new Date(yearNum, monthNum - 1).toLocaleString('default', { month: 'long' })} ${yearNum}`);
             })
-            .catch(err => console.error('Daily breakdown fetch error:', err));
+            .catch(err => console.error('Breakdown monthly error:', err));
+
+    } else {
+        const url = `/api/dashboards/daily-breakdown?from=${from}&to=${to}`;
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                if (!Array.isArray(data)) return;
+
+                const labels = data.map(d => d.date);
+                const values = data.map(d => d.totalTimeMinutes || 0);
+                const counts = data.map(d => d.breakdownCount || 0);
+
+                renderBreakdownChart(labels, values, counts, 'Daily Breakdown');
+            })
+            .catch(err => console.error('Breakdown daily error:', err));
     }
+}
+
+function renderBreakdownChart(labels, values, counts, title) {
+    const ctx = document.getElementById('breakdown-line-chart').getContext('2d');
+    if (breakdownChart) breakdownChart.destroy();
+
+    const maxVal = Math.max(...values, 0);
+    let stepSize = maxVal <= 20 ? 5 : maxVal <= 50 ? 10 : maxVal <= 100 ? 20 : maxVal <= 200 ? 25 : maxVal <= 500 ? 50 : Math.ceil(maxVal / 10 / 10) * 10;
+    const yAxisMax = Math.ceil(maxVal / stepSize) * stepSize;
+
+    breakdownChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Total Time (min)",
+                borderColor: "#1d7af3",
+                pointBackgroundColor: "#1d7af3",
+                pointRadius: 4,
+                borderWidth: 2,
+                fill: false,
+                data: values,
+                breakdownCounts: counts
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: ctx => [
+                            `Total Time: ${ctx.parsed.y} min`,
+                            `Breakdown Count: ${ctx.dataset.breakdownCounts[ctx.dataIndex]}`
+                        ]
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Total Time (minutes)' },
+                    ticks: { stepSize: stepSize }
+                }
+            },
+            onClick: (event, elements) => {
+                if (elements.length === 0) return;
+
+                const label = labels[elements[0].index];
+                let from, to;
+                if (label.length === 3) {
+                    const year = document.getElementById('breakdown-year-select')?.value || new Date().getFullYear();
+                    const monthMap = { "Jan":0,"Feb":1,"Mar":2,"Apr":3,"May":4,"Jun":5,"Jul":6,"Aug":7,"Sep":8,"Oct":9,"Nov":10,"Dec":11 };
+                    const i = monthMap[label];
+                    if (i !== undefined) {
+                        const days = new Date(year, i + 1, 0).getDate();
+                        from = `${year}-${String(i + 1).padStart(2, '0')}-01`;
+                        to = `${year}-${String(i + 1).padStart(2, '0')}-${days}`;
+                    } else {
+                        from = to = label;
+                    }
+                } else {
+                    from = to = label;
+                }
+
+                const url = new URL('/work-reports', window.location.origin);
+                url.searchParams.set('reportDateFrom', from);
+                url.searchParams.set('reportDateTo', to);
+                url.searchParams.set('group', 'BREAKDOWN');
+                url.searchParams.set('sortBy', 'reportDate');
+                url.searchParams.set('asc', 'true');
+                url.searchParams.set('page', '1');
+                window.location.href = url.toString();
+            }
+        }
+    });
 }
 
 function initBreakdownChartForm() {
@@ -1415,59 +1111,110 @@ function initBreakdownChartForm() {
     document.getElementById('breakdown-to').value = formatDate(now);
 
     populateYearSelector('breakdown-year-select', now.getFullYear());
+    document.getElementById('breakdown-month-select').value = String(now.getMonth() + 1).padStart(2, '0');
 
-    document.querySelector('.dropdown-menu').addEventListener('click', function (e) {
-        if (e.target.closest('select, input, .btn, .input-group')) {
-            e.stopPropagation(); // 🔑 Keep dropdown open
-        }
+    document.getElementById('breakdown-year-selector').style.display = 'none';
+    document.getElementById('breakdown-month-selector').style.display = 'none';
+    document.getElementById('breakdown-weekly-nav').style.display = 'flex';
+
+    updateBreakdownWeekNav(formatDate(from), formatDate(now));
+    updateBreakdownChart('daily', formatDate(from), formatDate(now));
+
+    // Keep dropdown open
+    document.querySelector('#breakdownFilterDropdown + .dropdown-menu').addEventListener('click', e => {
+        if (e.target.closest('select, input, .btn, .input-group')) e.stopPropagation();
     });
 
-    ddocument.querySelectorAll('.breakdown-filter').forEach(btn => {
+    // Filter buttons
+    document.querySelectorAll('.breakdown-filter').forEach(btn => {
         btn.addEventListener('click', () => {
             const range = btn.getAttribute('data-range');
-            const now = new Date();
+            const year = document.getElementById('breakdown-year-select').value;
 
-            if (range === 'weekly') {
-                document.getElementById('breakdown-year-selector').style.display = 'none';
-                const from = new Date(now);
-                from.setDate(now.getDate() - 6);
-                document.getElementById('breakdown-from').value = formatDate(from);
-                document.getElementById('breakdown-to').value = formatDate(now);
-                updateBreakdownChart('daily', formatDate(from), formatDate(now));
-            } else if (range === 'monthly') {
-                document.getElementById('breakdown-year-selector').style.display = 'none';
-                const from = new Date(now.getFullYear(), now.getMonth(), 1);
-                document.getElementById('breakdown-from').value = formatDate(from);
-                document.getElementById('breakdown-to').value = formatDate(now);
-                updateBreakdownChart('daily', formatDate(from), formatDate(now));
+            document.getElementById('breakdown-year-selector').style.display = 'none';
+            document.getElementById('breakdown-month-selector').style.display = 'none';
+
+            if (range === 'monthly') {
+                document.getElementById('breakdown-month-selector').style.display = 'block';
+                const month = document.getElementById('breakdown-month-select').value;
+                updateBreakdownChart('monthly', null, null, year, month);
             } else if (range === 'yearly') {
                 document.getElementById('breakdown-year-selector').style.display = 'block';
-                const year = document.getElementById('breakdown-year-select').value;
                 updateBreakdownChart('yearly', null, null, year);
             }
         });
     });
 
+    document.getElementById('breakdown-month-select').addEventListener('change', () => {
+        const year = document.getElementById('breakdown-year-select').value;
+        const month = document.getElementById('breakdown-month-select').value;
+        updateBreakdownChart('monthly', null, null, year, month);
+    });
+
     document.getElementById('breakdown-year-select').addEventListener('change', () => {
         const year = document.getElementById('breakdown-year-select').value;
-        updateBreakdownChart('yearly', null, null, year);
+        const currentMode = document.querySelector('.breakdown-filter[data-range="monthly"]')?.classList.contains('active') ? 'monthly' : 'yearly';
+        if (currentMode === 'monthly') {
+            const month = document.getElementById('breakdown-month-select').value;
+            updateBreakdownChart('monthly', null, null, year, month);
+        } else {
+            updateBreakdownChart('yearly', null, null, year);
+        }
     });
 
     document.getElementById('apply-breakdown-filters').addEventListener('click', () => {
         const from = document.getElementById('breakdown-from').value;
         const to = document.getElementById('breakdown-to').value;
         const year = document.getElementById('breakdown-year-select').value;
+        const month = document.getElementById('breakdown-month-select').value;
 
         if (document.getElementById('breakdown-year-selector').style.display === 'block') {
             updateBreakdownChart('yearly', null, null, year);
+        } else if (document.getElementById('breakdown-month-selector').style.display === 'block') {
+            updateBreakdownChart('monthly', null, null, year, month);
         } else {
-            document.getElementById('breakdown-year-selector').style.display = 'none';
             updateBreakdownChart('daily', from, to);
         }
     });
 
-    updateBreakdownChart('daily', formatDate(from), formatDate(now));
+    // Weekly nav
+    document.getElementById('breakdown-prevWeekBtn').addEventListener('click', () => {
+        const from = new Date(document.getElementById('breakdown-from').value);
+        const to = new Date(document.getElementById('breakdown-to').value);
+        from.setDate(from.getDate() - 7);
+        to.setDate(to.getDate() - 7);
+        const f = formatDate(from), t = formatDate(to);
+        document.getElementById('breakdown-from').value = f;
+        document.getElementById('breakdown-to').value = t;
+        updateBreakdownWeekNav(f, t);
+        updateBreakdownChart('daily', f, t);
+    });
+
+    document.getElementById('breakdown-nextWeekBtn').addEventListener('click', () => {
+        const from = new Date(document.getElementById('breakdown-from').value);
+        const to = new Date(document.getElementById('breakdown-to').value);
+        from.setDate(from.getDate() + 7);
+        to.setDate(to.getDate() + 7);
+        const f = formatDate(from), t = formatDate(to);
+        document.getElementById('breakdown-from').value = f;
+        document.getElementById('breakdown-to').value = t;
+        updateBreakdownWeekNav(f, t);
+        updateBreakdownChart('daily', f, t);
+    });
 }
+
+function updateBreakdownWeekNav(fromDate, toDate) {
+    const label = document.getElementById('breakdown-weekRangeLabel');
+    const start = new Date(fromDate), end = new Date(toDate);
+    const startMonth = start.toLocaleString('default', { month: 'short' });
+    const endMonth = end.toLocaleString('default', { month: 'short' });
+    const monthPart = startMonth === endMonth ? startMonth : `${startMonth}–${endMonth}`;
+    label.textContent = `Week of ${monthPart} ${start.getDate()}–${end.getDate()}, ${start.getFullYear()}`;
+    document.getElementById('breakdown-prevWeekBtn').disabled = false;
+    const today = new Date(); today.setHours(0,0,0,0);
+    document.getElementById('breakdown-nextWeekBtn').disabled = end >= today;
+}
+
 
 // Equipment Repaired
 function formatNumber(num) {
@@ -1616,5 +1363,6 @@ window.addEventListener('DOMContentLoaded', () => {
     initComplaintChartForm();
     fetchEngineerData();
     initEquipmentWorkList();
+    initWrChartForm();
     initBreakdownChartForm();
 });
