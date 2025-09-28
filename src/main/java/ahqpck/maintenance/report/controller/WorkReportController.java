@@ -54,6 +54,7 @@ public class WorkReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateTo,
             @RequestParam(required = false) WorkReport.Category group,
             @RequestParam(required = false) String equipmentCode,
+            @RequestParam(required = false) String hiddenColumns,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") String size,
             @RequestParam(defaultValue = "reportDate") String sortBy,
@@ -73,6 +74,7 @@ public class WorkReportController {
             model.addAttribute("workReports", reportPage);
             model.addAttribute("keyword", keyword);
             model.addAttribute("reportDateFrom", reportDateFrom);
+            model.addAttribute("hiddenColumns", hiddenColumns);
             model.addAttribute("reportDateTo", reportDateTo);
             model.addAttribute("currentPage", page);
             model.addAttribute("pageSize", size);
@@ -99,6 +101,7 @@ public class WorkReportController {
     @PostMapping
     public String createWorkReport(
             @Valid @ModelAttribute WorkReportDTO workReportDTO,
+            @RequestParam(required = false) String redirectUrl,
             BindingResult bindingResult,
             RedirectAttributes ra) {
 
@@ -115,24 +118,28 @@ public class WorkReportController {
 
         if (WebUtil.hasErrors(bindingResult)) {
             ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
-            return "redirect:/work-reports";
+            String target = buildSafeRedirect(redirectUrl);
+            return target;
         }
 
         try {
             workReportService.createWorkReport(workReportDTO);
             ra.addFlashAttribute("success", "Work report created successfully.");
-            return "redirect:/work-reports";
+            String target = buildSafeRedirect(redirectUrl);
+            return target;
 
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Failed to create work report: " + e.getMessage());
             ra.addFlashAttribute("workReportDTO", workReportDTO);
-            return "redirect:/work-reports";
+            String target = buildSafeRedirect(redirectUrl);
+            return target;
         }
     }
 
     @PostMapping("/update")
     public String updateWorkReport(
             @Valid @ModelAttribute WorkReportDTO workReportDTO,
+            @RequestParam(required = false) String redirectUrl,
             BindingResult bindingResult,
             RedirectAttributes ra) {
 
@@ -149,20 +156,24 @@ public class WorkReportController {
 
         if (WebUtil.hasErrors(bindingResult)) {
             ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
-            return "redirect:/work-reports";
+            String target = buildSafeRedirect(redirectUrl);
+            return target;
         }
 
         try {
             workReportService.updateWorkReport(workReportDTO);
             ra.addFlashAttribute("success", "Work report updated successfully.");
-            return "redirect:/work-reports";
+            String target = buildSafeRedirect(redirectUrl);
+            return target;
 
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Failed to update work report: " + e.getMessage());
             ra.addFlashAttribute("workReportDTO", workReportDTO);
-            return "redirect:/work-reports";
+            String target = buildSafeRedirect(redirectUrl);
+            return target;
         }
     }
+
     @GetMapping("/delete/{id}")
     public String deleteWorkReport(@PathVariable String id, RedirectAttributes ra) {
         try {
@@ -213,6 +224,25 @@ public class WorkReportController {
             ra.addFlashAttribute("error", "Bulk import failed: " + e.getMessage());
             return "redirect:/work-reports";
         }
+    }
+
+    private String buildSafeRedirect(String redirectUrl) {
+        // If no redirectUrl or it's blank, fallback
+        if (redirectUrl == null || redirectUrl.trim().isEmpty()) {
+            return "redirect:/work-reports";
+        }
+
+        // Ensure it's a relative path (starts with /) and is within our app
+        String cleanUrl = redirectUrl.trim();
+        if (cleanUrl.startsWith("/") && !cleanUrl.contains("//") && !cleanUrl.startsWith("/../")) {
+            // Optional: restrict to /work-reports only
+            if (cleanUrl.startsWith("/work-reports")) {
+                return "redirect:" + cleanUrl;
+            }
+        }
+
+        // Fallback to default
+        return "redirect:/work-reports";
     }
 
     private List<UserDTO> getAllUsersForDropdown() {

@@ -337,7 +337,7 @@
                                             <li class="page-item"
                                                 th:classappend="${!workReports.hasPrevious} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, group=${param.group}, page=${workReports.number}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, hiddenColumns=${param.hiddenColumns}, group=${param.group}, page=${workReports.number}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
                                                     th:if="${workReports.hasPrevious}">Prev</a>
                                                 <span class="page-link" th:if="${!workReports.hasPrevious}">Prev</span>
                                             </li>
@@ -345,7 +345,7 @@
                                             <li class="page-item" th:if="${workReports.number > 0}"
                                                 th:classappend="${!workReports.hasPrevious} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, group=${param.group}, page=1, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">1</a>
+                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, hiddenColumns=${param.hiddenColumns}, group=${param.group}, page=1, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">1</a>
                                             </li>
 
                                             <li class="page-item"
@@ -366,14 +366,14 @@
                                                 th:if="${workReports.number + 1 < workReports.totalPages}"
                                                 th:classappend="${!workReports.hasNext} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, group=${param.group}, page=${workReports.totalPages}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">
+                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, hiddenColumns=${param.hiddenColumns}, group=${param.group}, page=${workReports.totalPages}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">
                                                     <span th:text="${workReports.totalPages}">20</span>
                                                 </a>
                                             </li>
 
                                             <li class="page-item" th:classappend="${!workReports.hasNext} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, group=${param.group}, page=${workReports.number + 2}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, hiddenColumns=${param.hiddenColumns}, group=${param.group}, page=${workReports.number + 2}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
                                                     th:if="${workReports.hasNext}">Next</a>
                                                 <span class="page-link" th:if="${!workReports.hasNext}">Next</span>
                                             </li>
@@ -387,6 +387,20 @@
             </div>
         </div>
     </div>
+    // base format page btn-link
+    <!-- <a class="page-link"
+   th:href="@{/work-reports(
+       keyword=${param.keyword},
+       reportDateFrom=${param.reportDateFrom},
+       reportDateTo=${param.reportDateTo},
+       equipmentCode=${param.equipmentCode},
+       group=${param.group},
+       page=${workReports.number},
+       size=${pageSize},
+       sortBy=${sortBy},
+       asc=${asc},
+       hiddenColumns=${param.hiddenColumns}
+   )}"> -->
 
     <!-- Scripts -->
     <th:block layout:fragment="scripts">
@@ -632,61 +646,61 @@
                     });
                 });
 
-                // Lets user show/hide table columns dynamically
+                // --- Column Visibility with URL Sync ---
                 const table = document.getElementById("work-report-table");
                 const headerRow = table.querySelector("thead tr");
                 const dataRows = table.querySelectorAll("tbody tr");
                 const container = document.getElementById("column-toggle-list");
 
-                // Define initial visibility state for each column
+                // Get hidden columns from URL (fallback to empty if not present)
+                const urlParams = new URLSearchParams(window.location.search);
+                const hiddenColumnsParam = urlParams.get('hiddenColumns');
+                const hiddenSet = hiddenColumnsParam ? new Set(hiddenColumnsParam.split(',')) : new Set();
+
+                // Define all columns (MUST match table column order)
                 const columnSettings = [
-                    { key: "code", label: "Code", visible: false },
-                    { key: "reportDate", label: "Report Date", visible: true },
-                    { key: "shift", label: "Shift", visible: true },
-                    { key: "area", label: "Area", visible: false },
-                    { key: "equipment", label: "Equipment", visible: true },
-                    { key: "category", label: "Category", visible: true },
-                    { key: "problem", label: "Problem", visible: true },
-                    { key: "solution", label: "Solution", visible: false },
-                    { key: "startTime", label: "Start Time", visible: true },
-                    { key: "stopTime", label: "Stop Time", visible: true },
-                    { key: "totalTimeMinutes", label: "Total Time", visible: true },
-                    { key: "technicians", label: "Technicians", visible: false },
-                    { key: "supervisor", label: "Supervisor", visible: false },
-                    { key: "status", label: "Status", visible: true },
-                    { key: "scope", label: "Scope", visible: true },
-                    { key: "workType", label: "Work Type", visible: false },
-                    { key: "remark", label: "Remark", visible: false }
+                    { key: "code", label: "Code" },
+                    { key: "reportDate", label: "Report Date" },
+                    { key: "shift", label: "Shift" },
+                    { key: "area", label: "Area" },
+                    { key: "equipment", label: "Equipment" },
+                    { key: "category", label: "Category" },
+                    { key: "problem", label: "Problem" },
+                    { key: "solution", label: "Solution" },
+                    { key: "startTime", label: "Start Time" },
+                    { key: "stopTime", label: "Stop Time" },
+                    { key: "totalTimeMinutes", label: "Total Time" },
+                    { key: "technicians", label: "Technicians" },
+                    { key: "supervisor", label: "Supervisor" },
+                    { key: "status", label: "Status" },
+                    { key: "scope", label: "Scope" },
+                    { key: "workType", label: "Work Type" },
+                    { key: "remark", label: "Remark" }
                 ];
 
-                // Render toggle UI and sync with table columns
+                // Render toggle UI and apply visibility from URL
                 columnSettings.forEach((col, index) => {
+                    const isVisible = !hiddenSet.has(col.key);
                     const div = document.createElement("div");
                     div.className = "px-3 py-1";
                     div.style.cursor = "pointer";
                     div.style.userSelect = "none";
-
                     div.innerHTML = `
-                    <div class="d-flex align-items-center">
-                        <span class="column-checkbox" data-index="${index}" 
-                            style="display: inline-block; width: 18px; height: 18px; border: 2px solid #adb5bd; border-radius: 4px; margin-right: 8px; text-align: center; line-height: 16px; font-size: 12px; transition: 0.2s background; 
-                            ${col.visible ? 'background-color: #007bff; border-color: #007bff;' : ''}">
-                            ${col.visible ? '<i class="fas fa-check" style="color: white;"></i>' : ''}
-                        </span>
-                        <span style="font-size: 0.95rem; color: #212529;">${col.label}</span>
-                    </div>`;
+        <div class="d-flex align-items-center">
+            <span class="column-checkbox" data-index="${index}" 
+                style="display: inline-block; width: 18px; height: 18px; border: 2px solid #adb5bd; border-radius: 4px; margin-right: 8px; text-align: center; line-height: 16px; font-size: 12px; transition: 0.2s background; 
+                ${isVisible ? 'background-color: #007bff; border-color: #007bff;' : ''}">
+                ${isVisible ? '<i class="fas fa-check" style="color: white;"></i>' : ''}
+            </span>
+            <span style="font-size: 0.95rem; color: #212529;">${col.label}</span>
+        </div>`;
 
                     const checkboxSpan = div.querySelector(".column-checkbox");
                     const th = headerRow.children[index];
-                    const tds = dataRows.length > 0
-                        ? Array.from(dataRows).map(row => row.children[index])
-                        : [];
+                    const tds = Array.from(dataRows).map(row => row.children[index]);
 
-                    if (th && !col.visible) {
-                        th.style.display = "none";
-                    }
-
-                    if (!col.visible) {
+                    // Apply visibility
+                    if (!isVisible) {
                         if (th) th.style.display = "none";
                         tds.forEach(td => {
                             if (td && !td.hasAttribute('colspan')) {
@@ -695,21 +709,43 @@
                         });
                     }
 
+                    // Toggle on click
                     div.addEventListener("click", function (e) {
                         e.stopPropagation();
-                        const isChecked = checkboxSpan.innerHTML.trim() !== "";
-                        if (isChecked) {
-                            checkboxSpan.style.backgroundColor = "";
-                            checkboxSpan.innerHTML = "";
-                            th.style.display = "none";
-                            tds.forEach(td => td.style.display = "none");
-                        } else {
+                        const wasVisible = checkboxSpan.innerHTML.trim() !== "";
+                        const newVisible = !wasVisible;
+
+                        // Update UI
+                        if (newVisible) {
                             checkboxSpan.style.backgroundColor = "#007bff";
                             checkboxSpan.style.borderColor = "#007bff";
                             checkboxSpan.innerHTML = '<i class="fas fa-check" style="color: white;"></i>';
                             th.style.display = "";
                             tds.forEach(td => td.style.display = "");
+                        } else {
+                            checkboxSpan.style.backgroundColor = "";
+                            checkboxSpan.innerHTML = "";
+                            th.style.display = "none";
+                            tds.forEach(td => td.style.display = "none");
                         }
+
+                        // Recompute hidden columns from current DOM state
+                        const currentlyHidden = [];
+                        columnSettings.forEach((c, idx) => {
+                            const thEl = headerRow.children[idx];
+                            if (thEl && thEl.style.display === "none") {
+                                currentlyHidden.push(c.key);
+                            }
+                        });
+
+                        // Update URL without reload
+                        const url = new URL(window.location);
+                        if (currentlyHidden.length > 0) {
+                            url.searchParams.set('hiddenColumns', currentlyHidden.join(','));
+                        } else {
+                            url.searchParams.delete('hiddenColumns');
+                        }
+                        window.history.replaceState({}, '', url);
                     });
 
                     container.appendChild(div);
@@ -780,9 +816,11 @@
 
                 // Preserve all params when apply filter
                 document.getElementById('pageSizeSelect').addEventListener('change', function () {
-                    const size = this.value;
                     const url = new URL(window.location);
-                    url.searchParams.set('size', size);
+                    url.searchParams.set('size', this.value);
+                    // Preserve hiddenColumns
+                    const hidden = new URLSearchParams(window.location.search).get('hiddenColumns');
+                    if (hidden) url.searchParams.set('hiddenColumns', hidden);
                     window.location.href = url.toString();
                 });
 
@@ -793,6 +831,13 @@
                         u.searchParams.set(k, v || '');
                     });
                     u.searchParams.set('page', '1');
+                    // Preserve hiddenColumns
+                    const currentHidden = new URLSearchParams(window.location.search).get('hiddenColumns');
+                    if (currentHidden) {
+                        u.searchParams.set('hiddenColumns', currentHidden);
+                    } else {
+                        u.searchParams.delete('hiddenColumns');
+                    }
                     window.location.href = u.toString();
                 });
 

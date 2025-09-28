@@ -17,7 +17,8 @@
                     <form th:action="@{/work-reports}" th:object="${workReportDTO}" method="post" id="formAdd">
 
                         <!-- Hidden ID -->
-                        <input type="hidden" th:field="*{id}" />
+                        <input type="hidden" name="redirectUrl"
+                            th:value="${#httpServletRequest.requestURL + '?' + #httpServletRequest.queryString}" />
 
                         <!-- Row 1: Report Date & Shift -->
                         <div class="form-row">
@@ -311,6 +312,8 @@
                 <div class="modal-body p-4">
                     <form th:action="@{/work-reports/update}" method="post" id="formEdit">
                         <input type="hidden" name="id" id="editId">
+                        <input type="hidden" name="redirectUrl"
+                            th:value="${#httpServletRequest.requestURL + '?' + #httpServletRequest.queryString}" />
 
                         <!-- Report Date & Shift -->
                         <div class="form-row">
@@ -466,8 +469,8 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Total Time Time (min)</label>
-                                    <input type="number" class="form-control" id="editTotalTime"
-                                        name="totalTimeMinutes" readonly />
+                                    <input type="number" class="form-control" id="editTotalTime" name="totalTimeMinutes"
+                                        readonly />
                                     <small id="editTotalTimeDisplay" class="text-muted"></small>
                                 </div>
                             </div>
@@ -958,7 +961,7 @@
 
         setupTagInput('technicianInput', 'technicianTagList', 'technicianTagSearch', 'technicianSelect');
         setupTagInput('editTechnicianInput', 'editTechnicianTagList', 'editTechnicianTagSearch', 'editTechnicianSelect');
-        
+
     </script>
 
     <script>
