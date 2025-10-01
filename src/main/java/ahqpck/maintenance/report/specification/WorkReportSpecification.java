@@ -31,29 +31,28 @@ public class WorkReportSpecification {
             Join<WorkReport, User> supervisor = root.join("supervisor", JoinType.LEFT);
 
             return cb.or(
-                cb.like(cb.lower(root.get("code")), pattern),
-                cb.like(cb.lower(root.get("problem")), pattern),
-                cb.like(cb.lower(root.get("solution")), pattern),
-                cb.like(cb.lower(root.get("workType")), pattern),
-                cb.like(cb.lower(root.get("remark")), pattern),
-                cb.like(cb.lower(root.get("shift").as(String.class)), pattern),
-                cb.like(cb.lower(root.get("category").as(String.class)), pattern),
-                cb.like(cb.lower(root.get("status").as(String.class)), pattern),
-                cb.like(cb.lower(root.get("scope").as(String.class)), pattern),
-                
-                // Search in Equipment (via join)
-                cb.like(cb.lower(cb.coalesce(equipment.<String>get("name"), "")), pattern),
-                cb.like(cb.lower(cb.coalesce(equipment.<String>get("code"), "")), pattern),
+                    cb.like(cb.lower(root.get("code")), pattern),
+                    cb.like(cb.lower(root.get("problem")), pattern),
+                    cb.like(cb.lower(root.get("solution")), pattern),
+                    cb.like(cb.lower(root.get("workType")), pattern),
+                    cb.like(cb.lower(root.get("remark")), pattern),
+                    cb.like(cb.lower(root.get("shift").as(String.class)), pattern),
+                    cb.like(cb.lower(root.get("category").as(String.class)), pattern),
+                    cb.like(cb.lower(root.get("status").as(String.class)), pattern),
+                    cb.like(cb.lower(root.get("scope").as(String.class)), pattern),
 
-                // Search in Area (via join)
-                cb.like(cb.lower(cb.coalesce(area.<String>get("name"), "")), pattern),
-                cb.like(cb.lower(cb.coalesce(area.<String>get("code"), "")), pattern),
+                    // Search in Equipment (via join)
+                    cb.like(cb.lower(cb.coalesce(equipment.<String>get("name"), "")), pattern),
+                    cb.like(cb.lower(cb.coalesce(equipment.<String>get("code"), "")), pattern),
 
-                // Search in Supervisor
-                cb.like(cb.lower(cb.coalesce(supervisor.<String>get("name"), "")), pattern),
-                cb.like(cb.lower(cb.coalesce(supervisor.<String>get("employeeId"), "")), pattern),
-                cb.like(cb.lower(cb.coalesce(supervisor.<String>get("email"), "")), pattern)
-            );
+                    // Search in Area (via join)
+                    cb.like(cb.lower(cb.coalesce(area.<String>get("name"), "")), pattern),
+                    cb.like(cb.lower(cb.coalesce(area.<String>get("code"), "")), pattern),
+
+                    // Search in Supervisor
+                    cb.like(cb.lower(cb.coalesce(supervisor.<String>get("name"), "")), pattern),
+                    cb.like(cb.lower(cb.coalesce(supervisor.<String>get("employeeId"), "")), pattern),
+                    cb.like(cb.lower(cb.coalesce(supervisor.<String>get("email"), "")), pattern));
         };
     }
 
@@ -81,24 +80,33 @@ public class WorkReportSpecification {
         };
     }
 
+    public static Specification<WorkReport> withScope(WorkReport.Scope scope) {
+        return (root, query, cb) -> {
+            if (scope == null) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("scope"), scope);
+        };
+    }
+
     public static Specification<WorkReport> withEquipment(String equipmentCode) {
-    return (root, query, cb) -> {
-        if (equipmentCode == null || equipmentCode.trim().isEmpty()) {
-            return cb.conjunction();
-        }
+        return (root, query, cb) -> {
+            if (equipmentCode == null || equipmentCode.trim().isEmpty()) {
+                return cb.conjunction();
+            }
 
-        // Split, trim, and filter
-        List<String> codes = Arrays.stream(equipmentCode.split(","))
-                .map(String::trim)
-                .filter(code -> !code.isEmpty())
-                .collect(Collectors.toList());
+            // Split, trim, and filter
+            List<String> codes = Arrays.stream(equipmentCode.split(","))
+                    .map(String::trim)
+                    .filter(code -> !code.isEmpty())
+                    .collect(Collectors.toList());
 
-        if (codes.isEmpty()) {
-            return cb.conjunction();
-        }
+            if (codes.isEmpty()) {
+                return cb.conjunction();
+            }
 
-        Join<WorkReport, Equipment> equipment = root.join("equipment", JoinType.LEFT);
-        return equipment.get("code").in(codes);
-    };
-}
+            Join<WorkReport, Equipment> equipment = root.join("equipment", JoinType.LEFT);
+            return equipment.get("code").in(codes);
+        };
+    }
 }

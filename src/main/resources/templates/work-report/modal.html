@@ -17,8 +17,7 @@
                     <form th:action="@{/work-reports}" th:object="${workReportDTO}" method="post" id="formAdd">
 
                         <!-- Hidden ID -->
-                        <input type="hidden" name="redirectUrl"
-                            th:value="${#httpServletRequest.requestURL + '?' + #httpServletRequest.queryString}" />
+                        <input type="hidden" name="redirectUrl" id="addRedirectUrl" />
 
                         <!-- Row 1: Report Date & Shift -->
                         <div class="form-row">
@@ -312,8 +311,7 @@
                 <div class="modal-body p-4">
                     <form th:action="@{/work-reports/update}" method="post" id="formEdit">
                         <input type="hidden" name="id" id="editId">
-                        <input type="hidden" name="redirectUrl"
-                            th:value="${#httpServletRequest.requestURL + '?' + #httpServletRequest.queryString}" />
+                        <input type="hidden" name="redirectUrl" id="addRedirectUrl" />
 
                         <!-- Report Date & Shift -->
                         <div class="form-row">
@@ -778,7 +776,7 @@
         setupLiveSearch('supervisorInput', 'supervisorSelect', 'userOptions', 'Supervisor');
         setupLiveSearch('editSupervisorInput', 'editSupervisorSelect', 'userOptions', 'Supervisor');
 
-        function setupTagInput(inputId, tagListId, tagSearchId, selectId, formatDisplay = val => val) {
+        function setupTagInput(inputId, tagListId, tagSearchId, selectId, optionsContainerId, formatDisplay = val => val) {
             const tagInput = document.getElementById(inputId);
             const tagList = document.getElementById(tagListId);
             const tagSearch = document.getElementById(tagSearchId);
@@ -802,8 +800,8 @@
                 tag.className = "tag";
                 tag.dataset.value = value;
                 tag.innerHTML = `
-                ${displayText || value}
-                <span class="remove-tag" onclick="window.removeTag(this, '${selectId}', '${tagListId}')">×</span>`;
+            ${displayText || value}
+            <span class="remove-tag" onclick="window.removeTag(this, '${selectId}', '${tagListId}')">×</span>`;
                 tagList.appendChild(tag);
                 syncSelect();
             }
@@ -846,10 +844,10 @@
             }
 
             // Prepare options for live search
-            const options = Array.from(document.querySelectorAll("#userOptions option")).map(opt => ({
+            const options = Array.from(document.querySelectorAll(`#${optionsContainerId} option`)).map(opt => ({
                 value: opt.value,
-                label: opt.value, // Display text like "John (EMP001)"
-                id: opt.dataset.employeeId || ''
+                label: opt.value,
+                id: opt.dataset.employeeId || opt.dataset.code || ''
             }));
 
             // Attach live search behavior to tagSearch input
@@ -959,8 +957,9 @@
             tagInput.addEventListener("click", () => tagSearch.focus());
         }
 
-        setupTagInput('technicianInput', 'technicianTagList', 'technicianTagSearch', 'technicianSelect');
-        setupTagInput('editTechnicianInput', 'editTechnicianTagList', 'editTechnicianTagSearch', 'editTechnicianSelect');
+        // Initialize tag inputs
+        setupTagInput('technicianInput', 'technicianTagList', 'technicianTagSearch', 'technicianSelect', 'userOptions');
+        setupTagInput('editTechnicianInput', 'editTechnicianTagList', 'editTechnicianTagSearch', 'editTechnicianSelect', 'userOptions');
 
     </script>
 
@@ -1021,6 +1020,31 @@
 
         // Setup event listeners on DOM ready
         document.addEventListener("DOMContentLoaded", function () {
+
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            // Format as YYYY-MM-DD for <input type="date">
+            const formatted = yesterday.toISOString().split('T')[0];
+
+            const reportDateInput = document.querySelector('input[name="reportDate"]');
+            if (reportDateInput && !reportDateInput.value) {
+                reportDateInput.value = formatted;
+            }
+
+            // Handle Add form submit
+            document.getElementById('formAdd')?.addEventListener('submit', function () {
+                const input = this.querySelector('[name="redirectUrl"]');
+                if (input) input.value = window.location.href;
+            });
+
+            // Handle Edit form submit
+            document.getElementById('formEdit')?.addEventListener('submit', function () {
+                const input = this.querySelector('[name="redirectUrl"]');
+                if (input) input.value = window.location.href;
+            });
+
             // Add modal
             const addStart = document.getElementById('addStartTime');
             const addStop = document.getElementById('addStopTime');

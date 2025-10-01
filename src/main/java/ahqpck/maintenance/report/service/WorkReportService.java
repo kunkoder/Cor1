@@ -62,7 +62,7 @@ public class WorkReportService {
 
     @Transactional
     public Page<WorkReportDTO> getAllWorkReports(String keyword, LocalDateTime reportDateFrom,
-            LocalDateTime reportDateTo, WorkReport.Category category, String equipmentCode, int page, int size,
+            LocalDateTime reportDateTo, WorkReport.Category category, WorkReport.Scope scope, String equipmentCode, int page, int size,
             String sortBy, boolean asc) {
         Sort sort = asc ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -70,6 +70,7 @@ public class WorkReportService {
         Specification<WorkReport> spec = WorkReportSpecification.search(keyword)
                 .and(WorkReportSpecification.withReportDateRange(reportDateFrom, reportDateTo))
                 .and(WorkReportSpecification.withCategory(category))
+                .and(WorkReportSpecification.withScope(scope))
                 .and(WorkReportSpecification.withEquipment(equipmentCode));
         Page<WorkReport> workReportPage = workReportRepository.findAll(spec, pageable);
 

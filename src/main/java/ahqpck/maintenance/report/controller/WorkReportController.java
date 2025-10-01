@@ -53,6 +53,7 @@ public class WorkReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateTo,
             @RequestParam(required = false) WorkReport.Category group,
+            @RequestParam(required = false) WorkReport.Scope field,
             @RequestParam(required = false) String equipmentCode,
             @RequestParam(required = false) String hiddenColumns,
             @RequestParam(defaultValue = "1") int page,
@@ -70,7 +71,7 @@ public class WorkReportController {
             LocalDateTime to = reportDateTo != null ? reportDateTo.atTime(LocalTime.MAX) : null;
 
             Page<WorkReportDTO> reportPage = workReportService.getAllWorkReports(keyword, from, to,
-                    group, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
+                    group, field, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
             model.addAttribute("workReports", reportPage);
             model.addAttribute("keyword", keyword);
             model.addAttribute("reportDateFrom", reportDateFrom);
@@ -80,6 +81,10 @@ public class WorkReportController {
             model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("asc", asc);
+
+            model.addAttribute("group", group);
+            model.addAttribute("equipmentCode", equipmentCode);
+            model.addAttribute("field", field);
 
             model.addAttribute("title", "Work Report");
 
@@ -118,21 +123,18 @@ public class WorkReportController {
 
         if (WebUtil.hasErrors(bindingResult)) {
             ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
-            String target = buildSafeRedirect(redirectUrl);
-            return target;
+            return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
         }
 
         try {
             workReportService.createWorkReport(workReportDTO);
             ra.addFlashAttribute("success", "Work report created successfully.");
-            String target = buildSafeRedirect(redirectUrl);
-            return target;
+            return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
 
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Failed to create work report: " + e.getMessage());
             ra.addFlashAttribute("workReportDTO", workReportDTO);
-            String target = buildSafeRedirect(redirectUrl);
-            return target;
+            return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
         }
     }
 
@@ -142,6 +144,8 @@ public class WorkReportController {
             @RequestParam(required = false) String redirectUrl,
             BindingResult bindingResult,
             RedirectAttributes ra) {
+
+        System.out.println("redirectUrl: " + redirectUrl);
 
         if (workReportDTO.getTechnicianEmpIds() != null && !workReportDTO.getTechnicianEmpIds().isEmpty()) {
             Set<UserDTO> technicianDTOs = workReportDTO.getTechnicianEmpIds().stream()
@@ -156,33 +160,30 @@ public class WorkReportController {
 
         if (WebUtil.hasErrors(bindingResult)) {
             ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
-            String target = buildSafeRedirect(redirectUrl);
-            return target;
+            return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
         }
 
         try {
             workReportService.updateWorkReport(workReportDTO);
             ra.addFlashAttribute("success", "Work report updated successfully.");
-            String target = buildSafeRedirect(redirectUrl);
-            return target;
+            return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
 
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Failed to update work report: " + e.getMessage());
             ra.addFlashAttribute("workReportDTO", workReportDTO);
-            String target = buildSafeRedirect(redirectUrl);
-            return target;
+            return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
         }
     }
 
     @GetMapping("/delete/{id}")
-    public String deleteWorkReport(@PathVariable String id, RedirectAttributes ra) {
+    public String deleteWorkReport(@PathVariable String id, @RequestParam(required = false) String redirectUrl, RedirectAttributes ra) {
         try {
             workReportService.deleteWorkReport(id);
             ra.addFlashAttribute("success", "Work report deleted successfully.");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Failed to delete work report: " + e.getMessage());
         }
-        return "redirect:/work-reports";
+        return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
     }
 
     @PostMapping("/import")
@@ -224,25 +225,6 @@ public class WorkReportController {
             ra.addFlashAttribute("error", "Bulk import failed: " + e.getMessage());
             return "redirect:/work-reports";
         }
-    }
-
-    private String buildSafeRedirect(String redirectUrl) {
-        // If no redirectUrl or it's blank, fallback
-        if (redirectUrl == null || redirectUrl.trim().isEmpty()) {
-            return "redirect:/work-reports";
-        }
-
-        // Ensure it's a relative path (starts with /) and is within our app
-        String cleanUrl = redirectUrl.trim();
-        if (cleanUrl.startsWith("/") && !cleanUrl.contains("//") && !cleanUrl.startsWith("/../")) {
-            // Optional: restrict to /work-reports only
-            if (cleanUrl.startsWith("/work-reports")) {
-                return "redirect:" + cleanUrl;
-            }
-        }
-
-        // Fallback to default
-        return "redirect:/work-reports";
     }
 
     private List<UserDTO> getAllUsersForDropdown() {
