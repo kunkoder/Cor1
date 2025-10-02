@@ -122,7 +122,7 @@ public class AreaController {
     }
 
     @GetMapping("/delete/{id}")
-    public String deleteArea(@PathVariable String id, RedirectAttributes ra) {
+    public String deleteArea(@PathVariable Long id, RedirectAttributes ra) {
         try {
             areaService.deleteArea(id);
             ra.addFlashAttribute("success", "Area deleted successfully.");

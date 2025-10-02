@@ -82,19 +82,19 @@ public class Complaint {
     private Status status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reporter", referencedColumnName = "employee_id", nullable = false)
+    @JoinColumn(name = "reporter", referencedColumnName = "id", nullable = false)
     private User reporter;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assignee", referencedColumnName = "employee_id", nullable = true)
+    @JoinColumn(name = "assignee", referencedColumnName = "id", nullable = true)
     private User assignee;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "area_code", referencedColumnName = "code", nullable = true)
+    @JoinColumn(name = "area_code", referencedColumnName = "id", nullable = true)
     private Area area;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "equipment_code", referencedColumnName = "code", nullable = true)
+    @JoinColumn(name = "equipment_code", referencedColumnName = "id", nullable = true)
     private Equipment equipment;
 
     @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true)

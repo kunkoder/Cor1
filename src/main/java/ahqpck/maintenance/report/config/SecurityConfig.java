@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // ← Add this!
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 

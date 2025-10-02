@@ -1,11 +1,9 @@
 package ahqpck.maintenance.report.controller;
 
 import ahqpck.maintenance.report.dto.AreaDTO;
-import ahqpck.maintenance.report.dto.ComplaintDTO;
 import ahqpck.maintenance.report.dto.EquipmentDTO;
 import ahqpck.maintenance.report.dto.UserDTO;
 import ahqpck.maintenance.report.dto.WorkReportDTO;
-import ahqpck.maintenance.report.entity.Complaint;
 import ahqpck.maintenance.report.entity.WorkReport;
 import ahqpck.maintenance.report.service.AreaService;
 import ahqpck.maintenance.report.service.EquipmentService;
@@ -20,7 +18,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -30,11 +27,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Controller
@@ -63,7 +58,6 @@ public class WorkReportController {
             Model model) {
 
         try {
-
             int zeroBasedPage = page - 1;
             int parsedSize = "All".equalsIgnoreCase(size) ? Integer.MAX_VALUE : Integer.parseInt(size);
 
@@ -82,8 +76,8 @@ public class WorkReportController {
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("asc", asc);
 
-            model.addAttribute("group", group);
             model.addAttribute("equipmentCode", equipmentCode);
+            model.addAttribute("group", group);
             model.addAttribute("field", field);
 
             model.addAttribute("title", "Work Report");

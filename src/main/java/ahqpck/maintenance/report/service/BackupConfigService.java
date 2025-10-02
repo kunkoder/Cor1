@@ -2,6 +2,8 @@ package ahqpck.maintenance.report.service;
 
 import ahqpck.maintenance.report.dto.BackupConfigDTO;
 import ahqpck.maintenance.report.entity.BackupConfig;
+import ahqpck.maintenance.report.entity.Role;
+import ahqpck.maintenance.report.entity.User;
 import ahqpck.maintenance.report.repository.*;
 import lombok.RequiredArgsConstructor;
 
@@ -75,7 +77,7 @@ public class BackupConfigService {
 
             // Save file
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-            String filename = "icbs_backup_" + timestamp + ".xlsx";
+            String filename = "maintenance_backup_" + timestamp + ".xlsx";
             Path filePath = folderPath.resolve(filename);
             try (FileOutputStream out = new FileOutputStream(filePath.toFile())) {
                 workbook.write(out);
@@ -114,19 +116,21 @@ public class BackupConfigService {
     // MAPPING FUNCTIONS (readable, at the bottom)
     // ===================================================================
 
-    private Map<String, Object> mapUser(Object user) {
-        Map<String, Object> map = new LinkedHashMap<>();
-        map.put("ID", getField(user, "id"));
-        map.put("Name", getField(user, "name"));
-        map.put("Employee ID", getField(user, "employeeId"));
-        map.put("Email", getField(user, "email"));
-        map.put("Role", getRoles(user));
-        map.put("Phone", getField(user, "phoneNumber"));
-        map.put("Designation", getField(user, "designation"));
-        map.put("Join Date", getField(user, "joinDate"));
-        map.put("Nationality", getField(user, "nationality"));
-        return map;
-    }
+    private Map<String, Object> mapUser(User user) {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("ID", user.getId());
+    map.put("Name", user.getName());
+    map.put("Employee ID", user.getEmployeeId());
+    map.put("Email", user.getEmail());
+    map.put("Role", user.getRoles().stream()
+        .map(role -> role.getName().toString())
+        .collect(Collectors.joining(", ")));
+    map.put("Phone", user.getPhoneNumber());
+    map.put("Designation", user.getDesignation());
+    map.put("Join Date", user.getJoinDate() != null ? user.getJoinDate().toString() : "");
+    map.put("Nationality", user.getNationality());
+    return map;
+}
 
     private Map<String, Object> mapArea(Object area) {
         Map<String, Object> map = new LinkedHashMap<>();

@@ -9,9 +9,9 @@ import org.springframework.stereotype.Repository;
 import ahqpck.maintenance.report.entity.Area;
 
 @Repository
-public interface AreaRepository extends JpaRepository<Area, String>, JpaSpecificationExecutor<Area> {
+public interface AreaRepository extends JpaRepository<Area, Long>, JpaSpecificationExecutor<Area> {
 
     Optional<Area> findByCode(String code);
     boolean existsByCodeIgnoreCase(String code);
-    boolean existsByCodeIgnoreCaseAndIdNot(String code, String id);
+    boolean existsByCodeIgnoreCaseAndIdNot(String code, Long id);
 }

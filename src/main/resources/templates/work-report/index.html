@@ -224,11 +224,11 @@
                                                 data-sort="shift">
                                                 Shift <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
                                             </th>
-                                            <th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
+                                            <th style="min-width: 150px; cursor: pointer; white-space: nowrap;"
                                                 data-sort="area">
                                                 Area <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
                                             </th>
-                                            <th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
+                                            <th style="min-width: 150px; cursor: pointer; white-space: nowrap;"
                                                 data-sort="equipment">
                                                 Equipment <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
                                             </th>
@@ -236,11 +236,11 @@
                                                 data-sort="category">
                                                 Category <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
                                             </th>
-                                            <th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
+                                            <th style="min-width: 300px; cursor: pointer; white-space: nowrap;"
                                                 data-sort="problem">
                                                 Problem <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
                                             </th>
-                                            <th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
+                                            <th style="min-width: 150px; cursor: pointer; white-space: nowrap;"
                                                 data-sort="solution">
                                                 Solution <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
                                             </th>
@@ -254,8 +254,7 @@
                                             </th>
                                             <th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
                                                 data-sort="totalTimeMinutes">
-                                                Total Time (min) <i
-                                                    class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                                Total Time <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
                                             </th>
                                             <th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
                                                 data-sort="technicians">
@@ -291,28 +290,46 @@
                                             <td data-field="reportDate"
                                                 th:text="${report.reportDate != null ? #temporals.format(report.reportDate, 'MMM dd, yyyy') : '-'}">
                                             </td>
-                                            <td data-field="shift" th:text="${report.shift ?: '-'}"></td>
+                                            <td data-field="shift">
+                                                <span class="badge badge-sm" th:classappend="|badge-${
+                                                    report.shift == report.shift.DAY ? 'success' :
+                                                    report.shift == report.shift.NIGHT ? 'primary' : 'secondary'
+                                                }|" th:text="${
+                                                    report.shift == report.shift.DAY ? 'DAY' :
+                                                    report.shift == report.shift.NIGHT ? 'NIGHT' : '-'
+                                                }">
+                                                </span>
+                                            </td>
                                             <td data-field="area" th:data-area-code="${report.area?.code ?: ''}"
                                                 th:text="${report.area?.name ?: '-'}">-</td>
                                             <td data-field="equipment"
                                                 th:data-equipment-code="${report.equipment?.code ?: ''}"
                                                 th:text="${report.equipment?.name ?: '-'}">-</td>
                                             <td data-field="category">
-                                                <span class="badge badge-pill px-3 py-2" th:classappend="${
-                                                        report.category == report.category.CORRECTIVE_MAINTENANCE ? 'badge-warning' :
-                                                        report.category == report.category.PREVENTIVE_MAINTENANCE ? 'badge-info' :
-                                                        report.category == report.category.BREAKDOWN ? 'badge-danger' :
-                                                        'badge-dark'
-                                                    }" th:text="${report.category ?: '-'}">
+                                                <span class="badge badge-sm"
+                                                    th:data-enum-value="${report.category != null ? report.category : ''}"
+                                                    th:classappend="${
+                                                    report.category == report.category.CORRECTIVE_MAINTENANCE ? 'badge-warning' :
+                                                    report.category == report.category.PREVENTIVE_MAINTENANCE ? 'badge-info' :
+                                                    report.category == report.category.BREAKDOWN ? 'badge-danger' :
+                                                    'badge-dark'
+                                                }" th:text="${
+                                                    report.category == report.category.CORRECTIVE_MAINTENANCE ? 'CM' :
+                                                    report.category == report.category.PREVENTIVE_MAINTENANCE ? 'PM' :
+                                                    report.category == report.category.BREAKDOWN ? 'BD' :
+                                                    'OTHER'
+                                                }">
                                                 </span>
                                             </td>
                                             <td data-field="problem" th:text="${report.problem ?: '-'}"></td>
                                             <td data-field="solution" th:text="${report.solution ?: '-'}"></td>
                                             <td data-field="startTime"
-                                                th:text="${report.startTime != null ? #temporals.format(report.startTime, 'MMM dd, yyyy, hh:mm a') : '-'}">
+                                                th:data-full-datetime="${report.startTime != null ? #temporals.format(report.startTime, 'yyyy-MM-dd HH:mm') : ''}"
+                                                th:text="${report.startTime != null ? #temporals.format(report.startTime, 'HH:mm') : '-'}">
                                             </td>
                                             <td data-field="stopTime"
-                                                th:text="${report.stopTime != null ? #temporals.format(report.stopTime, 'MMM dd, yyyy, hh:mm a') : '-'}">
+                                                th:data-full-datetime="${report.stopTime != null ? #temporals.format(report.stopTime, 'yyyy-MM-dd HH:mm') : ''}"
+                                                th:text="${report.stopTime != null ? #temporals.format(report.stopTime, 'HH:mm') : '-'}">
                                             </td>
                                             <td data-field="totalTimeMinutes"
                                                 th:text="${report.totalTimeMinutes != null ? report.totalTimeMinutes + ' min' : '-'}">
@@ -343,12 +360,17 @@
                                                 </span>
                                             </td>
                                             <td data-field="scope">
-                                                <span class="badge badge-pill px-3 py-2" th:classappend="${
-                                                        report.scope == report.scope.MECHANICAL ? 'badge-info' :
-                                                        report.scope == report.scope.ELECTRICAL ? 'badge-danger' :
-                                                        report.scope == report.scope.IT ? 'badge-success' :
-                                                        'badge-dark'
-                                                    }" th:text="${report.scope ?: '-'}">
+                                                <span class="badge badge-sm"
+                                                    th:data-enum-value="${report.scope != null ? report.scope : ''}"
+                                                    th:classappend="|badge-${
+                                                    report.scope == report.scope.MECHANICAL ? 'info' :
+                                                    report.scope == report.scope.ELECTRICAL ? 'danger' :
+                                                    report.scope == report.scope.IT ? 'success' : 'secondary'
+                                                }|" th:text="${
+                                                    report.scope == report.scope.MECHANICAL ? 'MECH' :
+                                                    report.scope == report.scope.ELECTRICAL ? 'ELEC' :
+                                                    report.scope == report.scope.IT ? 'IT' : 'OTHER'
+                                                }">
                                                 </span>
                                             </td>
                                             <td data-field="workType" th:text="${report.workType ?: '-'}"></td>
@@ -394,7 +416,7 @@
                                             <li class="page-item"
                                                 th:classappend="${!workReports.hasPrevious} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, hiddenColumns=${param.hiddenColumns}, group=${param.group}, field=${param.field}, page=${workReports.number}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, hiddenColumns=${hiddenColumns}, group=${param.group}, field=${param.field}, page=${workReports.number}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
                                                     th:if="${workReports.hasPrevious}">Prev</a>
                                                 <span class="page-link" th:if="${!workReports.hasPrevious}">Prev</span>
                                             </li>
@@ -402,7 +424,7 @@
                                             <li class="page-item" th:if="${workReports.number > 0}"
                                                 th:classappend="${!workReports.hasPrevious} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, hiddenColumns=${param.hiddenColumns}, group=${param.group}, field=${param.field}, page=1, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">1</a>
+                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, hiddenColumns=${hiddenColumns}, group=${param.group}, field=${param.field}, page=1, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">1</a>
                                             </li>
 
                                             <li class="page-item"
@@ -423,14 +445,14 @@
                                                 th:if="${workReports.number + 1 < workReports.totalPages}"
                                                 th:classappend="${!workReports.hasNext} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, hiddenColumns=${param.hiddenColumns}, group=${param.group}, field=${param.field}, page=${workReports.totalPages}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">
+                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, hiddenColumns=${hiddenColumns}, group=${param.group}, field=${param.field}, page=${workReports.totalPages}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">
                                                     <span th:text="${workReports.totalPages}">20</span>
                                                 </a>
                                             </li>
 
                                             <li class="page-item" th:classappend="${!workReports.hasNext} ? 'disabled'">
                                                 <a class="page-link"
-                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, hiddenColumns=${param.hiddenColumns}, group=${param.group}, field=${param.field}, page=${workReports.number + 2}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:href="@{/work-reports(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, equipmentCode=${param.equipmentCode}, hiddenColumns=${hiddenColumns}, group=${param.group}, field=${param.field}, page=${workReports.number + 2}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
                                                     th:if="${workReports.hasNext}">Next</a>
                                                 <span class="page-link" th:if="${!workReports.hasNext}">Next</span>
                                             </li>
@@ -489,9 +511,8 @@
                         tag.className = "tag";
                         tag.dataset.value = tech.empId;
                         tag.innerHTML = `
-            ${tech.name} (${tech.empId})
-            <span class="remove-tag" onclick="window.removeTag(this, 'editTechnicianSelect', 'editTechnicianTagList')">×</span>
-        `;
+                        ${tech.name} (${tech.empId})
+                        <span class="remove-tag" onclick="window.removeTag(this, 'editTechnicianSelect', 'editTechnicianTagList')">×</span>`;
                         tagList.appendChild(tag);
 
                         const option = document.createElement("option");
@@ -501,6 +522,29 @@
                     });
 
                     hiddenSelect.dispatchEvent(new Event('change'));
+                }
+
+                // Update all pagination links to include current hiddenColumns
+                function updatePaginationLinks() {
+                    const currentUrl = new URL(window.location);
+                    const hiddenColumns = currentUrl.searchParams.get('hiddenColumns');
+
+                    document.querySelectorAll('.pagination .page-item a.page-link').forEach(link => {
+                        try {
+                            const linkUrl = new URL(link.href, window.location.origin);
+
+                            // Only update hiddenColumns — leave everything else as-is
+                            if (hiddenColumns !== null) {
+                                linkUrl.searchParams.set('hiddenColumns', hiddenColumns);
+                            } else {
+                                linkUrl.searchParams.delete('hiddenColumns');
+                            }
+
+                            link.href = linkUrl.toString();
+                        } catch (e) {
+                            console.warn('Failed to update pagination link:', link.href, e);
+                        }
+                    });
                 }
 
                 // --- Date Helpers ---
@@ -575,7 +619,12 @@
                         }
 
                         if (['reportDate', 'startTime', 'stopTime'].includes(field)) {
-                            const parse = s => s && s !== '-' ? new Date(s.split(',')[0].trim()).getTime() || 0 : 0;
+                            const aCell = a.querySelector(`[data-field="${field}"]`);
+                            const bCell = b.querySelector(`[data-field="${field}"]`);
+                            aVal = aCell?.dataset.fullDatetime || '';
+                            bVal = bCell?.dataset.fullDatetime || '';
+
+                            const parse = s => s ? new Date(s.replace(' ', 'T')).getTime() : 0;
                             const aTime = parse(aVal);
                             const bTime = parse(bVal);
                             return direction === 'asc' ? aTime - bTime : bTime - aTime;
@@ -657,16 +706,16 @@
 
                         // Badge-based fields (category, status, scope)
                         const categoryBadge = row.querySelector('[data-field="category"] .badge');
-                        const categoryText = categoryBadge?.textContent.trim().toUpperCase() || '';
-                        document.getElementById('editCategory').value = categoryText;
+                        const realCategory = categoryBadge?.dataset.enumValue || '';
+                        document.getElementById('editCategory').value = realCategory;
 
                         const statusBadge = row.querySelector('[data-field="status"] .badge');
                         const statusText = statusBadge?.textContent.trim().toUpperCase() || '';
                         document.getElementById('editStatus').value = statusText;
 
                         const scopeBadge = row.querySelector('[data-field="scope"] .badge');
-                        const scopeText = scopeBadge?.textContent.trim().toUpperCase() || '';
-                        document.getElementById('editScope').value = scopeText;
+                        const realScope = scopeBadge?.dataset.enumValue || '';
+                        document.getElementById('editScope').value = realScope;
 
                         // Text content fields
                         document.getElementById('editProblem').value = row.querySelector('[data-field="problem"]')?.textContent.trim() || '';
@@ -675,8 +724,14 @@
                         document.getElementById('editRemark').value = row.querySelector('[data-field="remark"]')?.textContent.trim() || '';
 
                         // Datetime fields
-                        document.getElementById('editStartTime').value = toIsoDateTime(row.querySelector('[data-field="startTime"]')?.textContent.trim() || '');
-                        document.getElementById('editStopTime').value = toIsoDateTime(row.querySelector('[data-field="stopTime"]')?.textContent.trim() || '');
+                        // In your edit-row click handler
+                        const startTimeCell = row.querySelector('[data-field="startTime"]');
+                        const fullStartDateTime = startTimeCell?.dataset.fullDatetime || '';
+                        document.getElementById('editStartTime').value = toIsoDateTime(fullStartDateTime);
+                        // In your edit-row click handler
+                        const stopTimeCell = row.querySelector('[data-field="stopTime"]');
+                        const fullStopDateTime = stopTimeCell?.dataset.fullDatetime || '';
+                        document.getElementById('editStopTime').value = toIsoDateTime(fullStopDateTime);
 
                         // Total time (extract number from text like "120 min")
                         const totalTimeText = row.querySelector('[data-field="totalTimeMinutes"]')?.textContent.trim() || '';
@@ -874,7 +929,6 @@
                 ];
 
                 columnSettings.forEach((col, index) => {
-                    // Default visibility from config
                     let isVisible = col.visible;
                     // Override if URL specifies hidden state
                     if (hiddenSet !== null) {
@@ -945,6 +999,7 @@
                             url.searchParams.delete('hiddenColumns');
                         }
                         window.history.replaceState({}, '', url);
+                        updatePaginationLinks();
                     });
 
                     container.appendChild(div);

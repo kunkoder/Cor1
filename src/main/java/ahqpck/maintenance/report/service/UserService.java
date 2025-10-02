@@ -68,6 +68,12 @@ public class UserService {
         return userPage.map(this::toDTO);
     }
 
+    public List<UserDTO> getAllUsersForBackup() {
+        return userRepository.findAll().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
     public List<RoleDTO> getAllRoles() {
         List<RoleDTO> roles = roleRepository.findAll().stream()
                 .map(RoleDTO::new)
