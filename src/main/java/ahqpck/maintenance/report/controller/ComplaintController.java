@@ -6,6 +6,7 @@ import ahqpck.maintenance.report.entity.Complaint;
 import ahqpck.maintenance.report.entity.Equipment;
 import ahqpck.maintenance.report.entity.Part;
 import ahqpck.maintenance.report.entity.User;
+import ahqpck.maintenance.report.entity.WorkReport;
 import ahqpck.maintenance.report.exception.NotFoundException;
 import ahqpck.maintenance.report.repository.AreaRepository;
 import ahqpck.maintenance.report.repository.EquipmentRepository;
@@ -55,8 +56,11 @@ public class ComplaintController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateTo,
             @RequestParam(required = false) String assigneeEmpId,
-            @RequestParam(required = false) Complaint.Status status,
+            @RequestParam(required = false) Complaint.Status state,
+            @RequestParam(required = false) Complaint.Category group,
             @RequestParam(required = false) String equipmentCode,
+            @RequestParam(required = false) String hiddenColumns,
+
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") String size,
             @RequestParam(defaultValue = "reportDate") String sortBy,
@@ -71,7 +75,7 @@ public class ComplaintController {
             LocalDateTime to = reportDateTo != null ? reportDateTo.atTime(LocalTime.MAX) : null;
 
             Page<ComplaintDTO> complaintPage = complaintService.getAllComplaints(keyword, from, to, assigneeEmpId,
-                    status, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
+                    state, group, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
 
             model.addAttribute("complaints", complaintPage);
             model.addAttribute("keyword", keyword);
@@ -81,6 +85,10 @@ public class ComplaintController {
             model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("asc", asc);
+
+            model.addAttribute("equipmentCode", equipmentCode);
+            model.addAttribute("state", state);
+            model.addAttribute("group", group);
 
             model.addAttribute("title", "Complaint List");
 

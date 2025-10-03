@@ -64,6 +64,7 @@ public class UserController {
     @GetMapping
     public String listUsers(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String hiddenColumns,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") String size,
             @RequestParam(defaultValue = "name") String sortBy,
@@ -78,6 +79,7 @@ public class UserController {
 
             model.addAttribute("users", userPage);
             model.addAttribute("keyword", keyword);
+            model.addAttribute("hiddenColumns", hiddenColumns);
             model.addAttribute("currentPage", page);
             model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);

@@ -187,6 +187,94 @@
 
     <div th:replace="~{fragments/error-modal :: error-modal}"></div>
 
+    <style>
+        .tag-input {
+            /* Match .form-control */
+            border: 1px solid #ebedf2;
+            border-radius: 0.25rem;
+            /* 6px - Bootstrap default */
+            padding: 0.375rem 0.75rem;
+            /* 6px 12px - Bootstrap padding */
+            min-height: calc(1.5em + 0.75rem + 2px);
+            /* ~42px, matches input height */
+            line-height: 1.5;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.375rem;
+            /* 6px gap between tags */
+            background-color: #fff;
+            background-clip: padding-box;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            cursor: text;
+            width: 100%;
+        }
+
+        /* Focus style like Bootstrap */
+        .tag-input:focus-within {
+            border-color: #3e93ff;
+            outline: 0;
+        }
+
+        /* Optional: Disabled state */
+        .tag-input:has(input:disabled) {
+            background-color: #e9ecef;
+            opacity: 1;
+            pointer-events: none;
+        }
+
+        /* Tag List */
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        /* Individual Tag */
+        .tag {
+            background: #007bff;
+            color: white;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .tag .remove-tag {
+            margin-left: 4px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fff;
+            opacity: 0.8;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .tag .remove-tag:hover {
+            opacity: 1;
+        }
+
+        /* Input Field inside Tag Input */
+        .tag-input-field {
+            border: none;
+            outline: none;
+            font-size: 0.9rem;
+            padding: 0px;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .tag-input-field::placeholder {
+            color: #999;
+        }
+    </style>
+
     <script>
 
         // ==============================

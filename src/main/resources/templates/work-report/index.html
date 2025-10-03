@@ -236,7 +236,7 @@
                                                 data-sort="category">
                                                 Category <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
                                             </th>
-                                            <th style="min-width: 300px; cursor: pointer; white-space: nowrap;"
+                                            <th style="min-width: 200px; cursor: pointer; white-space: nowrap;"
                                                 data-sort="problem">
                                                 Problem <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
                                             </th>
@@ -286,9 +286,10 @@
                                     </thead>
                                     <tbody>
                                         <tr th:each="report : ${workReports.content}" th:data-id="${report.id}">
-                                            <td data-field="code" th:text="${report.code ?: '-'}"></td>
+                                            <td data-field="code" th:text="${report.code ?: '-'}">-</td>
                                             <td data-field="reportDate"
                                                 th:text="${report.reportDate != null ? #temporals.format(report.reportDate, 'MMM dd, yyyy') : '-'}">
+                                                -
                                             </td>
                                             <td data-field="shift">
                                                 <span class="badge badge-sm" th:classappend="|badge-${
@@ -618,7 +619,7 @@
                             return direction === 'asc' ? aVal - bVal : bVal - aVal;
                         }
 
-                        if (['reportDate', 'startTime', 'stopTime'].includes(field)) {
+                        if (['startTime', 'stopTime'].includes(field)) {
                             const aCell = a.querySelector(`[data-field="${field}"]`);
                             const bCell = b.querySelector(`[data-field="${field}"]`);
                             aVal = aCell?.dataset.fullDatetime || '';
@@ -649,7 +650,7 @@
                 }
 
                 // Builds URL with current params and new sort
-                function builSortUrl(sortByValue) {
+                function buildSortUrl(sortByValue) {
                     const base = '/work-reports';
                     const params = [];
 
@@ -877,7 +878,7 @@
                     const a = document.createElement('a');
                     a.className = 'dropdown-item sort-column';
                     a.textContent = label;
-                    a.href = builSortUrl(field);
+                    a.href = buildSortUrl(field);
                     if (field === currentSortBy) a.classList.add('active');
                     sortContainer.appendChild(a);
                 }
@@ -893,7 +894,7 @@
                         document.querySelectorAll('.dropdown-item[data-asc]').forEach(el => el.classList.remove('active'));
                         this.classList.add('active');
 
-                        window.location.href = builSortUrl(sortByInput.value);
+                        window.location.href = buildSortUrl(sortByInput.value);
                     });
                 });
 

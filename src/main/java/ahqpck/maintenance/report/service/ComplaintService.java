@@ -67,7 +67,7 @@ public class ComplaintService {
     private final ZeroPaddedCodeGenerator codeGenerator;
 
     public Page<ComplaintDTO> getAllComplaints(String keyword, LocalDateTime reportDateFrom, LocalDateTime reportDateTo,
-            String assigneeEmpId, Complaint.Status status, String equipmentCode, int page, int size, String sortBy,
+            String assigneeEmpId, Complaint.Status status, Complaint.Category category, String equipmentCode, int page, int size, String sortBy,
             boolean asc) {
         Sort sort = asc ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -76,6 +76,7 @@ public class ComplaintService {
                 .and(ComplaintSpecification.withReportDateRange(reportDateFrom, reportDateTo))
                 .and(ComplaintSpecification.withAssignee(assigneeEmpId))
                 .and(ComplaintSpecification.withStatus(status))
+                .and(ComplaintSpecification.withCategory(category))
                 .and(ComplaintSpecification.withEquipment(equipmentCode));
         Page<Complaint> complaintPage = complaintRepository.findAll(spec, pageable);
 

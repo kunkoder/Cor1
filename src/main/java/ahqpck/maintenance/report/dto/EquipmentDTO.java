@@ -39,4 +39,9 @@ public class EquipmentDTO {
     private String remarks;
 
     private String image;
+
+    private Long totalOpenWorkReports;
+    private Long totalOpenComplaints;
+    private Long totalPendingWorkReports;
+    private Long totalPendingComplaints;
 }

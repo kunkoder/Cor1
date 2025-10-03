@@ -39,6 +39,7 @@ public class EquipmentController {
     @GetMapping
     public String listEquipments(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String hiddenColumns,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") String size,
             @RequestParam(defaultValue = "name") String sortBy,
@@ -53,6 +54,7 @@ public class EquipmentController {
 
             model.addAttribute("equipments", equipmentPage);
             model.addAttribute("keyword", keyword);
+            model.addAttribute("hiddenColumns", hiddenColumns);
             model.addAttribute("currentPage", page); // Store 1-based for Thymeleaf
             model.addAttribute("pageSize", size);
             model.addAttribute("sortBy", sortBy);

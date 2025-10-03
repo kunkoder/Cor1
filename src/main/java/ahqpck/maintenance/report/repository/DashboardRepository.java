@@ -31,11 +31,11 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
                 CAST(COALESCE(SUM(CASE WHEN (:from IS NULL OR DATE(c.report_date) >= DATE(:from))
                                        AND (:to IS NULL OR DATE(c.report_date) < DATE(:to))
                                   THEN 1 ELSE 0 END), 0) AS SIGNED) AS totalComplaints,
-                CAST(COALESCE(SUM(CASE WHEN c.status IN ('OPEN', 'IN_PROGRESS')
+                CAST(COALESCE(SUM(CASE WHEN c.status IN ('OPEN')
                                        AND (:from IS NULL OR DATE(c.report_date) >= DATE(:from))
                                        AND (:to IS NULL OR DATE(c.report_date) < DATE(:to))
                                   THEN 1 ELSE 0 END), 0) AS SIGNED) AS totalOpen,
-                CAST(COALESCE(SUM(CASE WHEN c.status IN ('DONE', 'CLOSED')
+                CAST(COALESCE(SUM(CASE WHEN c.status IN ('CLOSED')
                                        AND (:from IS NULL OR DATE(c.report_date) >= DATE(:from))
                                        AND (:to IS NULL OR DATE(c.report_date) < DATE(:to))
                                   THEN 1 ELSE 0 END), 0) AS SIGNED) AS totalClosed,

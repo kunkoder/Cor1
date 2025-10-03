@@ -90,8 +90,8 @@ public class WorkReportController {
 
         } catch (Exception e) {
             model.addAttribute("error", "Failed to load work reports: " + e.getMessage());
-            // return "error/500";
-            e.printStackTrace();
+            return "error/500";
+            // e.printStackTrace();
         }
 
         return "work-report/index";
