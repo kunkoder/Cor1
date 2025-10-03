@@ -49,7 +49,7 @@ public class AreaService {
         return areaPage.map(this::toDTO);
     }
 
-    public AreaDTO getAreaById(Long id) {
+    public AreaDTO getAreaById(String id) {
         Area area = areaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Area not found with ID: " + id));
         return toDTO(area);
@@ -73,7 +73,7 @@ public class AreaService {
         areaRepository.save(area);
     }
 
-    public void deleteArea(Long id) {
+    public void deleteArea(String id) {
         Area area = areaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Area not found with ID: " + id));
 

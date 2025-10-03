@@ -14,7 +14,7 @@ import jakarta.validation.constraints.NotNull;
 @AllArgsConstructor
 public class AreaDTO {
 
-    private Long id;
+    private String id;
 
     @NotNull(message = "Code is mandatory")
     private String code;

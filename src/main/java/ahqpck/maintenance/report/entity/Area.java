@@ -33,9 +33,8 @@ import lombok.NoArgsConstructor;
 public class Area {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-increment
-    @Column(name = "id", nullable = false, updatable = false)
-    private Long id;
+    @Column(length = 22, updatable = false, nullable = false)
+    private String id;
 
     @Column(nullable = false, unique = true)
     private String code;
@@ -48,7 +47,7 @@ public class Area {
     private Status status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "responsible_person", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "responsible_person", referencedColumnName = "employee_id", nullable = false)
     private User responsiblePerson;
 
     @OneToMany(mappedBy = "area", fetch = FetchType.LAZY)
@@ -64,6 +63,7 @@ public class Area {
 
     @PrePersist
     public void prePersist() {
+        this.id = (this.id == null) ? Base62.encode(UUID.randomUUID()) : this.id;
         this.status = this.status != null ? this.status : Status.INACTIVE;
     }
 }
