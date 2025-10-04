@@ -75,15 +75,16 @@
 					<!-- User Profile -->
 					<div class="user">
 						<div class="avatar-sm float-left mr-3">
-							<img src="/assets/img/profile.jpg" alt="User Avatar"
-								class="avatar-img rounded-circle border border-primary"
+							<img th:src="${#authentication.principal.image != null} 
+								? @{/upload/user/image/__${#authentication.principal.image}__} 
+								: @{/assets/img/arashmil.jpg}" alt="User Avatar" class="avatar-img rounded-circle border border-primary"
 								style="border-width: 2px !important;">
 						</div>
 						<div class="info">
 							<a data-toggle="collapse" href="#collapseUserMenu" aria-expanded="false">
 								<span>
-									Hizrian
-									<span class="user-level">Administrator</span>
+									<span th:text="${#authentication.principal.name}"></span>
+									<span class="user-level" th:text="${#authentication.principal.designation}"></span>
 									<span class="caret"></span>
 								</span>
 							</a>
@@ -126,7 +127,8 @@
 						</li>
 
 						<!-- User Management -->
-						<li class="nav-item" th:classappend="${title == 'User Management'} ? 'active' : ''">
+						<li class="nav-item" th:classappend="${title == 'User Management'} ? 'active' : ''"
+							sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
 							<a th:href="@{/users}">
 								<i class="fas fa-users"></i>
 								<p class="nav-label">User Management</p>
@@ -174,7 +176,8 @@
 						</li>
 
 						<!-- Configuration -->
-						<li class="nav-item" th:classappend="${title == 'Backup Configuration'} ? 'active' : ''">
+						<li class="nav-item" th:classappend="${title == 'Backup Configuration'} ? 'active' : ''"
+						sec:authorize="hasAnyRole('SUPERADMIN')">
 							<a th:href="@{/backup}">
 								<i class="fas fa-cog"></i>
 								<p class="nav-label">Backup Configuration</p>

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +29,7 @@ public class BackupConfigController {
     private final BackupConfigService backupConfigService;
     private final BackupConfigRepository backupConfigRepository;
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN')")
     @GetMapping
     public String showBackup(Model model) {
         BackupConfig config = backupConfigRepository.findTopByOrderByIdDesc()
@@ -56,7 +58,7 @@ public class BackupConfigController {
         return "backup/index";
     }
 
-    // Save config
+    @PreAuthorize("hasAnyRole('SUPERADMIN')")
     @PostMapping("/save-config")
     public String saveConfig(@ModelAttribute BackupConfigDTO dto) {
         System.out.println("Backup Types save: " + dto.getBackupTypes());
@@ -64,7 +66,7 @@ public class BackupConfigController {
         return "redirect:/backup";
     }
 
-    // Backup now
+    @PreAuthorize("hasAnyRole('SUPERADMIN')")
     @PostMapping("/backup-now")
     public String backupNow(@ModelAttribute BackupConfigDTO dto) {
         try {

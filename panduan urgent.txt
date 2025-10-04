@@ -1,3 +1,5 @@
+mysql -u root -p maintenance_report < "D:\Code\maintenance\backup\maintenance_report_1_backup_04Sat10_0840.sql"
+
 SELECT 
     CONSTRAINT_NAME,
     TABLE_NAME,

@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -42,6 +43,7 @@ public class WorkReportController {
     private final EquipmentService equipmentService;
     private final UserService userService;
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'ENGINEER', 'VIEWER')")
     @GetMapping
     public String listWorkReports(
             @RequestParam(required = false) String keyword,
@@ -97,6 +99,7 @@ public class WorkReportController {
         return "work-report/index";
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @PostMapping
     public String createWorkReport(
             @Valid @ModelAttribute WorkReportDTO workReportDTO,
@@ -132,6 +135,7 @@ public class WorkReportController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'ENGINEER')")
     @PostMapping("/update")
     public String updateWorkReport(
             @Valid @ModelAttribute WorkReportDTO workReportDTO,
@@ -169,6 +173,7 @@ public class WorkReportController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN')")
     @GetMapping("/delete/{id}")
     public String deleteWorkReport(@PathVariable String id, @RequestParam(required = false) String redirectUrl, RedirectAttributes ra) {
         try {
@@ -180,6 +185,7 @@ public class WorkReportController {
         return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @PostMapping("/import")
     public String importWorkReports(
             @RequestParam("data") String dataJson,

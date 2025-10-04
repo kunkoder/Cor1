@@ -44,18 +44,42 @@
     </div>
 
     <!-- Modal Delete -->
-    <div class="modal fade" id="deletePartModal" tabindex="-1" role="dialog" aria-labelledby="deletePartModalLabel"
+    <div class="modal fade" id="deleteComplaintModal" tabindex="-1" role="dialog" aria-labelledby="deleteComplaintModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white no-bd">
-                    <h5 class="modal-title" id="deletePartModalLabel">Delete Complaint</h5>
+                    <h5 class="modal-title" id="deleteComplaintModalLabel">Delete Complaint</h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body p-4">
                     <p>Are you sure you want to delete this complaint?</p>
+                    <strong id="deleteComplaintName" class="text-dark"></strong>
+                    <p class="text-muted mt-2 mb-0">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-border" data-dismiss="modal">Cancel</button>
+                    <a href="#" id="confirmDeleteButton" class="btn btn-danger ml-2">Yes, Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Delete -->
+    <div class="modal fade" id="deletePartModal" tabindex="-1" role="dialog" aria-labelledby="deletePartModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white no-bd">
+                    <h5 class="modal-title" id="deletePartModalLabel">Delete Part</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <p>Are you sure you want to delete this part?</p>
                     <strong id="deletePartName" class="text-dark"></strong>
                     <p class="text-muted mt-2 mb-0">This action cannot be undone.</p>
                 </div>
@@ -100,13 +124,13 @@
                         1
                     </td>
                     <td class="text-center">
-                        <button class="btn btn-link text-danger btn-sm delete-row" type="button">
+                        <button class="btn btn-link text-danger btn-sm delete-part-row" type="button">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </td>`;
                     tbody.appendChild(tr);
 
-                    tr.querySelector('.delete-row').addEventListener('click', function () {
+                    tr.querySelector('.delete-part-row').addEventListener('click', function () {
                         tr.remove();
                         updatePartsUsedData();
                     });

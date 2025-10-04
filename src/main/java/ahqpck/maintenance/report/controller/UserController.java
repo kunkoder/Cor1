@@ -60,7 +60,7 @@ public class UserController {
     @Value("${app.upload-user-image.dir:src/main/resources/static/upload/user/image}")
     private String uploadDir;
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @GetMapping
     public String listUsers(
             @RequestParam(required = false) String keyword,
@@ -98,6 +98,7 @@ public class UserController {
         return "user/index";
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'ENGINEER', 'VIEWER')")
     @GetMapping("/profile")
     public String getUserDetail(Principal principal, Model model) {
         try {
@@ -116,7 +117,7 @@ public class UserController {
         }
     }
 
-    // === CREATE USER ===
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @PostMapping
     public String createUser(
             @Valid @ModelAttribute UserDTO userDTO,
@@ -153,7 +154,7 @@ public class UserController {
         }
     }
 
-    // === UPDATE USER ===
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @PostMapping("/update")
     public String updateUser(
             @Valid @ModelAttribute UserDTO userDTO,
@@ -193,7 +194,7 @@ public class UserController {
         }
     }
 
-    // === DELETE USER ===
+    @PreAuthorize("hasAnyRole('SUPERADMIN')")
     @GetMapping("/delete/{id}")
     public String deleteUser(@PathVariable String id, RedirectAttributes ra) {
         try {
@@ -205,6 +206,7 @@ public class UserController {
         return "redirect:/users";
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @PostMapping("/import")
     public String importWorkReports(
             @RequestParam("data") String dataJson,

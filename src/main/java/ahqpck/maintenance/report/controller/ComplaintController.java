@@ -23,6 +23,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -50,6 +51,7 @@ public class ComplaintController {
     private final AreaService areaService;
     private final UserService userService;
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'ENGINEER', 'VIEWER')")
     @GetMapping
     public String listComplaints(
             @RequestParam(required = false) String keyword,
@@ -106,6 +108,7 @@ public class ComplaintController {
         return "complaint/index";
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'ENGINEER')")
     @GetMapping("/{id}")
     public String getComplaintDetail(@PathVariable String id, Model model) {
         try {
@@ -128,6 +131,7 @@ public class ComplaintController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @PostMapping
     public String createComplaint(
             @Valid @ModelAttribute ComplaintDTO complaintDTO,
@@ -152,6 +156,7 @@ public class ComplaintController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'ENGINEER')")
     @PostMapping("/update")
     public String updateComplaint(
             @Valid @ModelAttribute ComplaintDTO complaintDTO,
@@ -179,7 +184,7 @@ public class ComplaintController {
         }
     }
 
-    // === DELETE COMPLAINT ===
+    @PreAuthorize("hasAnyRole('SUPERADMIN')")
     @GetMapping("/delete/{id}")
     public String deleteComplaint(@PathVariable String id, RedirectAttributes ra) {
         try {
@@ -191,6 +196,7 @@ public class ComplaintController {
         return "redirect:/complaints";
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @PostMapping("/import")
     public String importComplaints(
             @RequestParam("data") String dataJson,

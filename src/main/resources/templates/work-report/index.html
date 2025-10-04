@@ -30,7 +30,7 @@
                 </ul>
 
                 <div class="header-action-group d-flex align-items-center ml-auto">
-                    <button class="btn btn-primary mt-2 mr-2" data-toggle="modal" data-target="#importModal">
+                    <button class="btn btn-primary mt-2 mr-2" data-toggle="modal" data-target="#importModal" sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
                         <i class="fa fa-download mr-1"></i> Import
                     </button>
                     <button class="btn btn-primary dropdown-toggle mt-2 mr-2" type="button" id="exportDropdown"
@@ -45,7 +45,7 @@
                             <i class="fa fa-file-pdf mr-2 text-danger"></i> PDF
                         </a>
                     </div>
-                    <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal">
+                    <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal" sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
                         <i class="fa fa-plus-circle mr-2"></i> Add
                     </button>
                 </div>
@@ -381,14 +381,17 @@
                                                     <span data-field="parts" th:data-parts="${report.partsUsed}"></span>
                                                     <button type="button"
                                                         class="btn btn-link btn-primary btn-lg edit-row"
-                                                        th:data-id="${report.id}">
+                                                        th:data-id="${report.id}"
+                                                        sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
                                                         <i class="fa fa-edit"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-link btn-danger delete-row"
                                                         th:data-id="${report.id}"
-                                                        th:data-name="${report.equipment?.name ?: ''}">
+                                                        th:data-name="${report.equipment?.name ?: ''}"
+                                                        sec:authorize="hasAnyRole('SUPERADMIN')">
                                                         <i class="fa fa-times"></i>
                                                     </button>
+                                                    <span sec:authorize="!hasAnyRole('SUPERADMIN', 'ADMIN')" class="badge badge-danger mr-1">No Access</span>
                                                 </div>
                                             </td>
                                         </tr>

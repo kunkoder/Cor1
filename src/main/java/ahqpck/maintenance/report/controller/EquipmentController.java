@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -36,6 +37,7 @@ public class EquipmentController {
     @Value("${app.upload-equipment-image.dir:src/main/resources/static/upload/equipment/image}")
     private String uploadDir;
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'ENGINEER', 'VIEWER')")
     @GetMapping
     public String listEquipments(
             @RequestParam(required = false) String keyword,
@@ -51,7 +53,7 @@ public class EquipmentController {
             int parsedSize = "All".equalsIgnoreCase(size) ? Integer.MAX_VALUE : Integer.parseInt(size);
 
             Page<EquipmentDTO> equipmentPage = equipmentService.getAllEquipments(keyword, zeroBasedPage, parsedSize, sortBy, asc);
-
+            System.out.println("Equipment Page: " + equipmentPage.getContent());
             model.addAttribute("equipments", equipmentPage);
             model.addAttribute("keyword", keyword);
             model.addAttribute("hiddenColumns", hiddenColumns);
@@ -72,6 +74,7 @@ public class EquipmentController {
         return "equipment/index";
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @PostMapping
     public String createEquipment(
             @Valid @ModelAttribute EquipmentDTO equipmentDTO,
@@ -96,6 +99,7 @@ public class EquipmentController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @PostMapping("/update")
     public String updateEquipment(
             @Valid @ModelAttribute EquipmentDTO equipmentDTO,
@@ -121,6 +125,7 @@ public class EquipmentController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN')")
     @GetMapping("/delete/{id}")
     public String deleteEquipment(@PathVariable String id, RedirectAttributes ra) {
         try {
@@ -132,6 +137,7 @@ public class EquipmentController {
         return "redirect:/equipments";
     }
 
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     @PostMapping("/import")
     public String importEquipments(
             @RequestParam("data") String dataJson,

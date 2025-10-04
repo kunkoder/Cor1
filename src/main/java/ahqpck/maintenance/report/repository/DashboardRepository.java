@@ -163,7 +163,7 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
                 DATE(c.report_date) AS report_date,
                 COUNT(*) AS count
             FROM complaints c
-            JOIN users u ON c.assignee = u.employee_id
+            JOIN users u ON c.assignee = u.id
             WHERE DATE(c.report_date) >= :from
               AND DATE(c.report_date) < DATE_ADD(:to, INTERVAL 1 DAY)
               AND c.status IN ('OPEN', 'PENDING', 'CLOSED')
@@ -397,8 +397,8 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
                 COUNT(DISTINCT c.id) AS total_complaints,
                 (COUNT(DISTINCT wr.id) + COUNT(DISTINCT c.id)) AS total_occurrences
             FROM equipments e
-            LEFT JOIN work_reports wr ON e.code = wr.equipment_code
-            LEFT JOIN complaints c ON e.code = c.equipment_code
+            LEFT JOIN work_reports wr ON e.id = wr.equipment_code
+            LEFT JOIN complaints c ON e.id = c.equipment_code
             GROUP BY e.id, e.code, e.name
             ORDER BY total_occurrences DESC, total_time DESC
             """, nativeQuery = true)

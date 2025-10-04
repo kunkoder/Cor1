@@ -14,37 +14,37 @@ import ahqpck.maintenance.report.entity.Equipment;
 @Repository
 public interface EquipmentRepository extends JpaRepository<Equipment, String>, JpaSpecificationExecutor<Equipment> {
 
-    Optional<Equipment> findByCode(String code);
+  Optional<Equipment> findByCode(String code);
 
-    boolean existsByCodeIgnoreCase(String code);
+  boolean existsByCodeIgnoreCase(String code);
 
-    boolean existsByCodeIgnoreCaseAndIdNot(String code, String id);
+  boolean existsByCodeIgnoreCaseAndIdNot(String code, String id);
 
-    @Query("""
-            SELECT e.id,
-                   COUNT(DISTINCT wr.id) AS openWr,
-                   COUNT(DISTINCT CASE WHEN wr.status = 'PENDING' THEN wr.id END) AS pendingWr,
-                   COUNT(DISTINCT c.id) AS openC,
-                   COUNT(DISTINCT CASE WHEN c.status = 'PENDING' THEN c.id END) AS pendingC
-            FROM Equipment e
-            LEFT JOIN WorkReport wr ON e.code = wr.equipment.code AND wr.status IN ('OPEN', 'PENDING')
-            LEFT JOIN Complaint c ON e.code = c.equipment.code AND c.status IN ('OPEN', 'PENDING')
-            WHERE e.id IN :equipmentIds
-              AND e.id IS NOT NULL
-            GROUP BY e.id
-            """)
-    List<EquipmentStats> findStatsByEquipmentIds(@Param("equipmentIds") List<String> equipmentIds);
+  @Query(value = """
+    SELECT 
+        e.id,
+        COUNT(DISTINCT wr.id) AS openWr,
+        COUNT(DISTINCT CASE WHEN wr.status = 'PENDING' THEN wr.id END) AS pendingWr,
+        COUNT(DISTINCT c.id) AS openC,
+        COUNT(DISTINCT CASE WHEN c.status = 'PENDING' THEN c.id END) AS pendingC
+    FROM equipments e
+    LEFT JOIN work_reports wr ON e.id = wr.equipment_code AND wr.status IN ('OPEN', 'PENDING')
+    LEFT JOIN complaints c ON e.id = c.equipment_code AND c.status IN ('OPEN', 'PENDING')
+    WHERE e.id IN :equipmentIds
+    GROUP BY e.id
+    """, nativeQuery = true)
+  List<EquipmentStats> findStatsByEquipmentIds(@Param("equipmentIds") List<String> equipmentIds);
 
-    // Add this projection interface inside or near EquipmentRepository
-    interface EquipmentStats {
-        String getId();
+  // Add this projection interface inside or near EquipmentRepository
+  interface EquipmentStats {
+    String getId();
 
-        Long getOpenWr(); // OPEN work reports
+    Long getOpenWr(); // OPEN work reports
 
-        Long getPendingWr(); // PENDING work reports
+    Long getPendingWr(); // PENDING work reports
 
-        Long getOpenC(); // OPEN complaints
+    Long getOpenC(); // OPEN complaints
 
-        Long getPendingC(); // PENDING complaints
-    }
+    Long getPendingC(); // PENDING complaints
+  }
 }
