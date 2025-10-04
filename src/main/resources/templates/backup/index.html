@@ -122,14 +122,14 @@
                                                     </div>
                                                     <small class="form-text text-muted">
                                                         Absolute path on server (e.g.,
-                                                        <code>/var/backups/maintenance</code>)
+                                                        <code>/backups/maintenance</code>)
                                                     </small>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <!-- Hidden input for backup types -->
-                                        <input type="text" id="backupTypesInput" name="backupTypes"
+                                        <input type="hidden" id="backupTypesInput" name="backupTypes"
                                             th:value="${backupConfig.backupTypes}">
 
                                         <!-- Data Types Section -->

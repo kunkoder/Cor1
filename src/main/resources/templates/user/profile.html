@@ -36,7 +36,9 @@
                             <div class="profile-picture"
                                 style="position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); z-index: 2;">
                                 <div class="avatar avatar-xxl">
-                                    <img id="profileImagePreview" src="/assets/img/profile.jpg" alt="Foto Profil"
+                                    <img id="profileImagePreview"
+                                        th:src="${user.image != null} ? @{/upload/user/image/__${user.image}__} : @{/assets/img/arashmil.jpg}"
+                                        alt="Foto Profil"
                                         class="avatar-img rounded-circle border border-white border-3">
                                 </div>
                             </div>
@@ -65,7 +67,7 @@
                             <div class="tab-pane fade show active" id="profile" role="tabpanel"
                                 aria-labelledby="profile-tab">
                                 <div class="card-body pt-4">
-                                    <form class="contact-form" th:action="@{/icbsstaff/profile}" method="POST"
+                                    <form class="contact-form" th:action="@{/users/update}" method="POST"
                                         enctype="multipart/form-data">
                                         <!-- Hidden ID (use 'id' from UserDTO) -->
                                         <input type="hidden" name="id" th:value="${user.id}">
@@ -101,19 +103,39 @@
 
                                             <!-- Role (display only — disabled) -->
                                             <div class="col-md-12">
-    <div class="form-group">
-        <label>Role <span class="text-danger">*</span></label>
-        <div class="mt-1">
-            <span th:if="${#sets.isEmpty(user.roles)}" class="text-muted">No roles assigned</span>
-            <span th:unless="${#sets.isEmpty(user.roles)}">
-                <span th:each="role : ${user.roles}"
-                      class="badge badge-primary rounded-pill px-3 py-2 mr-2 mb-1"
-                      th:text="${role.name}">
-                </span>
-            </span>
-        </div>
-    </div>
-</div>
+                                                <div class="form-group">
+                                                    <label>Role <span class="text-danger">*</span></label>
+                                                    <div class="mt-1">
+                                                        <!-- Display current roles -->
+                                                        <span th:if="${#sets.isEmpty(user.roles)}" class="text-muted">No
+                                                            roles assigned</span>
+                                                        <span th:unless="${#sets.isEmpty(user.roles)}">
+                                                            <span th:each="role : ${user.roles}"
+                                                                class="badge badge-primary rounded-pill px-3 py-2 mr-2 mb-1"
+                                                                th:text="${role.name}">
+                                                            </span>
+                                                        </span>
+
+                                                        <!-- Hidden inputs to preserve roles during form submission -->
+                                                        <input type="hidden" th:each="role : ${user.roles}"
+                                                            name="roleNames" th:value="${role.name}" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Status (display only — disabled) -->
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label>Status <span class="text-danger">*</span></label>
+                                                    <div class="mt-1">
+                                                        <span class="badge badge-primary rounded-pill px-3 py-2"
+                                                            th:text="${user.status}">
+                                                        </span>
+                                                        <!-- Hidden input for form submission (immutable) -->
+                                                        <input type="hidden" name="status" th:value="${user.status}" />
+                                                    </div>
+                                                </div>
+                                            </div>
 
                                             <!-- Optional: Add more fields if needed (e.g., phone, designation) -->
                                             <div class="col-md-12">
@@ -152,20 +174,27 @@
                                             <!-- Profile Picture -->
                                             <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="avatar">Foto Profil</label>
+                                                    <label>Image</label>
+                                                    <div class="mb-2">
+                                                        <img id="editImagePreview" src="" alt="No image"
+                                                            class="img-thumbnail"
+                                                            style="max-height: 150px; display: none;">
+                                                    </div>
+
+                                                    <div class="custom-control custom-checkbox mb-2">
+                                                        <input type="checkbox" class="custom-control-input"
+                                                            id="deleteImage" name="deleteImage" value="true">
+                                                        <label class="custom-control-label" for="deleteImage">
+                                                            <small>Remove current image</small>
+                                                        </label>
+                                                    </div>
+
                                                     <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" id="avatar"
-                                                            name="avatar" accept="image/*">
-                                                        <label class="custom-file-label" for="avatar">Pilih file</label>
+                                                        <input type="file" class="custom-file-input" id="editImageInput"
+                                                            name="imageFile" accept="image/*">
+                                                        <label class="custom-file-label" for="editImageInput">Change
+                                                            image...</label>
                                                     </div>
-                                                    <!-- Show current image if exists -->
-                                                    <div th:if="${user.image}" class="mt-2">
-                                                        <img th:src="@{'/assets/uploads/' + ${user.image}}"
-                                                            alt="Profile Picture" class="img-thumbnail"
-                                                            style="max-height: 150px;">
-                                                    </div>
-                                                    <small class="form-text text-muted mt-1">Maksimal ukuran file
-                                                        5MB</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -228,19 +257,20 @@
     <th:block layout:fragment="scripts">
         <!-- Update file input label -->
         <script>
-            $('#avatar').on('change', function () {
-                const fileName = $(this).val().split('\\').pop();
-                $(this).next('.custom-file-label').text(fileName || 'Pilih file');
+            document.addEventListener('DOMContentLoaded', function () {
+                document.getElementById('editImageInput')?.addEventListener('change', function (evt) {
+                    const preview = document.getElementById('editImagePreview');
+                    const file = evt.target.files[0];
+                    if (file && file.type.match('image.*')) {
+                        const reader = new FileReader();
+                        reader.onload = function () {
+                            preview.src = reader.result;
+                            preview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
             });
-
-            // Optional: Image preview on upload
-            document.getElementById('avatar').onchange = function (e) {
-                const reader = new FileReader();
-                reader.onload = function () {
-                    document.getElementById('profileImagePreview').src = reader.result;
-                };
-                if (e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
-            };
         </script>
     </th:block>
 </body>
