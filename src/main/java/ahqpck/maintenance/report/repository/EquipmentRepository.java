@@ -25,8 +25,8 @@ public interface EquipmentRepository extends JpaRepository<Equipment, String>, J
         e.id,
         COUNT(DISTINCT wr.id) AS openWr,
         COUNT(DISTINCT CASE WHEN wr.status = 'PENDING' THEN wr.id END) AS pendingWr,
-        COUNT(DISTINCT c.id) AS openC,
-        COUNT(DISTINCT CASE WHEN c.status = 'PENDING' THEN c.id END) AS pendingC
+        COUNT(DISTINCT c.id) AS openCp,
+        COUNT(DISTINCT CASE WHEN c.status = 'PENDING' THEN c.id END) AS pendingCp
     FROM equipments e
     LEFT JOIN work_reports wr ON e.id = wr.equipment_code AND wr.status IN ('OPEN', 'PENDING')
     LEFT JOIN complaints c ON e.id = c.equipment_code AND c.status IN ('OPEN', 'PENDING')
@@ -43,8 +43,8 @@ public interface EquipmentRepository extends JpaRepository<Equipment, String>, J
 
     Long getPendingWr(); // PENDING work reports
 
-    Long getOpenC(); // OPEN complaints
+    Long getOpenCp(); // OPEN complaints
 
-    Long getPendingC(); // PENDING complaints
+    Long getPendingCp(); // PENDING complaints
   }
 }

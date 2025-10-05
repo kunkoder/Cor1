@@ -36,7 +36,7 @@
                             <div class="profile-picture"
                                 style="position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); z-index: 2;">
                                 <div class="avatar avatar-xxl">
-                                    <img src="/assets/img/settings-icon.png" alt="Configuration"
+                                    <img src="/assets/img/blogpost.jpg" alt="Configuration"
                                         class="avatar-img rounded-circle border border-white border-3"
                                         onerror="this.src='/assets/img/profile.jpg'">
                                 </div>
@@ -199,10 +199,10 @@
 
                                         <!-- Action Buttons -->
                                         <div class="text-right">
-                                            <button type="button" class="btn btn-success px-4 mr-2" id="backupNowBtn">
+                                            <button class="btn btn-success px-4 mr-2" id="backupNowBtn">
                                                 <i class="fas fa-bolt mr-1"></i> Backup Now
                                             </button>
-                                            <button type="submit" class="btn btn-primary px-4">
+                                            <button class="btn btn-primary px-4" id="saveConfigBtn">
                                                 <i class="fas fa-save mr-1"></i> Save Configuration
                                             </button>
                                         </div>
@@ -251,30 +251,6 @@
                                                     el.addEventListener('change', updateBackupTypes);
                                                 }
                                             });
-
-                                            // Handle "Backup Now" click
-                                            document.getElementById('backupNowBtn').addEventListener('click', function (e) {
-                                                e.preventDefault();
-                                                // updateBackupTypes(); // Optional: redundant since change listeners keep it synced
-                                                const formData = new FormData(document.getElementById('backupConfigForm'));
-                                                fetch('/backup/backup-now', {
-                                                    method: 'POST',
-                                                    body: formData
-                                                })
-                                                    .then(response => {
-                                                        if (response.redirected) {
-                                                            window.location.href = response.url;
-                                                        } else {
-                                                            return response.text().then(text => { throw new Error(text); });
-                                                        }
-                                                    })
-                                                    .catch(error => {
-                                                        alert('Backup failed: ' + error.message);
-                                                    });
-                                            });
-
-                                            // Set form action for save
-                                            document.getElementById('backupConfigForm').action = '/backup/save-config';
                                         });
                                     </script>
                                 </div>
@@ -423,41 +399,58 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const folderInput = document.getElementById('backupFolder');
-            const browseBtn = document.getElementById('browseFolderBtn');
+    <th:block layout:fragment="scripts">
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                console.log("✅ JS: Backup config script loaded");
 
-            if (!browseBtn || !folderInput) {
-                console.warn('Backup folder elements not found');
-                return;
-            }
+                const form = document.getElementById('backupConfigForm');
+                const saveConfigBtn = document.getElementById('saveConfigBtn');
+                const backupNowBtn = document.getElementById('backupNowBtn');
 
-            browseBtn.addEventListener('click', function () {
-                const current = folderInput.value || '/var/backups/icbs';
-                const help =
-                    'Enter an absolute server path (e.g., /var/backups/icbs).\n\n' +
-                    'Requirements:\n' +
-                    '• Must start with /\n' +
-                    '• Must be writable by the application\n\n' +
-                    'Current path:';
-
-                const newPath = prompt(help, current);
-                if (newPath !== null) {
-                    const trimmed = newPath.trim();
-                    if (trimmed === '') {
-                        alert('Path cannot be empty.');
-                        return;
-                    }
-                    if (!trimmed.startsWith('/')) {
-                        alert('Error: Path must be absolute (start with "/").');
-                        return;
-                    }
-                    folderInput.value = trimmed;
+                // If any of these is null, getElementById failed!
+                if (!form || !saveConfigBtn || !backupNowBtn) {
+                    console.error("❌ JS: Missing form or buttons!");
+                    return;
                 }
+
+                const isFormValid = () => {
+                    return ![...form.querySelectorAll('[required]')].some(input => !input.value.trim());
+                };
+
+                const updateButtonStates = () => {
+                    const valid = isFormValid();
+                    saveConfigBtn.disabled = !valid;
+                    backupNowBtn.disabled = !valid;
+                    console.log("Form valid:", valid);
+                };
+
+                updateButtonStates();
+                form.addEventListener('input', updateButtonStates);
+                form.addEventListener('change', updateButtonStates);
+
+                saveConfigBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    console.log("_CLICKED Save, form valid:", isFormValid());
+                    if (isFormValid()) {
+                        form.action = '/backup/save-config';
+                        console.log("Submitting to:", form.action);
+                        form.submit();
+                    }
+                });
+
+                backupNowBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    console.log("_CLICKED Backup Now, form valid:", isFormValid());
+                    if (isFormValid()) {
+                        form.action = '/backup/backup-now';
+                        console.log("Submitting to:", form.action);
+                        form.submit();
+                    }
+                });
             });
-        });
-    </script>
+        </script>
+    </th:block>
 
 </body>
 

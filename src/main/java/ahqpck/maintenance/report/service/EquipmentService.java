@@ -72,8 +72,8 @@ public class EquipmentService {
             if (stats != null) {
                 dto.setTotalOpenWorkReports(stats.getOpenWr());
                 dto.setTotalPendingWorkReports(stats.getPendingWr());
-                dto.setTotalOpenComplaints(stats.getOpenC());
-                dto.setTotalPendingComplaints(stats.getPendingC());
+                dto.setTotalOpenComplaints(stats.getOpenCp());
+                dto.setTotalPendingComplaints(stats.getPendingCp());
             } else {
                 // Set zeros if no stats (e.g., no WR/complaints)
                 dto.setTotalOpenWorkReports(0L);
