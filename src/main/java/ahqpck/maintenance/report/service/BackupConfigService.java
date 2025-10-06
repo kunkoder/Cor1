@@ -2,11 +2,13 @@ package ahqpck.maintenance.report.service;
 
 import ahqpck.maintenance.report.dto.AreaDTO;
 import ahqpck.maintenance.report.dto.BackupConfigDTO;
+import ahqpck.maintenance.report.dto.BackupHistoryDTO;
 import ahqpck.maintenance.report.dto.EquipmentDTO;
 import ahqpck.maintenance.report.dto.PartDTO;
 import ahqpck.maintenance.report.dto.UserDTO;
 import ahqpck.maintenance.report.entity.Area;
 import ahqpck.maintenance.report.entity.BackupConfig;
+import ahqpck.maintenance.report.entity.BackupHistory;
 import ahqpck.maintenance.report.entity.Complaint;
 import ahqpck.maintenance.report.entity.Equipment;
 import ahqpck.maintenance.report.entity.Part;
@@ -57,6 +59,7 @@ public class BackupConfigService {
     private final EquipmentRepository equipmentRepository;
     private final PartRepository partRepository;
     private final BackupConfigRepository backupConfigRepository;
+    private final BackupHistoryRepository backupHistoryRepository;
 
     @Transactional(readOnly = true)
     public BackupConfigDTO getCurrentConfig() {
@@ -86,16 +89,23 @@ public class BackupConfigService {
     }
 
     // --- BACKUP NOW ---
-    public void backupNow(String backupFolder, Set<String> backupTypes) throws IOException {
-        System.out.println("Performing backup to folder: " + backupFolder + " with types: " + backupTypes);
-        // Create folder if not exists
-        Path folderPath = Paths.get(backupFolder);
-        if (!Files.exists(folderPath)) {
-            Files.createDirectories(folderPath);
-        }
+    @Transactional
+    public void backupNow(String backupFolder, Set<String> backupTypes, String method) throws IOException {
+        String status = "SUCCESS";
+        String fileSize = null;
+        String errorMessage = null;
+        Path excelFilePath = null;
+        LocalDateTime backupTime = LocalDateTime.now(); // Capture time once
 
-        try (Workbook workbook = new XSSFWorkbook()) {
-            if (backupTypes.contains("USER")) {
+        try {
+            System.out.println("Performing backup to folder: " + backupFolder + " with types: " + backupTypes);
+            Path folderPath = Paths.get(backupFolder);
+            if (!Files.exists(folderPath)) {
+                Files.createDirectories(folderPath);
+            }
+
+            try (Workbook workbook = new XSSFWorkbook()) {
+                if (backupTypes.contains("USER")) {
                 Map<String, ColumnType> userTypes = new HashMap<>();
                 userTypes.put("Join Date", ColumnType.DATE);
                 userTypes.put("Created At", ColumnType.DATETIME);
@@ -120,7 +130,7 @@ public class BackupConfigService {
 
             if (backupTypes.contains("COMPLAINT")) {
                 Map<String, ColumnType> complaintTypes = new HashMap<>();
-                complaintTypes.put("Report Date", ColumnType.DATE);
+                complaintTypes.put("Report Date", ColumnType.DATETIME);
                 complaintTypes.put("Updated At", ColumnType.DATETIME);
                 complaintTypes.put("Close Time", ColumnType.DATETIME);
                 createSheet(workbook, "Complaints", complaintRepository.findAll(), this::mapComplaint, complaintTypes);
@@ -135,22 +145,42 @@ public class BackupConfigService {
                         workReportTypes);
             }
 
-            // Save file
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-            System.out.println("Backup timestamp: " + timestamp);
-            String excelFilename = "maintenance_backup_" + timestamp + ".xlsx";
-            Path excelFilePath = folderPath.resolve(excelFilename);
-            try (FileOutputStream out = new FileOutputStream(excelFilePath.toFile())) {
-                workbook.write(out);
+                // Save Excel file
+                String timestamp = backupTime.format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+                String excelFilename = "maintenance_backup_" + timestamp + ".xlsx";
+                excelFilePath = folderPath.resolve(excelFilename);
+                try (FileOutputStream out = new FileOutputStream(excelFilePath.toFile())) {
+                    workbook.write(out);
+                }
+
+                // Perform SQL backup
+                String sqlFilename = "maintenance_backup_" + timestamp + ".sql";
+                Path sqlFilePath = folderPath.resolve(sqlFilename);
+                performSqlBackup(sqlFilePath.toString());
+
+                // Get file size
+                if (Files.exists(excelFilePath)) {
+                    fileSize = formatFileSize(Files.size(excelFilePath));
+                }
             }
 
-            String sqlFilename = "maintenance_backup_" + timestamp + ".sql";
-            Path sqlFilePath = folderPath.resolve(sqlFilename);
-            performSqlBackup(sqlFilePath.toString());
+        } catch (Exception e) {
+            status = "FAILED";
+            errorMessage = e.getMessage();
+            throw e;
+        } finally {
+            // Always save history (even on failure)
+            BackupHistory history = new BackupHistory();
+            history.setBackupDateTime(backupTime);
+            history.setBackupTypes(String.join(",", backupTypes));
+            history.setStatus(status);
+            history.setMethod(method);
+            history.setFileSize(fileSize);
+            history.setLocation(backupFolder);
+            history.setErrorMessage(errorMessage);
+            backupHistoryRepository.save(history);
         }
-
     }
-
     // --- PERFORM SQL BACKUP ---
     private void performSqlBackup(String backupFile) {
 
@@ -282,6 +312,53 @@ public class BackupConfigService {
         DATETIME
     }
 
+    public BackupHistoryDTO mapToHistoryDTO(BackupHistory entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        return new BackupHistoryDTO(
+                entity.getId(),
+                entity.getBackupDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
+                entity.getBackupTypes(),
+                mapStatusForDisplay(entity.getStatus()),
+                mapMethodForDisplay(entity.getMethod()),
+                entity.getFileSize(),
+                entity.getLocation());
+    }
+
+    /**
+     * Converts list of BackupHistory entities to DTOs
+     */
+    public List<BackupHistoryDTO> mapToHistoryDTOList(List<BackupHistory> entities) {
+        if (entities == null) {
+            return Collections.emptyList();
+        }
+        return entities.stream()
+                .map(this::mapToHistoryDTO)
+                .collect(Collectors.toList());
+    }
+
+    // ======================
+    // HELPER METHODS
+    // ======================
+
+    private String mapStatusForDisplay(String status) {
+        return "SUCCESS".equals(status) ? "SUCCESS" : "FAILED";
+    }
+
+    private String mapMethodForDisplay(String method) {
+        return "AUTOMATIC".equals(method) ? "AUTOMATIC" : "MANUAL";
+    }
+
+    private String formatFileSize(long bytes) {
+        if (bytes < 1024)
+            return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(1024));
+        String pre = "KMGTPE".charAt(exp - 1) + "";
+        return String.format("%.2f %sB", bytes / Math.pow(1024, exp), pre);
+    }
+
     // ===================================================================
     // MAPPING FUNCTIONS (readable, at the bottom)
     // ===================================================================
@@ -301,142 +378,161 @@ public class BackupConfigService {
     }
 
     private Map<String, Object> mapUser(Object userObj) {
-        if (!(userObj instanceof UserDTO)) {
-            throw new IllegalArgumentException("Expected UserDTO instance");
-        }
-        UserDTO user = (UserDTO) userObj;
-
         Map<String, Object> map = new LinkedHashMap<>();
-        map.put("ID", user.getId());
-        map.put("Name", user.getName());
-        map.put("Employee ID", user.getEmployeeId());
-        map.put("Email", user.getEmail());
-        map.put("Status", user.getStatus() != null ? user.getStatus().name() : "");
-        map.put("Designation", user.getDesignation());
-        map.put("Nationality", user.getNationality());
-        map.put("Phone Number", user.getPhoneNumber());
 
-        // ✅ Keep as LocalDate/LocalDateTime (for Excel formatting)
-        map.put("Join Date", user.getJoinDate());
-        map.put("Created At", user.getCreatedAt());
-        map.put("Activated At", user.getActivatedAt());
+        if (userObj instanceof User) {
+            User user = (User) userObj;
+            map.put("ID", user.getId());
+            map.put("Name", user.getName());
+            map.put("Employee ID", user.getEmployeeId());
+            map.put("Email", user.getEmail());
+            map.put("Status", user.getStatus() != null ? user.getStatus().name() : "");
+            map.put("Designation", user.getDesignation());
+            map.put("Nationality", user.getNationality());
+            map.put("Phone Number", user.getPhoneNumber());
+            map.put("Join Date", user.getJoinDate());
+            map.put("Created At", user.getCreatedAt());
+            map.put("Activated At", user.getActivatedAt());
 
-        // Roles
-        String roleNames = user.getRoleNames() != null
-                ? String.join(", ", user.getRoleNames())
-                : "";
-        map.put("Roles", roleNames);
+            String roleNames = user.getRoles() != null
+                    ? user.getRoles().stream()
+                            .map(role -> role.getName().name()) // Assuming Role.getName() returns enum, then .name()
+                                                                // gives string
+                            .collect(Collectors.joining(", "))
+                    : "";
+            map.put("Roles", roleNames);
+
+        } else if (userObj instanceof UserDTO) {
+            UserDTO user = (UserDTO) userObj;
+            map.put("ID", user.getId());
+            map.put("Name", user.getName());
+            map.put("Employee ID", user.getEmployeeId());
+            map.put("Email", user.getEmail());
+            map.put("Status", user.getStatus() != null ? user.getStatus().name() : "");
+            map.put("Designation", user.getDesignation());
+            map.put("Nationality", user.getNationality());
+            map.put("Phone Number", user.getPhoneNumber());
+            map.put("Join Date", user.getJoinDate());
+            map.put("Created At", user.getCreatedAt());
+            map.put("Activated At", user.getActivatedAt());
+            map.put("Roles", user.getRoleNames() != null ? String.join(", ", user.getRoleNames()) : "");
+
+        } else {
+            throw new IllegalArgumentException("Expected User or UserDTO instance");
+        }
 
         return map;
     }
 
     private Map<String, Object> mapArea(Object areaObj) {
-    Area area;
-    if (areaObj instanceof Area) {
-        area = (Area) areaObj;
-    } else if (areaObj instanceof AreaDTO) {
-        AreaDTO dto = (AreaDTO) areaObj;
-        area = new Area();
-        area.setId(dto.getId());
-        area.setCode(dto.getCode());
-        area.setName(dto.getName());
-        area.setStatus(dto.getStatus());
-        area.setDescription(dto.getDescription());
-        if (dto.getResponsiblePerson() != null) {
-            User rp = new User();
-            rp.setName(dto.getResponsiblePerson().getName());
-            rp.setEmployeeId(dto.getResponsiblePerson().getEmployeeId());
-            area.setResponsiblePerson(rp);
+        Area area;
+        if (areaObj instanceof Area) {
+            area = (Area) areaObj;
+        } else if (areaObj instanceof AreaDTO) {
+            AreaDTO dto = (AreaDTO) areaObj;
+            area = new Area();
+            area.setId(dto.getId());
+            area.setCode(dto.getCode());
+            area.setName(dto.getName());
+            area.setStatus(dto.getStatus());
+            area.setDescription(dto.getDescription());
+            if (dto.getResponsiblePerson() != null) {
+                User rp = new User();
+                rp.setName(dto.getResponsiblePerson().getName());
+                rp.setEmployeeId(dto.getResponsiblePerson().getEmployeeId());
+                area.setResponsiblePerson(rp);
+            }
+        } else {
+            throw new IllegalArgumentException("Expected Area or AreaDTO instance");
         }
-    } else {
-        throw new IllegalArgumentException("Expected Area or AreaDTO instance");
+
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("ID", area.getId());
+        map.put("Code", area.getCode());
+        map.put("Name", area.getName());
+        map.put("Status", area.getStatus() != null ? area.getStatus().name() : "");
+        map.put("Description", area.getDescription());
+        map.put("Responsible Person Name",
+                (area.getResponsiblePerson() != null) ? area.getResponsiblePerson().getName() : "");
+        map.put("Responsible Person ID",
+                (area.getResponsiblePerson() != null) ? area.getResponsiblePerson().getEmployeeId() : "");
+
+        return map;
     }
-
-    Map<String, Object> map = new LinkedHashMap<>();
-    map.put("ID", area.getId());
-    map.put("Code", area.getCode());
-    map.put("Name", area.getName());
-    map.put("Status", area.getStatus() != null ? area.getStatus().name() : "");
-    map.put("Description", area.getDescription());
-    map.put("Responsible Person Name", (area.getResponsiblePerson() != null) ? area.getResponsiblePerson().getName() : "");
-    map.put("Responsible Person ID", (area.getResponsiblePerson() != null) ? area.getResponsiblePerson().getEmployeeId() : "");
-
-    return map;
-}
 
     private Map<String, Object> mapEquipment(Object equipmentObj) {
-    Equipment equipment;
-    if (equipmentObj instanceof Equipment) {
-        equipment = (Equipment) equipmentObj;
-    } else if (equipmentObj instanceof EquipmentDTO) {
-        EquipmentDTO dto = (EquipmentDTO) equipmentObj;
-        equipment = new Equipment();
-        equipment.setId(dto.getId());
-        equipment.setCode(dto.getCode());
-        equipment.setName(dto.getName());
-        equipment.setModel(dto.getModel());
-        equipment.setUnit(dto.getUnit());
-        equipment.setQty(dto.getQty());
-        equipment.setManufacturer(dto.getManufacturer());
-        equipment.setSerialNo(dto.getSerialNo());
-        equipment.setManufacturedDate(dto.getManufacturedDate());
-        equipment.setCommissionedDate(dto.getCommissionedDate());
-        equipment.setCapacity(dto.getCapacity());
-        equipment.setRemarks(dto.getRemarks());
-        equipment.setImage(dto.getImage());
-    } else {
-        throw new IllegalArgumentException("Expected Equipment or EquipmentDTO instance");
+        Equipment equipment;
+        if (equipmentObj instanceof Equipment) {
+            equipment = (Equipment) equipmentObj;
+        } else if (equipmentObj instanceof EquipmentDTO) {
+            EquipmentDTO dto = (EquipmentDTO) equipmentObj;
+            equipment = new Equipment();
+            equipment.setId(dto.getId());
+            equipment.setCode(dto.getCode());
+            equipment.setName(dto.getName());
+            equipment.setModel(dto.getModel());
+            equipment.setUnit(dto.getUnit());
+            equipment.setQty(dto.getQty());
+            equipment.setManufacturer(dto.getManufacturer());
+            equipment.setSerialNo(dto.getSerialNo());
+            equipment.setManufacturedDate(dto.getManufacturedDate());
+            equipment.setCommissionedDate(dto.getCommissionedDate());
+            equipment.setCapacity(dto.getCapacity());
+            equipment.setRemarks(dto.getRemarks());
+            equipment.setImage(dto.getImage());
+        } else {
+            throw new IllegalArgumentException("Expected Equipment or EquipmentDTO instance");
+        }
+
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("ID", equipment.getId());
+        map.put("Code", equipment.getCode());
+        map.put("Name", equipment.getName());
+        map.put("Model", equipment.getModel());
+        map.put("Unit", equipment.getUnit());
+        map.put("Quantity", equipment.getQty());
+        map.put("Manufacturer", equipment.getManufacturer());
+        map.put("Serial No", equipment.getSerialNo());
+        map.put("Manufactured Date", equipment.getManufacturedDate());
+        map.put("Commissioned Date", equipment.getCommissionedDate());
+        map.put("Capacity", equipment.getCapacity());
+        map.put("Remarks", equipment.getRemarks());
+        map.put("Image", equipment.getImage());
+
+        return map;
     }
-
-    Map<String, Object> map = new LinkedHashMap<>();
-    map.put("ID", equipment.getId());
-    map.put("Code", equipment.getCode());
-    map.put("Name", equipment.getName());
-    map.put("Model", equipment.getModel());
-    map.put("Unit", equipment.getUnit());
-    map.put("Quantity", equipment.getQty());
-    map.put("Manufacturer", equipment.getManufacturer());
-    map.put("Serial No", equipment.getSerialNo());
-    map.put("Manufactured Date", equipment.getManufacturedDate());
-    map.put("Commissioned Date", equipment.getCommissionedDate());
-    map.put("Capacity", equipment.getCapacity());
-    map.put("Remarks", equipment.getRemarks());
-    map.put("Image", equipment.getImage());
-
-    return map;
-}
 
     private Map<String, Object> mapPart(Object partObj) {
-    Part part;
-    if (partObj instanceof Part) {
-        part = (Part) partObj;
-    } else if (partObj instanceof PartDTO) {
-        PartDTO dto = (PartDTO) partObj;
-        part = new Part();
-        part.setId(dto.getId());
-        part.setCode(dto.getCode());
-        part.setName(dto.getName());
-        part.setDescription(dto.getDescription());
-        part.setCategory(dto.getCategory());
-        part.setSupplier(dto.getSupplier());
-        part.setImage(dto.getImage());
-        part.setStockQuantity(dto.getStockQuantity());
-    } else {
-        throw new IllegalArgumentException("Expected Part or PartDTO instance");
+        Part part;
+        if (partObj instanceof Part) {
+            part = (Part) partObj;
+        } else if (partObj instanceof PartDTO) {
+            PartDTO dto = (PartDTO) partObj;
+            part = new Part();
+            part.setId(dto.getId());
+            part.setCode(dto.getCode());
+            part.setName(dto.getName());
+            part.setDescription(dto.getDescription());
+            part.setCategory(dto.getCategory());
+            part.setSupplier(dto.getSupplier());
+            part.setImage(dto.getImage());
+            part.setStockQuantity(dto.getStockQuantity());
+        } else {
+            throw new IllegalArgumentException("Expected Part or PartDTO instance");
+        }
+
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("ID", part.getId());
+        map.put("Code", part.getCode());
+        map.put("Name", part.getName());
+        map.put("Description", part.getDescription());
+        map.put("Category", part.getCategory());
+        map.put("Supplier", part.getSupplier());
+        map.put("Image", part.getImage());
+        map.put("Stock Quantity", part.getStockQuantity());
+
+        return map;
     }
-
-    Map<String, Object> map = new LinkedHashMap<>();
-    map.put("ID", part.getId());
-    map.put("Code", part.getCode());
-    map.put("Name", part.getName());
-    map.put("Description", part.getDescription());
-    map.put("Category", part.getCategory());
-    map.put("Supplier", part.getSupplier());
-    map.put("Image", part.getImage());
-    map.put("Stock Quantity", part.getStockQuantity());
-
-    return map;
-}
 
     private Map<String, Object> mapComplaint(Object complaintObj) {
         if (!(complaintObj instanceof Complaint)) {

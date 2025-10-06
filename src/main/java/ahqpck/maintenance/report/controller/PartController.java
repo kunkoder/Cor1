@@ -1,11 +1,15 @@
 package ahqpck.maintenance.report.controller;
 
+import ahqpck.maintenance.report.config.UserDetailsImpl;
 import ahqpck.maintenance.report.dto.PartDTO;
+import ahqpck.maintenance.report.dto.UserDTO;
 import ahqpck.maintenance.report.service.PartService;
+import ahqpck.maintenance.report.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -22,6 +26,7 @@ import java.util.stream.Collectors;
 public class PartController {
 
     private final PartService partService;
+    private final UserService userService;
 
     @GetMapping
     public String listParts(
@@ -30,9 +35,22 @@ public class PartController {
             @RequestParam(defaultValue = "10") @Min(1) int size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "true") boolean asc,
+            Authentication authentication,
             Model model) {
 
         try {
+            String currentUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                currentUserId = userDetails.getId();
+            }
+
+            // Only fetch current user if needed
+            if (currentUserId != null) {
+                UserDTO currentUser = userService.getUserById(currentUserId);
+                model.addAttribute("currentUser", currentUser);
+            }
+
             var partsPage = partService.getAllParts(keyword, page, size, sortBy, asc);
             model.addAttribute("parts", partsPage);
             model.addAttribute("keyword", keyword);

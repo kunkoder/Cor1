@@ -64,7 +64,7 @@ public class DashboardService {
     }
 
     public AssigneeDailyStatusDTO getAssigneeDailyStatus(LocalDateTime from, LocalDateTime to) {
-
+        // Set default date range if not provided
         if (from == null || to == null) {
             to = LocalDateTime.now().with(LocalTime.MAX);
             from = to.minusDays(2);
@@ -73,32 +73,31 @@ public class DashboardService {
         LocalDate fromDate = from.toLocalDate();
         LocalDate toDate = to.toLocalDate();
 
-        // Validate: from <= to
+        // Validate date range
         if (fromDate.isAfter(toDate)) {
             throw new IllegalArgumentException("Invalid date range: 'from' must be before or equal to 'to'");
         }
 
-        List<Object[]> results = dashboardRepository.getAssigneeDailyStatus(fromDate, toDate);
+        // Fetch data from repository
+        List<Object[]> dailyResults = dashboardRepository.getAssigneeDailyStatus(fromDate, toDate);
+        List<Object[]> totalResults = dashboardRepository.getAssigneeTotalStatus();
 
-        // Generate all dates in range
+        // Generate date range
         List<LocalDate> dateList = Stream.iterate(fromDate, d -> d.plusDays(1))
                 .takeWhile(d -> !d.isAfter(toDate))
                 .collect(Collectors.toList());
-
         int numDays = dateList.size();
 
+        // Build assignee map with daily data
         Map<String, AssigneeDailyStatusDetailDTO> assigneeMap = new LinkedHashMap<>();
 
-        // Pre-initialize all assignees with empty lists of zeros
-        for (Object[] row : results) {
-            String assigneeName = (String) row[0]; // u.name
-            String assigneeEmpId = (String) row[1]; // u.employee_id
+        // Initialize assignees from daily results
+        for (Object[] row : dailyResults) {
+            String assigneeName = (String) row[0];
+            String assigneeEmpId = (String) row[1];
+            String key = assigneeName + "|" + assigneeEmpId;
 
-            // Create a unique key using name + empId to avoid collisions if names are
-            // duplicated
-            String assigneeKey = assigneeName + "|" + assigneeEmpId;
-
-            assigneeMap.computeIfAbsent(assigneeKey, k -> {
+            assigneeMap.computeIfAbsent(key, k -> {
                 AssigneeDailyStatusDetailDTO dto = new AssigneeDailyStatusDetailDTO();
                 dto.setAssigneeName(assigneeName);
                 dto.setAssigneeEmpId(assigneeEmpId);
@@ -106,52 +105,60 @@ public class DashboardService {
                 dto.setOpen(new ArrayList<>(zeros));
                 dto.setPending(new ArrayList<>(zeros));
                 dto.setClosed(new ArrayList<>(zeros));
+                dto.setTotalOpen(0);
+                dto.setTotalPending(0);
+                dto.setTotalClosed(0);
                 return dto;
             });
         }
 
-        // Now populate the counts
-        for (Object[] row : results) {
+        // Populate daily counts
+        for (Object[] row : dailyResults) {
             String assigneeName = (String) row[0];
             String assigneeEmpId = (String) row[1];
             String status = (String) row[2];
             LocalDate reportDate = ((java.sql.Date) row[3]).toLocalDate();
-            Long count = ((Number) row[4]).longValue();
+            int count = Math.toIntExact(((Number) row[4]).longValue());
 
-            if (!dateList.contains(reportDate)) {
+            if (!dateList.contains(reportDate))
                 continue;
-            }
 
             int dayIndex = dateList.indexOf(reportDate);
+            String key = assigneeName + "|" + assigneeEmpId;
+            AssigneeDailyStatusDetailDTO dto = assigneeMap.get(key);
 
-            // Use composite key to look up DTO
-            String assigneeKey = assigneeName + "|" + assigneeEmpId;
-            AssigneeDailyStatusDetailDTO dto = assigneeMap.get(assigneeKey);
-
-            if ("OPEN".equals(status)) {
-                List<Integer> open = dto.getOpen();
-                open.set(dayIndex, Math.toIntExact(count));
-                dto.setOpen(open); // Not strictly needed since it's mutable, but safe
-            } else if ("PENDING".equals(status)) {
-                List<Integer> pending = dto.getPending();
-                pending.set(dayIndex, Math.toIntExact(count));
-                dto.setPending(pending);
-            } else if ("CLOSED".equals(status)) {
-                List<Integer> closed = dto.getClosed();
-                closed.set(dayIndex, Math.toIntExact(count));
-                dto.setClosed(closed);
+            if (dto != null) {
+                switch (status) {
+                    case "OPEN" -> dto.getOpen().set(dayIndex, count);
+                    case "PENDING" -> dto.getPending().set(dayIndex, count);
+                    case "CLOSED" -> dto.getClosed().set(dayIndex, count);
+                }
             }
         }
 
-        AssigneeDailyStatusDTO response = new AssigneeDailyStatusDTO();
-        response.setDates(dateList.stream().map(LocalDate::toString).collect(Collectors.toList()));
-        response.setData(new ArrayList<>(assigneeMap.values()));
+        // Populate all-time totals
+        for (Object[] row : totalResults) {
+            String assigneeName = (String) row[0];
+            String assigneeEmpId = (String) row[1];
+            String status = (String) row[2];
+            int count = Math.toIntExact(((Number) row[3]).longValue());
 
-        return response;
-    }
+            String key = assigneeName + "|" + assigneeEmpId;
+            AssigneeDailyStatusDetailDTO dto = assigneeMap.get(key);
 
-    public List<EquipmentComplaintCountDTO> getEquipmentComplaintCount() {
-        return dashboardRepository.getEquipmentComplaintCount();
+            if (dto != null) {
+                switch (status) {
+                    case "OPEN" -> dto.setTotalOpen(count);
+                    case "PENDING" -> dto.setTotalPending(count);
+                    case "CLOSED" -> dto.setTotalClosed(count);
+                }
+            }
+        }
+
+        // Build response
+        return new AssigneeDailyStatusDTO(
+                dateList.stream().map(LocalDate::toString).collect(Collectors.toList()),
+                new ArrayList<>(assigneeMap.values()));
     }
 
     public List<DailyBreakdownDTO> getDailyBreakdownTime(LocalDate from, LocalDate to) {

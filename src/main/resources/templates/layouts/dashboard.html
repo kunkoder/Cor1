@@ -75,16 +75,18 @@
 					<!-- User Profile -->
 					<div class="user">
 						<div class="avatar-sm float-left mr-3">
-							<img th:src="${#authentication.principal.image != null} 
+							<!-- <img th:src="${#authentication.principal.image != null} 
 								? @{/upload/user/image/__${#authentication.principal.image}__} 
 								: @{/assets/img/arashmil.jpg}" alt="User Avatar" class="avatar-img rounded-circle border border-primary"
-								style="border-width: 2px !important;">
+								style="border-width: 2px !important;"> -->
 						</div>
 						<div class="info">
 							<a data-toggle="collapse" href="#collapseUserMenu" aria-expanded="false">
 								<span>
-									<span th:text="${#authentication.principal.name}"></span>
-									<span class="user-level" th:text="${#authentication.principal.designation}"></span>
+									<span th:text="${currentUser.name}"></span>
+									<span class="user-level" th:text="${currentUser.designation}"></span>
+									<!-- <span th:text="${#authentication.principal.name}"></span>
+									<span class="user-level" th:text="${#authentication.principal.designation}"></span> -->
 									<span class="caret"></span>
 								</span>
 							</a>

@@ -76,12 +76,6 @@ public class DashboardRestController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/equipment-complaint-count")
-    public ResponseEntity<List<EquipmentComplaintCountDTO>> getEquipmentComplaintCount() {
-        List<EquipmentComplaintCountDTO> data = dashboardService.getEquipmentComplaintCount();
-        return ResponseEntity.ok(data);
-    }
-
     @GetMapping("/daily-breakdown")
     public ResponseEntity<List<DailyBreakdownDTO>> getDailyBreakdown(
             @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,

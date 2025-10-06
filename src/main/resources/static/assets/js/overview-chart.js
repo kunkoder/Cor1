@@ -497,7 +497,6 @@ function initComplaintChartForm() {
 }
 
 // Engineers Responsibility
-
 let currentFrom = null;
 let currentTo = null;
 

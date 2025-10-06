@@ -15,4 +15,8 @@ public class AssigneeDailyStatusDetailDTO {
     private List<Integer> open;
     private List<Integer> pending;
     private List<Integer> closed;
+
+    private int totalOpen;
+    private int totalPending;
+    private int totalClosed;
 }

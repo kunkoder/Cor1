@@ -38,6 +38,7 @@
                                         </option>
                                     </datalist>
                                     <select class="d-none" th:field="*{area.code}" id="areaSelect">
+                                        <option value="">Select Area</option>
                                         <option th:each="area : ${areas}" th:value="${area.code}">Area</option>
                                     </select>
                                 </div>
@@ -59,6 +60,7 @@
                                         </option>
                                     </datalist>
                                     <select class="d-none" th:field="*{equipment.code}" id="equipmentSelect">
+                                        <option value="">Select Equipment</option>
                                         <option th:each="equipment : ${equipments}" th:value="${equipment.code}">
                                             Equipment</option>
                                     </select>
@@ -395,6 +397,17 @@
                 };
                 reader.readAsDataURL(file);
             }
+        }
+
+        // Set today's date
+        const today = new Date();
+
+        // Set start time (YYYY-MM-DDTHH:mm in LOCAL time)
+        const timeInput = document.querySelector('input[name="reportDate"]');
+        if (timeInput && !timeInput.value) {
+            timeInput.value = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+                .toISOString()
+                .slice(0, 16);
         }
     </script>
 </div>

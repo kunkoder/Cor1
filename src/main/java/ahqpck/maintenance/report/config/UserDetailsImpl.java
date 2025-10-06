@@ -20,6 +20,10 @@ public class UserDetailsImpl implements UserDetails {
         return user;
     }
 
+    public String getId() {
+        return user.getId();
+    }
+
     public String getName() {
         return user.getName();
     }

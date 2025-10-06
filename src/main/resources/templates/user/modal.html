@@ -173,6 +173,7 @@
                     <form th:action="@{/users/update}" th:object="${user}" method="post" enctype="multipart/form-data"
                         id="formEdit">
                         <input type="hidden" name="id" id="editId">
+                        <input type="hidden" name="currentUrl" id="currentUrl">
 
                         <div class="form-group">
                             <label>Full Name <span class="text-danger">*</span></label>
@@ -512,6 +513,11 @@
 
         // Unified Tag Input Logic
         document.addEventListener("DOMContentLoaded", function () {
+            const currentUrlInput = document.getElementById('currentUrl');
+            if (currentUrlInput) {
+                currentUrlInput.value = window.location.href;
+            }
+
             const datalist = document.getElementById("roleOptions");
             const options = Array.from(datalist?.options || []).map(opt => opt.value);
 

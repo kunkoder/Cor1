@@ -47,8 +47,8 @@ public class BackupHistoryService {
         dto.setBackupTypes(history.getBackupTypes());
         
         // Convert status to display format
-        dto.setStatus("SUCCESS".equals(history.getStatus()) ? "Success" : "Failed");
-        dto.setMethod("AUTOMATIC".equals(history.getMethod()) ? "Automatic" : "Manual");
+        dto.setStatus("SUCCESS".equals(history.getStatus()) ? "SUCCESS" : "FAILED");
+        dto.setMethod("AUTOMATIC".equals(history.getMethod()) ? "AUTOMATIC" : "MANUAL");
         dto.setFileSize(history.getFileSize());
         dto.setLocation(history.getLocation());
         

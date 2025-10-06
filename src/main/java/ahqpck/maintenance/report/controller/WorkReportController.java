@@ -1,5 +1,6 @@
 package ahqpck.maintenance.report.controller;
 
+import ahqpck.maintenance.report.config.UserDetailsImpl;
 import ahqpck.maintenance.report.dto.AreaDTO;
 import ahqpck.maintenance.report.dto.EquipmentDTO;
 import ahqpck.maintenance.report.dto.UserDTO;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -57,6 +59,7 @@ public class WorkReportController {
             @RequestParam(defaultValue = "10") String size,
             @RequestParam(defaultValue = "reportDate") String sortBy,
             @RequestParam(defaultValue = "false") boolean asc,
+            Authentication authentication,
             Model model) {
 
         try {
@@ -66,8 +69,21 @@ public class WorkReportController {
             LocalDateTime from = reportDateFrom != null ? reportDateFrom.atStartOfDay() : null;
             LocalDateTime to = reportDateTo != null ? reportDateTo.atTime(LocalTime.MAX) : null;
 
+            String currentUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                currentUserId = userDetails.getId();
+            }
+
+            // Only fetch current user if needed
+            if (currentUserId != null) {
+                UserDTO currentUser = userService.getUserById(currentUserId);
+                model.addAttribute("currentUser", currentUser);
+            }
+
             Page<WorkReportDTO> reportPage = workReportService.getAllWorkReports(keyword, from, to,
                     group, field, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
+            
             model.addAttribute("workReports", reportPage);
             model.addAttribute("keyword", keyword);
             model.addAttribute("reportDateFrom", reportDateFrom);

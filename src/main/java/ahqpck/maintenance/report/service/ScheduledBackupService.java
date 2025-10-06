@@ -39,10 +39,11 @@ public class ScheduledBackupService {
                 boolean isBackupDay = daysSinceStart >= 0 && daysSinceStart % config.getIntervalDays() == 0;
 
                 // Check if current time matches backup time (within 1-minute window)
-                boolean isBackupTime = currentTime.isAfter(config.getBackupTime()) || 
-                                     currentTime.equals(config.getBackupTime());
+                boolean isBackupTime = currentTime.getHour() == config.getBackupTime().getHour() &&
+                        currentTime.getMinute() == config.getBackupTime().getMinute();
 
-                // Check if not already executed today (simplified - in real app use execution log)
+                // Check if not already executed today (simplified - in real app use execution
+                // log)
                 if (isBackupDay && isBackupTime) {
                     try {
                         Set<String> backupTypes = Stream.of(config.getBackupTypes().split(","))
@@ -50,10 +51,10 @@ public class ScheduledBackupService {
                                 .filter(type -> !type.isEmpty())
                                 .collect(Collectors.toSet());
 
-                        log.info("Executing scheduled backup: folder={}, types={}", 
+                        log.info("Executing scheduled backup: folder={}, types={}",
                                 config.getBackupFolder(), backupTypes);
-                        
-                        backupConfigService.backupNow(config.getBackupFolder(), backupTypes);
+
+                        backupConfigService.backupNow(config.getBackupFolder(), backupTypes, "AUTOMATIC");
                         log.info("Scheduled backup completed successfully");
                     } catch (Exception e) {
                         log.error("Failed to execute scheduled backup", e);

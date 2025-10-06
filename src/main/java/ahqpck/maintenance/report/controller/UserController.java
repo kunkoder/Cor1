@@ -1,5 +1,6 @@
 package ahqpck.maintenance.report.controller;
 
+import ahqpck.maintenance.report.config.UserDetailsImpl;
 import ahqpck.maintenance.report.dto.ComplaintDTO;
 import ahqpck.maintenance.report.dto.RoleDTO;
 import ahqpck.maintenance.report.dto.UserDTO;
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -69,12 +71,25 @@ public class UserController {
             @RequestParam(defaultValue = "10") String size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "true") boolean asc,
+            Authentication authentication,
             Model model) {
 
         try {
             int zeroBasedPage = page - 1;
             int parsedSize = "All".equalsIgnoreCase(size) ? Integer.MAX_VALUE : Integer.parseInt(size);
-
+            
+            String currentUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                currentUserId = userDetails.getId();
+            }
+            
+            // Only fetch current user if needed
+            if (currentUserId != null) {
+                UserDTO currentUser = userService.getUserById(currentUserId);
+                model.addAttribute("currentUser", currentUser);
+            }
+            
             Page<UserDTO> userPage = userService.getAllUsers(keyword, zeroBasedPage, parsedSize, sortBy, asc);
 
             model.addAttribute("users", userPage);
@@ -100,10 +115,20 @@ public class UserController {
 
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'ENGINEER', 'VIEWER')")
     @GetMapping("/profile")
-    public String getUserDetail(Principal principal, Model model) {
+    public String getUserDetail(Authentication authentication, Model model) {
         try {
-            UserDTO userDTO = userService.getUserByEmail(principal.getName());
-            model.addAttribute("user", userDTO);
+            String currentUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                currentUserId = userDetails.getId();
+            }
+
+            // Only fetch current user if needed
+            if (currentUserId != null) {
+                UserDTO currentUser = userService.getUserById(currentUserId);
+                model.addAttribute("currentUser", currentUser);
+            }
+            
             model.addAttribute("title", "User Detail");
 
             return "user/profile";
@@ -163,9 +188,11 @@ public class UserController {
             BindingResult bindingResult,
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             @RequestParam(value = "deleteImage", required = false, defaultValue = "false") boolean deleteImage,
+            @RequestParam(value = "currentUrl", required = false) String currentUrl, // Changed from boolean to String
             RedirectAttributes ra) {
 
         System.out.println("User DTO: " + userDTO);
+        System.out.println("Current URL: " + currentUrl);
 
         if (userDTO.getRoleNames() != null && !userDTO.getRoleNames().isEmpty()) {
             Set<RoleDTO> roleDTOs = userDTO.getRoleNames().stream()
@@ -181,18 +208,26 @@ public class UserController {
 
         if (WebUtil.hasErrors(bindingResult)) {
             ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
-            return "redirect:/users";
+            // Redirect to current URL if available, otherwise fallback
+            return currentUrl != null && !currentUrl.isEmpty()
+                    ? "redirect:" + currentUrl
+                    : "redirect:/users";
         }
 
         try {
             userService.updateUser(userDTO, imageFile, deleteImage);
             ra.addFlashAttribute("success", "User updated successfully.");
-            return "redirect:/users";
+            // Redirect to current URL if available, otherwise fallback
+            return currentUrl != null && !currentUrl.isEmpty()
+                    ? "redirect:" + currentUrl
+                    : "redirect:/users";
 
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
             ra.addFlashAttribute("userDTO", userDTO);
-            return "redirect:/users";
+            return currentUrl != null && !currentUrl.isEmpty()
+                    ? "redirect:" + currentUrl
+                    : "redirect:/users";
         }
     }
 

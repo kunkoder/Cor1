@@ -1,5 +1,6 @@
 package ahqpck.maintenance.report.controller;
 
+import ahqpck.maintenance.report.config.UserDetailsImpl;
 import ahqpck.maintenance.report.dto.*;
 import ahqpck.maintenance.report.entity.Area;
 import ahqpck.maintenance.report.entity.Complaint;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -67,6 +69,7 @@ public class ComplaintController {
             @RequestParam(defaultValue = "10") String size,
             @RequestParam(defaultValue = "reportDate") String sortBy,
             @RequestParam(defaultValue = "false") boolean asc,
+            Authentication authentication,
             Model model) {
 
         try {
@@ -75,6 +78,18 @@ public class ComplaintController {
 
             LocalDateTime from = reportDateFrom != null ? reportDateFrom.atStartOfDay() : null;
             LocalDateTime to = reportDateTo != null ? reportDateTo.atTime(LocalTime.MAX) : null;
+
+            String currentUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                currentUserId = userDetails.getId();
+            }
+
+            // Only fetch current user if needed
+            if (currentUserId != null) {
+                UserDTO currentUser = userService.getUserById(currentUserId);
+                model.addAttribute("currentUser", currentUser);
+            }
 
             Page<ComplaintDTO> complaintPage = complaintService.getAllComplaints(keyword, from, to, assigneeEmpId,
                     state, group, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
@@ -110,9 +125,22 @@ public class ComplaintController {
 
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'ENGINEER')")
     @GetMapping("/{id}")
-    public String getComplaintDetail(@PathVariable String id, Model model) {
+    public String getComplaintDetail(@PathVariable String id, Authentication authentication, Model model) {
         try {
+            String currentUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                currentUserId = userDetails.getId();
+            }
+
+            // Only fetch current user if needed
+            if (currentUserId != null) {
+                UserDTO currentUser = userService.getUserById(currentUserId);
+                model.addAttribute("currentUser", currentUser);
+            }
+
             ComplaintDTO complaintDTO = complaintService.getComplaintById(id);
+            
             model.addAttribute("complaint", complaintDTO);
             model.addAttribute("title", "Complaint Detail");
 

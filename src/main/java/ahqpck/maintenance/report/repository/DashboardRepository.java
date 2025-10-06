@@ -176,15 +176,17 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
 
     @Query(value = """
             SELECT
-                e.name AS equipment_name,
-                e.code AS equipment_code,
-                CAST(COUNT(c.id) AS SIGNED) AS total_complaints
-            FROM equipments e
-            LEFT JOIN complaints c ON e.code = c.equipment_code
-            GROUP BY e.id, e.code, e.name
-            ORDER BY total_complaints DESC
+                u.name AS assignee_name,
+                u.employee_id AS assignee_id,
+                c.status,
+                COUNT(*) AS count
+            FROM complaints c
+            JOIN users u ON c.assignee = u.id
+            WHERE c.status IN ('OPEN', 'PENDING', 'CLOSED')
+            GROUP BY u.name, u.employee_id, c.status
+            ORDER BY u.name
             """, nativeQuery = true)
-    List<EquipmentComplaintCountDTO> getEquipmentComplaintCount();
+    List<Object[]> getAssigneeTotalStatus();
 
     // Daily breakdown: last N days
     @Query(value = """

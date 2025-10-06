@@ -1,8 +1,10 @@
 package ahqpck.maintenance.report.controller;
 
+import ahqpck.maintenance.report.config.UserDetailsImpl;
 import ahqpck.maintenance.report.dto.EquipmentDTO;
 import ahqpck.maintenance.report.dto.UserDTO;
 import ahqpck.maintenance.report.service.EquipmentService;
+import ahqpck.maintenance.report.service.UserService;
 import ahqpck.maintenance.report.util.ImportUtil;
 import ahqpck.maintenance.report.util.WebUtil;
 import jakarta.validation.Valid;
@@ -12,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -33,6 +36,7 @@ import java.util.stream.Collectors;
 public class EquipmentController {
 
     private final EquipmentService equipmentService;
+    private final UserService userService;
 
     @Value("${app.upload-equipment-image.dir:src/main/resources/static/upload/equipment/image}")
     private String uploadDir;
@@ -46,11 +50,24 @@ public class EquipmentController {
             @RequestParam(defaultValue = "10") String size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "true") boolean asc,
+            Authentication authentication,
             Model model) {
 
         try {
             int zeroBasedPage = page - 1;
             int parsedSize = "All".equalsIgnoreCase(size) ? Integer.MAX_VALUE : Integer.parseInt(size);
+
+            String currentUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                currentUserId = userDetails.getId();
+            }
+
+            // Only fetch current user if needed
+            if (currentUserId != null) {
+                UserDTO currentUser = userService.getUserById(currentUserId);
+                model.addAttribute("currentUser", currentUser);
+            }
 
             Page<EquipmentDTO> equipmentPage = equipmentService.getAllEquipments(keyword, zeroBasedPage, parsedSize, sortBy, asc);
             System.out.println("Equipment Page: " + equipmentPage.getContent());

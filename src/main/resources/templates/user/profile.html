@@ -37,7 +37,7 @@
                                 style="position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); z-index: 2;">
                                 <div class="avatar avatar-xxl">
                                     <img id="profileImagePreview"
-                                        th:src="${user.image != null} ? @{/upload/user/image/__${user.image}__} : @{/assets/img/arashmil.jpg}"
+                                        th:src="${currentUser.image != null} ? @{/upload/user/image/__${currentUser.image}__} : @{/assets/img/arashmil.jpg}"
                                         alt="Foto Profil"
                                         class="avatar-img rounded-circle border border-white border-3">
                                 </div>
@@ -70,7 +70,8 @@
                                     <form class="contact-form" th:action="@{/users/update}" method="POST"
                                         enctype="multipart/form-data">
                                         <!-- Hidden ID (use 'id' from UserDTO) -->
-                                        <input type="hidden" name="id" th:value="${user.id}">
+                                        <input type="hidden" name="id" th:value="${currentUser.id}">
+                                        <input type="hidden" name="currentUrl" id="currentUrl">
 
                                         <div class="form-row">
                                             <!-- Name -->
@@ -78,7 +79,7 @@
                                                 <div class="form-group">
                                                     <label for="name">Nama <span class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" id="name" name="name"
-                                                        th:value="${user.name}" required>
+                                                        th:value="${currentUser.name}" required>
                                                 </div>
                                             </div>
 
@@ -88,7 +89,7 @@
                                                     <label for="employeeId">Employee ID <span
                                                             class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" id="employeeId"
-                                                        name="employeeId" th:value="${user.employeeId}" required>
+                                                        name="employeeId" th:value="${currentUser.employeeId}" required>
                                                 </div>
                                             </div>
 
@@ -97,7 +98,7 @@
                                                 <div class="form-group">
                                                     <label for="email">Email <span class="text-danger">*</span></label>
                                                     <input type="email" class="form-control" id="email" name="email"
-                                                        th:value="${user.email}" required>
+                                                        th:value="${currentUser.email}" required>
                                                 </div>
                                             </div>
 
@@ -107,17 +108,17 @@
                                                     <label>Role <span class="text-danger">*</span></label>
                                                     <div class="mt-1">
                                                         <!-- Display current roles -->
-                                                        <span th:if="${#sets.isEmpty(user.roles)}" class="text-muted">No
+                                                        <span th:if="${#sets.isEmpty(currentUser.roles)}" class="text-muted">No
                                                             roles assigned</span>
-                                                        <span th:unless="${#sets.isEmpty(user.roles)}">
-                                                            <span th:each="role : ${user.roles}"
+                                                        <span th:unless="${#sets.isEmpty(currentUser.roles)}">
+                                                            <span th:each="role : ${currentUser.roles}"
                                                                 class="badge badge-primary rounded-pill px-3 py-2 mr-2 mb-1"
                                                                 th:text="${role.name}">
                                                             </span>
                                                         </span>
 
                                                         <!-- Hidden inputs to preserve roles during form submission -->
-                                                        <input type="hidden" th:each="role : ${user.roles}"
+                                                        <input type="hidden" th:each="role : ${currentUser.roles}"
                                                             name="roleNames" th:value="${role.name}" />
                                                     </div>
                                                 </div>
@@ -129,10 +130,10 @@
                                                     <label>Status <span class="text-danger">*</span></label>
                                                     <div class="mt-1">
                                                         <span class="badge badge-primary rounded-pill px-3 py-2"
-                                                            th:text="${user.status}">
+                                                            th:text="${currentUser.status}">
                                                         </span>
                                                         <!-- Hidden input for form submission (immutable) -->
-                                                        <input type="hidden" name="status" th:value="${user.status}" />
+                                                        <input type="hidden" name="status" th:value="${currentUser.status}" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -142,7 +143,7 @@
                                                 <div class="form-group">
                                                     <label for="phoneNumber">Phone Number</label>
                                                     <input type="text" class="form-control" id="phoneNumber"
-                                                        name="phoneNumber" th:value="${user.phoneNumber}">
+                                                        name="phoneNumber" th:value="${currentUser.phoneNumber}">
                                                 </div>
                                             </div>
 
@@ -150,7 +151,7 @@
                                                 <div class="form-group">
                                                     <label for="designation">Designation</label>
                                                     <input type="text" class="form-control" id="designation"
-                                                        name="designation" th:value="${user.designation}">
+                                                        name="designation" th:value="${currentUser.designation}">
                                                 </div>
                                             </div>
 
@@ -159,7 +160,7 @@
                                                     <label for="joinDate">Join Date</label>
                                                     <input type="date" class="form-control" id="joinDate"
                                                         name="joinDate"
-                                                        th:value="${#temporals.format(user.joinDate, 'yyyy-MM-dd')}">
+                                                        th:value="${#temporals.format(currentUser.joinDate, 'yyyy-MM-dd')}">
                                                 </div>
                                             </div>
 
@@ -167,7 +168,7 @@
                                                 <div class="form-group">
                                                     <label for="nationality">Nationality</label>
                                                     <input type="text" class="form-control" id="nationality"
-                                                        name="nationality" th:value="${user.nationality}">
+                                                        name="nationality" th:value="${currentUser.nationality}">
                                                 </div>
                                             </div>
 
@@ -258,6 +259,10 @@
         <!-- Update file input label -->
         <script>
             document.addEventListener('DOMContentLoaded', function () {
+                const currentUrlInput = document.getElementById('currentUrl');
+                if (currentUrlInput) {
+                    currentUrlInput.value = window.location.href;
+                }
                 document.getElementById('editImageInput')?.addEventListener('change', function (evt) {
                     const preview = document.getElementById('editImagePreview');
                     const file = evt.target.files[0];
