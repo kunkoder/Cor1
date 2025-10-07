@@ -96,7 +96,7 @@ document.querySelectorAll('.card-stats').forEach(card => {
         if (fromInput) params.append('reportDateFrom', fromInput.split('T')[0]);
         if (toInput) params.append('reportDateTo', toInput.split('T')[0]);
 
-        if (status) params.append('status', status);
+        if (status) params.append('state', status);
 
         params.append('sortBy', 'reportDate');
         params.append('asc', 'false');
@@ -333,7 +333,7 @@ function renderComplaintChart(labels, open, closed, pending, title) {
                 const url = new URL('/complaints', window.location.origin);
                 url.searchParams.set('reportDateFrom', encodeURIComponent(from));
                 url.searchParams.set('reportDateTo', encodeURIComponent(to));
-                url.searchParams.set('status', encodeURIComponent(status));
+                url.searchParams.set('state', encodeURIComponent(status));
                 url.searchParams.set('sortBy', 'reportDate');
                 url.searchParams.set('asc', 'false');
                 url.searchParams.set('size', '10');
@@ -499,142 +499,187 @@ function initComplaintChartForm() {
 // Engineers Responsibility
 let currentFrom = null;
 let currentTo = null;
+let totalData = [];
 
 function formatShort(dateStr) {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function fetchEngineerData(from = null, to = null) {
-    let url = `${baseUrl}/api/dashboards/assignee-daily-status`;
-    if (from && to) {
-        url += `?from=${from}&to=${to}`;
-    }
-
-    fetch(url)
+function fetchTotalStatus() {
+    return fetch(`${baseUrl}/api/dashboards/assignee-total-status`)
         .then(res => res.json())
         .then(data => {
-            currentFrom = data.dates[0];
-            currentTo = data.dates[data.dates.length - 1];
-
-            const dayHeaderRow = document.getElementById('dayHeaders');
-            const thead = dayHeaderRow.parentNode;
-
-            // 👇 STEP 1: Clear existing dynamic headers (date row + subheader row)
-            dayHeaderRow.innerHTML = ''; // Clear date headers
-
-            // Remove existing subheader row if exists (to prevent stacking)
-            const existingSubHeader = thead.querySelector('tr[data-subheader="true"]');
-            if (existingSubHeader) {
-                existingSubHeader.remove();
-            }
-
-            // Hide static status headers (Open, Pending, Closed)
-            document.getElementById('openHeader').colSpan = 0;
-            document.getElementById('pendingHeader').style.display = 'none';
-            document.getElementById('closedHeader').colSpan = 0;
-
-            const numDays = data.dates.length;
-
-            // 👇 STEP 2: Render new date headers (grouped by date)
-            for (let i = 0; i < numDays; i++) {
-                const dateShort = formatShort(data.dates[i]);
-                const thDate = document.createElement('th');
-
-                thDate.colSpan = 2;
-                thDate.classList.add('bg-primary');
-                thDate.style.verticalAlign = 'middle';
-                dayHeaderRow.appendChild(thDate);
-
-                const a = document.createElement('a');
-                a.href = `/complaints?reportDateFrom=${data.dates[i]}&reportDateTo=${data.dates[i]}`;
-                a.className = 'font-weight-bold text-white';
-                a.textContent = dateShort;
-                thDate.appendChild(a);
-            }
-
-            // 👇 STEP 3: Create and insert subheader row (Open / Closed)
-            const subHeaderRow = document.createElement('tr');
-            subHeaderRow.setAttribute('data-subheader', 'true'); // marker for cleanup
-            subHeaderRow.classList.add('bg-primary', 'text-white'); // 🔵 Primary background
-
-            for (let i = 0; i < numDays; i++) {
-                const thOpen = document.createElement('th');
-                thOpen.style.fontSize = '0.8em';
-                subHeaderRow.appendChild(thOpen);
-
-                const aOpen = document.createElement('a');
-                aOpen.href = `/complaints?reportDateFrom=${data.dates[i]}&reportDateTo=${data.dates[i]}&status=OPEN`;
-                aOpen.className = 'font-weight-bold text-white';
-                aOpen.textContent = 'Open';
-                thOpen.appendChild(aOpen);
-
-                const thClosed = document.createElement('th');
-                thClosed.style.fontSize = '0.8em';
-                subHeaderRow.appendChild(thClosed);
-
-                const aClosed = document.createElement('a');
-                aClosed.href = `/complaints?reportDateFrom=${data.dates[i]}&reportDateTo=${data.dates[i]}&status=CLOSED`;
-                aClosed.className = 'font-weight-bold text-white';
-                aClosed.textContent = 'Closed';
-                thClosed.appendChild(aClosed);
-            }
-
-            // Insert subheader row right after dayHeaders
-            thead.insertBefore(subHeaderRow, dayHeaderRow.nextSibling);
-
-            // 👇 STEP 4: Render table body
-            const tbody = document.getElementById('engineerTableBody');
-            tbody.innerHTML = '';
-
-            data.data.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                <td class="text-left fw-bold"><a class="font-weight-bold text-dark" href="/complaints?assigneeEmpId=${row.assigneeEmpId}">${row.assigneeName}</a></td>
-                ${data.dates.map((date, i) => `
-                    <td><a class="text-dark" href="/complaints?assigneeEmpId=${row.assigneeEmpId}&reportDateFrom=${data.dates[i]}&reportDateTo=${data.dates[i]}&status=OPEN">${row.open[i] || 0}</a></td>
-                    <td><a class="text-dark" href="/complaints?assigneeEmpId=${row.assigneeEmpId}&reportDateFrom=${data.dates[i]}&reportDateTo=${data.dates[i]}&status=CLOSED">${row.closed[i] || 0}</a></td>
-                `).join('')}`;
-                tbody.appendChild(tr);
-            });
+            totalData = data;
+            return data;
         })
         .catch(err => {
-            console.error('Failed to load engineer data:', err);
+            console.error('Failed to load total status:', err);
+            totalData = [];
+            return [];
         });
 }
 
+// Helper: Create status cell with conditional highlighting
+function createStatusCell(value, status, url) {
+    const cell = document.createElement('td');
+    const link = document.createElement('a');
+    link.className = 'text-dark d-block';
+    link.href = url;
+    link.textContent = value;
+
+    // Add background color for non-zero values
+    if (value > 0) {
+        if (status === 'OPEN') {
+            cell.classList.add('bg-warning', 'text-dark'); // Yellow
+        } else if (status === 'PENDING') {
+            cell.classList.add('bg-danger', 'text-white'); // Light red (Bootstrap danger)
+        } else if (status === 'CLOSED') {
+            cell.classList.add('bg-success', 'text-white'); // Light green (Bootstrap success)
+        }
+    }
+
+    cell.appendChild(link);
+    return cell;
+}
+
+function fetchEngineerData(from = null, to = null) {
+    fetchTotalStatus().then(() => {
+        let url = `${baseUrl}/api/dashboards/assignee-daily-status`;
+        if (from && to) url += `?from=${from}&to=${to}`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                currentFrom = data.dates[0];
+                currentTo = data.dates[data.dates.length - 1];
+
+                const thead = document.querySelector('#engineerTableBody').closest('table').querySelector('thead');
+                const mainHeaderRow = thead.rows[0];
+                const subHeaderRow = thead.rows[1];
+
+                // Clear dynamic date headers (keep "Engineer" and "Total")
+                while (mainHeaderRow.cells.length > 2) mainHeaderRow.deleteCell(-1);
+                while (subHeaderRow.cells.length > 3) subHeaderRow.deleteCell(-1);
+
+                // Add date headers
+                data.dates.forEach(date => {
+                    const dateShort = formatShort(date);
+
+                    const thDate = document.createElement('th');
+                    thDate.colSpan = 3;
+                    thDate.classList.add('bg-primary', 'align-middle');
+                    const aDate = document.createElement('a');
+                    aDate.href = `/complaints?reportDateFrom=${date}&reportDateTo=${date}`;
+                    aDate.className = 'font-weight-bold text-white';
+                    aDate.textContent = dateShort;
+                    thDate.appendChild(aDate);
+                    mainHeaderRow.appendChild(thDate);
+
+                    // Sub-headers: O / P / C (compact)
+                    ['OPEN', 'PENDING', 'CLOSED'].forEach(status => {
+                        const th = document.createElement('th');
+                        const a = document.createElement('a');
+                        a.href = `/complaints?reportDateFrom=${date}&reportDateTo=${date}&state=${status}`;
+                        a.className = 'font-weight-bold text-white';
+                        a.textContent = status.charAt(0);
+                        th.appendChild(a);
+                        subHeaderRow.appendChild(th);
+                    });
+                });
+
+                // Render body
+                const tbody = document.getElementById('engineerTableBody');
+                tbody.innerHTML = '';
+
+                const allAssignees = new Map();
+                totalData.forEach(total => {
+                    allAssignees.set(total.assigneeEmpId, {
+                        name: total.assigneeName,
+                        empId: total.assigneeEmpId,
+                        totalOpen: total.totalOpen,
+                        totalPending: total.totalPending,
+                        totalClosed: total.totalClosed,
+                        dailyData: null
+                    });
+                });
+
+                data.data.forEach(daily => {
+                    if (allAssignees.has(daily.assigneeEmpId)) {
+                        allAssignees.get(daily.assigneeEmpId).dailyData = daily;
+                    }
+                });
+
+                allAssignees.forEach(assignee => {
+                    const tr = document.createElement('tr');
+
+                    // Engineer name
+                    const nameCell = document.createElement('td');
+                    nameCell.className = 'text-left fw-bold';
+                    const nameLink = document.createElement('a');
+                    nameLink.className = 'font-weight-bold text-dark';
+                    nameLink.href = `/complaints?assigneeEmpId=${assignee.empId}`;
+                    nameLink.textContent = assignee.name;
+                    nameCell.appendChild(nameLink);
+                    tr.appendChild(nameCell);
+
+                    // Total columns (O/P/C)
+                    const totalCells = [
+                        { status: 'OPEN', value: assignee.totalOpen },
+                        { status: 'PENDING', value: assignee.totalPending },
+                        { status: 'CLOSED', value: assignee.totalClosed }
+                    ].map(item => {
+                        const url = `/complaints?assigneeEmpId=${assignee.empId}&state=${item.status}`;
+                        return createStatusCell(item.value, item.status, url);
+                    });
+                    tr.append(...totalCells);
+
+                    // Daily columns (O/P/C for each date)
+                    if (assignee.dailyData) {
+                        data.dates.forEach((_, i) => {
+                            // Open
+                            const openUrl = `/complaints?assigneeEmpId=${assignee.empId}&reportDateFrom=${data.dates[i]}&reportDateTo=${data.dates[i]}&state=OPEN`;
+                            tr.appendChild(createStatusCell(assignee.dailyData.open[i] || 0, 'OPEN', openUrl));
+
+                            // Pending
+                            const pendingUrl = `/complaints?assigneeEmpId=${assignee.empId}&reportDateFrom=${data.dates[i]}&reportDateTo=${data.dates[i]}&state=PENDING`;
+                            tr.appendChild(createStatusCell(assignee.dailyData.pending[i] || 0, 'PENDING', pendingUrl));
+
+                            // Closed
+                            const closedUrl = `/complaints?assigneeEmpId=${assignee.empId}&closeDateTime=${data.dates[i]}&state=CLOSED`;
+                            tr.appendChild(createStatusCell(assignee.dailyData.closed[i] || 0, 'CLOSED', closedUrl));
+                        });
+                    } else {
+                        // No daily data → show zeros (no highlighting)
+                        data.dates.forEach(() => {
+                            tr.innerHTML += '<td>0</td><td>0</td><td>0</td>';
+                        });
+                    }
+
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => console.error('Failed to load engineer data:', err));
+    });
+}
+
+document.getElementById('prevEngineerBtn')?.addEventListener('click', () => shiftRange(-1));
+document.getElementById('nextEngineerBtn')?.addEventListener('click', () => shiftRange(1));
+document.getElementById('refreshEngineerBtn')?.addEventListener('click', () => {
+    currentFrom = null; currentTo = null; fetchEngineerData();
+});
+
 function shiftRange(offsetDays) {
     if (!currentFrom || !currentTo) return;
-
     const from = new Date(currentFrom);
     const to = new Date(currentTo);
-
-    const daysDiff = Math.ceil((to - from) / (1000 * 60 * 60 * 24)); // number of days
-
-    const newFrom = new Date(from);
-    newFrom.setDate(newFrom.getDate() + offsetDays);
-    const newTo = new Date(to);
-    newTo.setDate(newTo.getDate() + offsetDays);
-
-    const fromStr = toDateTimeLocal(newFrom).slice(0, 16); // '2025-08-10T00:00'
-    const toStr = toDateTimeLocal(newTo).slice(0, 16);
-
+    from.setDate(from.getDate() + offsetDays);
+    to.setDate(to.getDate() + offsetDays);
+    const fromStr = from.toISOString().slice(0, 16);
+    const toStr = to.toISOString().slice(0, 16);
     fetchEngineerData(fromStr, toStr);
 }
 
-document.getElementById('prevEngineerBtn').addEventListener('click', () => {
-    shiftRange(-1); // shift backward by 1 day window size
-});
-
-document.getElementById('nextEngineerBtn').addEventListener('click', () => {
-    shiftRange(1);
-});
-
-document.getElementById('refreshEngineerBtn').addEventListener('click', () => {
-    currentFrom = null;
-    currentTo = null;
-    fetchEngineerData();
-});
+fetchEngineerData();
 
 // Work Report Chart
 let wrChart = null;
@@ -807,7 +852,7 @@ function renderWrChart(labels, corrective, preventive, breakdown, other, title) 
                 let from, to;
                 if (label.length === 3) {
                     const year = document.getElementById('wr-year-select')?.value || new Date().getFullYear();
-                    const monthMap = { "Jan":0,"Feb":1,"Mar":2,"Apr":3,"May":4,"Jun":5,"Jul":6,"Aug":7,"Sep":8,"Oct":9,"Nov":10,"Dec":11 };
+                    const monthMap = { "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11 };
                     const monthIndex = monthMap[label];
                     if (monthIndex !== undefined) {
                         const days = new Date(year, monthIndex + 1, 0).getDate();
@@ -943,7 +988,7 @@ function updateWrWeekNav(fromDate, toDate) {
     const monthPart = startMonth === endMonth ? startMonth : `${startMonth}–${endMonth}`;
     label.textContent = `Week of ${monthPart} ${start.getDate()}–${end.getDate()}, ${start.getFullYear()}`;
     document.getElementById('wr-prevWeekBtn').disabled = false;
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
     document.getElementById('wr-nextWeekBtn').disabled = end >= today;
 }
 
@@ -973,7 +1018,7 @@ function updateBreakdownChart(mode, from = null, to = null, year = null, month =
                 renderBreakdownChart(months, values, counts, 'Monthly Breakdown Summary');
             })
             .catch(err => console.error('Breakdown yearly error:', err));
-            console.log("url", url);
+        console.log("url", url);
 
     } else if (mode === 'monthly') {
         if (!year) return;
@@ -1075,7 +1120,7 @@ function renderBreakdownChart(labels, values, counts, title) {
                 let from, to;
                 if (label.length === 3) {
                     const year = document.getElementById('breakdown-year-select')?.value || new Date().getFullYear();
-                    const monthMap = { "Jan":0,"Feb":1,"Mar":2,"Apr":3,"May":4,"Jun":5,"Jul":6,"Aug":7,"Sep":8,"Oct":9,"Nov":10,"Dec":11 };
+                    const monthMap = { "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11 };
                     const i = monthMap[label];
                     if (i !== undefined) {
                         const days = new Date(year, i + 1, 0).getDate();
@@ -1210,7 +1255,7 @@ function updateBreakdownWeekNav(fromDate, toDate) {
     const monthPart = startMonth === endMonth ? startMonth : `${startMonth}–${endMonth}`;
     label.textContent = `Week of ${monthPart} ${start.getDate()}–${end.getDate()}, ${start.getFullYear()}`;
     document.getElementById('breakdown-prevWeekBtn').disabled = false;
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
     document.getElementById('breakdown-nextWeekBtn').disabled = end >= today;
 }
 

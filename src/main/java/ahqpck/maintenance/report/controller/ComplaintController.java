@@ -59,6 +59,7 @@ public class ComplaintController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateTo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDateTime,
             @RequestParam(required = false) String assigneeEmpId,
             @RequestParam(required = false) Complaint.Status state,
             @RequestParam(required = false) Complaint.Category group,
@@ -78,6 +79,7 @@ public class ComplaintController {
 
             LocalDateTime from = reportDateFrom != null ? reportDateFrom.atStartOfDay() : null;
             LocalDateTime to = reportDateTo != null ? reportDateTo.atTime(LocalTime.MAX) : null;
+            LocalDateTime closeTime = closeDateTime != null ? closeDateTime.atStartOfDay() : null;
 
             String currentUserId = null;
             if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
@@ -91,7 +93,7 @@ public class ComplaintController {
                 model.addAttribute("currentUser", currentUser);
             }
 
-            Page<ComplaintDTO> complaintPage = complaintService.getAllComplaints(keyword, from, to, assigneeEmpId,
+            Page<ComplaintDTO> complaintPage = complaintService.getAllComplaints(keyword, from, to, closeTime, assigneeEmpId,
                     state, group, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
 
             model.addAttribute("complaints", complaintPage);

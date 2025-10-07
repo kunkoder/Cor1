@@ -157,18 +157,24 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
 
     @Query(value = """
             SELECT
-                u.name AS assignee_name,
-                u.employee_id AS assignee_id,
+                u.name,
+                u.employee_id,
                 c.status,
-                DATE(c.report_date) AS report_date,
-                COUNT(*) AS count
+                DATE(CASE
+                    WHEN c.status = 'CLOSED' THEN c.close_time
+                    ELSE c.report_date
+                END),
+                COUNT(*)
             FROM complaints c
             JOIN users u ON c.assignee = u.id
-            WHERE DATE(c.report_date) >= :from
-              AND DATE(c.report_date) < DATE_ADD(:to, INTERVAL 1 DAY)
-              AND c.status IN ('OPEN', 'PENDING', 'CLOSED')
-            GROUP BY u.name, u.employee_id, c.status, DATE(c.report_date)
-            ORDER BY u.name, report_date
+            WHERE c.status IN ('OPEN', 'PENDING', 'CLOSED')
+              AND (
+                (c.status = 'CLOSED' AND c.close_time >= :from AND c.close_time < DATE_ADD(:to, INTERVAL 1 DAY))
+                OR
+                (c.status != 'CLOSED' AND c.report_date >= :from AND c.report_date < DATE_ADD(:to, INTERVAL 1 DAY))
+              )
+            GROUP BY u.name, u.employee_id, c.status, 4
+            ORDER BY u.name, 4
             """, nativeQuery = true)
     List<Object[]> getAssigneeDailyStatus(
             @Param("from") LocalDate from,
@@ -176,10 +182,10 @@ public interface DashboardRepository extends JpaRepository<Complaint, String> {
 
     @Query(value = """
             SELECT
-                u.name AS assignee_name,
-                u.employee_id AS assignee_id,
+                u.name,
+                u.employee_id,
                 c.status,
-                COUNT(*) AS count
+                COUNT(*)
             FROM complaints c
             JOIN users u ON c.assignee = u.id
             WHERE c.status IN ('OPEN', 'PENDING', 'CLOSED')

@@ -1,7 +1,5 @@
 package ahqpck.maintenance.report.dto;
 
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,10 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AssigneeDailyStatusDetailDTO {
+public class AssigneeTotalStatusDTO {
     private String assigneeName;
     private String assigneeEmpId;
-    private List<Integer> open;
-    private List<Integer> pending;
-    private List<Integer> closed;
+    private int totalOpen;
+    private int totalPending;
+    private int totalClosed;
 }

@@ -6,7 +6,9 @@ import ahqpck.maintenance.report.entity.Equipment;
 import ahqpck.maintenance.report.entity.User;
 import ahqpck.maintenance.report.entity.WorkReport;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -75,6 +77,21 @@ public class ComplaintSpecification {
             }
 
             return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    public static Specification<Complaint> withCloseTime(LocalDateTime closeTime) {
+        return (root, query, cb) -> {
+            if (closeTime == null) {
+                return cb.conjunction(); // no filter
+            }
+
+            // Extract the date part
+            LocalDate date = closeTime.toLocalDate();
+            LocalDateTime startOfDay = date.atStartOfDay();
+            LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+            return cb.between(root.get("closeTime"), startOfDay, endOfDay);
         };
     }
 

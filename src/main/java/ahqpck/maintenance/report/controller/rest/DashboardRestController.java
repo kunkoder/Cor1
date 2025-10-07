@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ahqpck.maintenance.report.dto.AssigneeDailyStatusDTO;
+import ahqpck.maintenance.report.dto.AssigneeTotalStatusDTO;
 import ahqpck.maintenance.report.dto.DailyBreakdownDTO;
 import ahqpck.maintenance.report.dto.DailyComplaintDTO;
 import ahqpck.maintenance.report.dto.DailyWorkReportDTO;
@@ -73,6 +74,13 @@ public class DashboardRestController {
             @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
 
         AssigneeDailyStatusDTO result = dashboardService.getAssigneeDailyStatus(from, to);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/assignee-total-status")
+    public ResponseEntity<List<AssigneeTotalStatusDTO>> getAssigneeTotalStatus() {
+
+        List<AssigneeTotalStatusDTO> result = dashboardService.getAssigneeTotalStatus();
         return ResponseEntity.ok(result);
     }
 

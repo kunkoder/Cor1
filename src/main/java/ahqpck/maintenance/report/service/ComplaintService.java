@@ -67,14 +67,14 @@ public class ComplaintService {
     private final ZeroPaddedCodeGenerator codeGenerator;
 
     public Page<ComplaintDTO> getAllComplaints(String keyword, LocalDateTime reportDateFrom, LocalDateTime reportDateTo,
-            String assigneeEmpId, Complaint.Status status, Complaint.Category category, String equipmentCode, int page,
-            int size, String sortBy,
-            boolean asc) {
+            LocalDateTime closeTime, String assigneeEmpId, Complaint.Status status, Complaint.Category category,
+            String equipmentCode, int page, int size, String sortBy, boolean asc) {
         Sort sort = asc ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
         Specification<Complaint> spec = ComplaintSpecification.search(keyword)
                 .and(ComplaintSpecification.withReportDateRange(reportDateFrom, reportDateTo))
+                .and(ComplaintSpecification.withCloseTime(closeTime))
                 .and(ComplaintSpecification.withAssignee(assigneeEmpId))
                 .and(ComplaintSpecification.withStatus(status))
                 .and(ComplaintSpecification.withCategory(category))
@@ -93,11 +93,11 @@ public class ComplaintService {
     public void createComplaint(ComplaintDTO dto, MultipartFile imageBefore) {
 
         Complaint complaint = new Complaint();
-        
+
         validateAreaOrEquipment(
                 dto.getArea() != null ? dto.getArea().getCode() : null,
                 dto.getEquipment() != null ? dto.getEquipment().getCode() : null);
-                
+
         if (dto.getCode() == null || dto.getCode().trim().isEmpty()) {
             String generatedCode = codeGenerator.generate(Complaint.class, "code", "CP");
             complaint.setCode(generatedCode);
@@ -127,6 +127,12 @@ public class ComplaintService {
         validateAreaOrEquipment(
                 dto.getArea() != null ? dto.getArea().getCode() : null,
                 dto.getEquipment() != null ? dto.getEquipment().getCode() : null);
+
+        if (dto.getStatus() == Complaint.Status.CLOSED) {
+            if (dto.getActionTaken() == null || dto.getActionTaken().trim().isEmpty()) {
+                throw new IllegalArgumentException("Action taken is required before closing the complaint.");
+            }
+        }
 
         mapToEntity(complaint, dto);
 
