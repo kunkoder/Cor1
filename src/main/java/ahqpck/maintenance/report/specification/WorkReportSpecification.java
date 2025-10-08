@@ -71,6 +71,15 @@ public class WorkReportSpecification {
         };
     }
 
+    public static Specification<WorkReport> withStatus(WorkReport.Status status) {
+        return (root, query, cb) -> {
+            if (status == null) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("status"), status);
+        };
+    }
+
     public static Specification<WorkReport> withCategory(WorkReport.Category category) {
         return (root, query, cb) -> {
             if (category == null) {

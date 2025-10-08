@@ -30,7 +30,8 @@
                 </ul>
 
                 <div class="header-action-group d-flex align-items-center ml-auto">
-                    <button class="btn btn-primary mt-2 mr-2" data-toggle="modal" data-target="#importModal" sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
+                    <button class="btn btn-primary mt-2 mr-2" data-toggle="modal" data-target="#importModal"
+                        sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
                         <i class="fa fa-download mr-1"></i> Import
                     </button>
                     <button class="btn btn-primary dropdown-toggle mt-2 mr-2" type="button" id="exportDropdown"
@@ -45,7 +46,8 @@
                             <i class="fa fa-file-pdf mr-2 text-danger"></i> PDF
                         </a>
                     </div>
-                    <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal" sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
+                    <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal"
+                        sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
                         <i class="fa fa-plus-circle mr-2"></i> Add
                     </button>
                 </div>
@@ -186,69 +188,79 @@
                                                 </div>
                                                 <span th:unless="${equipment.image != null}"></span>
                                             </td>
-                                            <td data-field="code" th:text="${equipment.code ?: '-'}"></td>
-                                            <td data-field="name" th:text="${equipment.name ?: '-'}"></td>
-                                            <td data-field="model" th:text="${equipment.model ?: '-'}"></td>
+                                            <td data-field="code" th:text="${equipment.code ?: ''}"></td>
+                                            <td data-field="name" th:text="${equipment.name ?: ''}"></td>
+                                            <td data-field="model" th:text="${equipment.model ?: ''}"></td>
                                             <td data-field="status">
                                                 <th:block
                                                     th:if="${equipment.totalOpenWorkReports != null and equipment.totalOpenWorkReports > 0}">
-                                                    <span class="badge badge-warning mr-1">WR Open (
+                                                    <a th:href="@{/work-reports(state='OPEN', equipmentCode=${equipment.code})}"
+                                                        class="badge badge-warning mr-1" style="text-decoration: none;">
+                                                        WR Open (
                                                         <th:block th:text="${equipment.totalOpenWorkReports}" />)
-                                                    </span>
+                                                    </a>
                                                 </th:block>
                                                 <th:block
                                                     th:if="${equipment.totalPendingWorkReports != null and equipment.totalPendingWorkReports > 0}">
-                                                    <span class="badge badge-danger mr-1">WR Pending (
+                                                    <a th:href="@{/work-reports(state='PENDING', equipmentCode=${equipment.code})}"
+                                                        class="badge badge-danger mr-1" style="text-decoration: none;">
+                                                        WR Pending (
                                                         <th:block th:text="${equipment.totalPendingWorkReports}" />)
-                                                    </span>
+                                                    </a>
                                                 </th:block>
                                                 <th:block
                                                     th:if="${equipment.totalOpenComplaints != null and equipment.totalOpenComplaints > 0}">
-                                                    <span class="badge badge-info mr-1">CP Open (
+                                                    <a th:href="@{/complaints(state='OPEN', equipmentCode=${equipment.code})}"
+                                                        class="badge badge-warning mr-1" style="text-decoration: none;">
+                                                        CP Open (
                                                         <th:block th:text="${equipment.totalOpenComplaints}" />)
-                                                    </span>
+                                                    </a>
                                                 </th:block>
                                                 <th:block
                                                     th:if="${equipment.totalPendingComplaints != null and equipment.totalPendingComplaints > 0}">
-                                                    <span class="badge badge-primary mr-1">CP Pending (
+                                                    <a th:href="@{/complaints(state='PENDING', equipmentCode=${equipment.code})}"
+                                                        class="badge badge-danger mr-1" style="text-decoration: none;">
+                                                        CP Pending (
                                                         <th:block th:text="${equipment.totalPendingComplaints}" />)
-                                                    </span>
+                                                    </a>
                                                 </th:block>
-                                                <th:block th:if="${equipment.totalOpenWorkReports == 0 and equipment.totalPendingWorkReports == 0 and 
-                                                equipment.totalOpenComplaints == 0 and equipment.totalPendingComplaints == 0}">
+                                                <th:block
+                                                    th:if="${equipment.totalOpenWorkReports == 0 and equipment.totalPendingWorkReports == 0 and 
+                                                    equipment.totalOpenComplaints == 0 and equipment.totalPendingComplaints == 0}">
                                                     <span class="badge badge-success mr-1">Good</span>
                                                 </th:block>
                                             </td>
-                                            <td data-field="unit" th:text="${equipment.unit ?: '-'}"></td>
+                                            <td data-field="unit" th:text="${equipment.unit ?: ''}"></td>
                                             <td data-field="qty" class="text-center"
-                                                th:text="${equipment.qty != null ? equipment.qty : '-'}"></td>
-                                            <td data-field="manufacturer" th:text="${equipment.manufacturer ?: '-'}">
+                                                th:text="${equipment.qty != null ? equipment.qty : ''}"></td>
+                                            <td data-field="manufacturer" th:text="${equipment.manufacturer ?: ''}">
                                             </td>
-                                            <td data-field="serialNo" th:text="${equipment.serialNo ?: '-'}"></td>
+                                            <td data-field="serialNo" th:text="${equipment.serialNo ?: ''}"></td>
                                             <td data-field="manufacturedDate"
-                                                th:text="${equipment.manufacturedDate != null ? #temporals.format(equipment.manufacturedDate, 'yyyy-MM-dd') : '-'}">
+                                                th:text="${equipment.manufacturedDate != null ? #temporals.format(equipment.manufacturedDate, 'yyyy-MM-dd') : ''}">
                                             </td>
                                             <td data-field="commissionedDate"
-                                                th:text="${equipment.commissionedDate != null ? #temporals.format(equipment.commissionedDate, 'yyyy-MM-dd') : '-'}">
+                                                th:text="${equipment.commissionedDate != null ? #temporals.format(equipment.commissionedDate, 'yyyy-MM-dd') : ''}">
                                             </td>
-                                            <td data-field="capacity" th:text="${equipment.capacity ?: '-'}"></td>
-                                            <td data-field="remarks" th:text="${equipment.remarks ?: '-'}"></td>
+                                            <td data-field="capacity" th:text="${equipment.capacity ?: ''}"></td>
+                                            <td data-field="remarks" th:text="${equipment.remarks ?: ''}"></td>
                                             <td>
                                                 <div class="form-button-action">
                                                     <button type="button"
                                                         class="btn btn-link btn-primary btn-lg edit-row"
                                                         th:data-id="${equipment.id}"
-                                                        th:data-name="${equipment.name ?: '-'}"
+                                                        th:data-name="${equipment.name ?: ''}"
                                                         sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
                                                         <i class="fa fa-edit"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-link btn-danger delete-row"
                                                         th:data-id="${equipment.id}"
-                                                        th:data-name="${equipment.name ?: '-'}"
+                                                        th:data-name="${equipment.name ?: ''}"
                                                         sec:authorize="hasAnyRole('SUPERADMIN')">
                                                         <i class="fa fa-times"></i>
                                                     </button>
-                                                    <span sec:authorize="!hasAnyRole('SUPERADMIN', 'ADMIN')" class="badge badge-danger mr-1">No Access</span>
+                                                    <span sec:authorize="!hasAnyRole('SUPERADMIN', 'ADMIN')"
+                                                        class="badge badge-danger mr-1">No Access</span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -443,17 +455,17 @@
 
                         // Populate fields
                         document.getElementById('editId').value = currentId;
-                        document.getElementById('editCode').value = row.querySelector('[data-field="code"]')?.textContent.trim() || '-';
-                        document.getElementById('editName').value = row.querySelector('[data-field="name"]')?.textContent.trim() || '-';
-                        document.getElementById('editModel').value = row.querySelector('[data-field="model"]')?.textContent.trim() || '-';
-                        document.getElementById('editUnit').value = row.querySelector('[data-field="unit"]')?.textContent.trim() || '-';
+                        document.getElementById('editCode').value = row.querySelector('[data-field="code"]')?.textContent.trim() || '';
+                        document.getElementById('editName').value = row.querySelector('[data-field="name"]')?.textContent.trim() || '';
+                        document.getElementById('editModel').value = row.querySelector('[data-field="model"]')?.textContent.trim() || '';
+                        document.getElementById('editUnit').value = row.querySelector('[data-field="unit"]')?.textContent.trim() || '';
                         document.getElementById('editQty').value = row.querySelector('[data-field="qty"]')?.textContent.trim() || '';
-                        document.getElementById('editManufacturer').value = row.querySelector('[data-field="manufacturer"]')?.textContent.trim() || '-';
-                        document.getElementById('editSerialNo').value = row.querySelector('[data-field="serialNo"]')?.textContent.trim() || '-';
-                        document.getElementById('editManufacturedDate').value = row.querySelector('[data-field="manufacturedDate"]')?.textContent.trim() || '-';
-                        document.getElementById('editCommissionedDate').value = row.querySelector('[data-field="commissionedDate"]')?.textContent.trim() || '-';
-                        document.getElementById('editCapacity').value = row.querySelector('[data-field="capacity"]')?.textContent.trim() || '-';
-                        document.getElementById('editRemarks').value = row.querySelector('[data-field="remarks"]')?.textContent.trim() || '-';
+                        document.getElementById('editManufacturer').value = row.querySelector('[data-field="manufacturer"]')?.textContent.trim() || '';
+                        document.getElementById('editSerialNo').value = row.querySelector('[data-field="serialNo"]')?.textContent.trim() || '';
+                        document.getElementById('editManufacturedDate').value = row.querySelector('[data-field="manufacturedDate"]')?.textContent.trim() || '';
+                        document.getElementById('editCommissionedDate').value = row.querySelector('[data-field="commissionedDate"]')?.textContent.trim() || '';
+                        document.getElementById('editCapacity').value = row.querySelector('[data-field="capacity"]')?.textContent.trim() || '';
+                        document.getElementById('editRemarks').value = row.querySelector('[data-field="remarks"]')?.textContent.trim() || '';
 
                         // Set image preview if exists
                         const img = row.querySelector('[data-field="image"] img');

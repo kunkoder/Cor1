@@ -181,18 +181,18 @@ public class UserController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'ENGINEER')")
     @PostMapping("/update")
     public String updateUser(
             @Valid @ModelAttribute UserDTO userDTO,
             BindingResult bindingResult,
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             @RequestParam(value = "deleteImage", required = false, defaultValue = "false") boolean deleteImage,
-            @RequestParam(value = "currentUrl", required = false) String currentUrl, // Changed from boolean to String
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             RedirectAttributes ra) {
 
         System.out.println("User DTO: " + userDTO);
-        System.out.println("Current URL: " + currentUrl);
+        System.out.println("Current URL: " + redirectUrl);
 
         if (userDTO.getRoleNames() != null && !userDTO.getRoleNames().isEmpty()) {
             Set<RoleDTO> roleDTOs = userDTO.getRoleNames().stream()
@@ -208,27 +208,16 @@ public class UserController {
 
         if (WebUtil.hasErrors(bindingResult)) {
             ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
-            // Redirect to current URL if available, otherwise fallback
-            return currentUrl != null && !currentUrl.isEmpty()
-                    ? "redirect:" + currentUrl
-                    : "redirect:/users";
         }
 
         try {
             userService.updateUser(userDTO, imageFile, deleteImage);
             ra.addFlashAttribute("success", "User updated successfully.");
-            // Redirect to current URL if available, otherwise fallback
-            return currentUrl != null && !currentUrl.isEmpty()
-                    ? "redirect:" + currentUrl
-                    : "redirect:/users";
-
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
             ra.addFlashAttribute("userDTO", userDTO);
-            return currentUrl != null && !currentUrl.isEmpty()
-                    ? "redirect:" + currentUrl
-                    : "redirect:/users";
         }
+        return "redirect:" + (redirectUrl != null ? redirectUrl : "/users");
     }
 
     @PreAuthorize("hasAnyRole('SUPERADMIN')")

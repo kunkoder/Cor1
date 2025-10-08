@@ -51,6 +51,7 @@ public class Complaint {
     @Column(nullable = true)
     private String subject;
 
+    // the nullable should be false
     @Column(columnDefinition = "TEXT", nullable = true)
     private String description;
 

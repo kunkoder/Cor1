@@ -71,7 +71,7 @@
                                         enctype="multipart/form-data">
                                         <!-- Hidden ID (use 'id' from UserDTO) -->
                                         <input type="hidden" name="id" th:value="${currentUser.id}">
-                                        <input type="hidden" name="currentUrl" id="currentUrl">
+                                        <input type="hidden" name="redirectUrl" id="redirectUrl">
 
                                         <div class="form-row">
                                             <!-- Name -->
@@ -259,9 +259,9 @@
         <!-- Update file input label -->
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                const currentUrlInput = document.getElementById('currentUrl');
-                if (currentUrlInput) {
-                    currentUrlInput.value = window.location.href;
+                const redirectUrlInput = document.getElementById('redirectUrl');
+                if (redirectUrlInput) {
+                    redirectUrlInput.value = window.location.href;
                 }
                 document.getElementById('editImageInput')?.addEventListener('change', function (evt) {
                     const preview = document.getElementById('editImagePreview');

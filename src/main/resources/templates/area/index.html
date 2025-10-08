@@ -147,18 +147,18 @@
                                     </thead>
                                     <tbody>
                                         <tr th:each="area : ${areas.content}" th:data-id="${area.id}" class="table-row-hover">
-                                            <td data-field="code" th:text="${area.code ?: '-'}"></td>
-                                            <td data-field="name" th:text="${area.name ?: '-'}"></td>
-                                            <td data-field="description" th:text="${area.description ?: '-'}"></td>
+                                            <td data-field="code" th:text="${area.code ?: ''}"></td>
+                                            <td data-field="name" th:text="${area.name ?: ''}"></td>
+                                            <td data-field="description" th:text="${area.description ?: ''}"></td>
                                             <td data-field="responsiblePerson"
                                                 th:data-employee-id="${area.responsiblePerson?.employeeId}"
-                                                th:text="${area.responsiblePerson?.name ?: '-'}">-</td>
+                                                th:text="${area.responsiblePerson?.name ?: ''}">-</td>
                                             <td data-field="status">
                                                 <span class="badge" th:classappend="${
                                                         area.status == area.status.ACTIVE ? 'badge-info' :
                                                         area.status == area.status.UNDER_MAINTENANCE ? 'badge-warning' :
                                                         'badge-danger'
-                                                    }" th:text="${area.status ?: '-'}">STATUS</span>
+                                                    }" th:text="${area.status ?: ''}">STATUS</span>
                                             </td>
                                             <td>
                                                 <div class="form-button-action">
@@ -169,7 +169,7 @@
                                                         <i class="fa fa-edit"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-link btn-danger delete-row"
-                                                        th:data-id="${area.id}" th:data-name="${area.name ?: '-'}"
+                                                        th:data-id="${area.id}" th:data-name="${area.name ?: ''}"
                                                         sec:authorize="hasAnyRole('SUPERADMIN')">
                                                         <i class="fa fa-times"></i>
                                                     </button>
@@ -364,18 +364,18 @@
 
                         // Populate fields
                         document.getElementById('editId').value = currentId;
-                        document.getElementById('editCode').value = row.querySelector('[data-field="code"]')?.textContent.trim() || '-';
-                        document.getElementById('editName').value = row.querySelector('[data-field="name"]')?.textContent.trim() || '-';
-                        document.getElementById('editDescription').value = row.querySelector('[data-field="description"]')?.textContent.trim() || '-';
+                        document.getElementById('editCode').value = row.querySelector('[data-field="code"]')?.textContent.trim() || '';
+                        document.getElementById('editName').value = row.querySelector('[data-field="name"]')?.textContent.trim() || '';
+                        document.getElementById('editDescription').value = row.querySelector('[data-field="description"]')?.textContent.trim() || '';
 
                         // Responsible Person
                         const responsibleCell = row.querySelector('[data-field="responsiblePerson"]');
-                        const employeeName = responsibleCell?.textContent.trim() || '-';
+                        const employeeName = responsibleCell?.textContent.trim() || '';
                         const employeeId = responsibleCell?.dataset.employeeId || '';
 
                         document.getElementById('editResponsiblePersonInput').value = employeeName && employeeId
                             ? `${employeeName} (${employeeId})`
-                            : '-';
+                            : '';
                         document.getElementById('editResponsiblePersonSelect').value = employeeId;
 
                         // Status

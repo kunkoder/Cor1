@@ -30,7 +30,8 @@
                 </ul>
 
                 <div class="header-action-group d-flex align-items-center ml-auto">
-                    <button class="btn btn-primary mt-2 mr-2" data-toggle="modal" data-target="#importModal" sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
+                    <button class="btn btn-primary mt-2 mr-2" data-toggle="modal" data-target="#importModal"
+                        sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
                         <i class="fa fa-download mr-1"></i> Import
                     </button>
                     <button class="btn btn-primary dropdown-toggle mt-2 mr-2" type="button" id="exportDropdown"
@@ -45,7 +46,8 @@
                             <i class="fa fa-file-pdf mr-2 text-danger"></i> PDF
                         </a>
                     </div>
-                    <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal" sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
+                    <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal"
+                        sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
                         <i class="fa fa-plus-circle mr-2"></i> Add
                     </button>
                 </div>
@@ -121,7 +123,7 @@
                                                 </option>
                                             </select>
 
-                                            <div id="equipmentInput" style="min-height: calc(1.5em + 0.5rem + 2px); /* matches .form-control-sm */
+                                            <div id="equipmentInput" style="min-height: calc(1.5em + 0.5rem + 2px);
                                             padding: 0.25rem 0.5rem;
                                             font-size: 0.875rem;
                                             line-height: 1.5;
@@ -304,45 +306,42 @@
                                             <td data-field="code">
                                                 <a th:href="@{/complaints/{id}(id=${complaint.id})}"
                                                     class="font-weight-bold text-dark"
-                                                    th:text="${complaint.code ?: '-'}">-</a>
+                                                    th:text="${complaint.code ?: ''}"></a>
                                             </td>
                                             <td data-field="reportDate"
-                                                th:text="${complaint.reportDate != null ? #temporals.format(complaint.reportDate, 'MMM d, yyyy') : '-'}">
-                                                -
+                                                th:data-full-datetime="${complaint.reportDate != null ? #temporals.format(complaint.reportDate, 'yyyy-MM-dd HH:mm') : ''}"
+                                                th:text="${complaint.reportDate != null ? #temporals.format(complaint.reportDate, 'MMM d, yyyy') : ''}">
                                             </td>
                                             <td data-field="updatedAt"
-                                                th:text="${complaint.updatedAt != null ? #temporals.format(complaint.updatedAt, 'MMM d, yyyy HH:mm') : '-'}">
-                                                -
+                                                th:text="${complaint.updatedAt != null ? #temporals.format(complaint.updatedAt, 'MMM d, yyyy HH:mm') : ''}">
                                             </td>
                                             <td data-field="reporter"
                                                 th:data-employee-id="${complaint.reporter?.employeeId}"
-                                                th:text="${complaint.reporter?.name ?: '-'}">
-                                                -
+                                                th:text="${complaint.reporter?.name ?: ''}">
                                             </td>
                                             <td data-field="area" th:data-area-code="${complaint.area?.code}"
-                                                th:text="${complaint.area?.name ?: '-'}">
-                                                -
+                                                th:text="${complaint.area?.name ?: ''}">
                                             </td>
                                             <td data-field="equipment"
                                                 th:data-equipment-code="${complaint.equipment?.code}"
-                                                th:text="${complaint.equipment?.name ?: '-'}">
-                                                -
+                                                th:text="${complaint.equipment?.name ?: ''}">
                                             </td>
-                                            <td data-field="subject" th:text="${complaint.subject ?: '-'}">-</td>
-                                            <td data-field="description" th:text="${complaint.description ?: '-'}">-
+                                            <td data-field="subject" th:text="${complaint.subject ?: ''}">
                                             </td>
-                                            <td data-field="actionTaken" th:text="${complaint.actionTaken ?: '-'}">-
+                                            <td data-field="description" th:text="${complaint.description ?: ''}">
+                                            </td>
+                                            <td data-field="actionTaken" th:text="${complaint.actionTaken ?: ''}">
                                             </td>
                                             <td data-field="assignee"
                                                 th:data-employee-id="${complaint.assignee?.employeeId}"
-                                                th:text="${complaint.assignee?.name ?: '-'}">-
+                                                th:text="${complaint.assignee?.name ?: ''}">
                                             </td>
                                             <td data-field="priority">
                                                 <span class="badge badge-pill px-3 py-2" th:classappend="${
                                                         complaint.priority == complaint.priority.HIGH ? 'badge-danger' :
                                                         complaint.priority == complaint.priority.MEDIUM ? 'badge-warning' :
                                                         'badge-success'
-                                                    }" th:text="${complaint.priority ?: '-'}"></span>
+                                                    }" th:text="${complaint.priority ?: ''}"></span>
                                             </td>
                                             <td data-field="category">
                                                 <span class="badge badge-pill px-3 py-2" th:classappend="${
@@ -350,21 +349,20 @@
                                                         complaint.category == complaint.category.ELECTRICAL ? 'badge-danger' :
                                                         complaint.category == complaint.category.IT ? 'badge-success' :
                                                         'badge-dark'
-                                                    }" th:text="${complaint.category ?: '-'}"></span>
+                                                    }" th:text="${complaint.category ?: ''}"></span>
                                             </td>
                                             <td data-field="status">
                                                 <span class="badge badge-pill px-3 py-2" th:classappend="${
                                                         complaint.status == complaint.status.OPEN ? 'badge-warning' :
                                                         complaint.status == complaint.status.PENDING ? 'badge-danger' :
                                                         'badge-success'
-                                                    }" th:text="${complaint.status ?: '-'}"></span>
+                                                    }" th:text="${complaint.status ?: ''}"></span>
                                             </td>
                                             <td data-field="closeTime"
-                                                th:text="${complaint.closeTime != null ? #temporals.format(complaint.closeTime, 'MMM d, yyyy HH:mm') : '-'}">
-                                                -
+                                                th:text="${complaint.closeTime != null ? #temporals.format(complaint.closeTime, 'MMM d, yyyy HH:mm') : ''}">
                                             </td>
                                             <td data-field="totalTimeMinutes"
-                                                th:text="${complaint.totalTimeDisplay ?: '-'}">-</td>
+                                                th:text="${complaint.totalTimeDisplay ?: ''}"></td>
                                         </tr>
                                         <tr th:if="${complaints.totalElements == 0}">
                                             <td colspan="15" class="text-center">No complaint found</td>
@@ -729,6 +727,18 @@
                             return direction === 'asc' ? aVal - bVal : bVal - aVal;
                         }
 
+                        if (['reportDate'].includes(field)) {
+                            const aCell = a.querySelector(`[data-field="${field}"]`);
+                            const bCell = b.querySelector(`[data-field="${field}"]`);
+                            aVal = aCell?.dataset.fullDatetime || '';
+                            bVal = bCell?.dataset.fullDatetime || '';
+
+                            const parse = s => s ? new Date(s.replace(' ', 'T')).getTime() : 0;
+                            const aTime = parse(aVal);
+                            const bTime = parse(bVal);
+                            return direction === 'asc' ? aTime - bTime : bTime - aTime;
+                        }
+
                         aVal = aVal.toLowerCase();
                         bVal = bVal.toLowerCase();
                         if (aVal < bVal) return direction === 'asc' ? -1 : 1;
@@ -769,12 +779,22 @@
                 // Builds URL with current params and new filters
                 function buildFilterUrl() {
                     const url = new URL(window.location);
-                    const fields = ['keyword', 'reportDateFrom', 'reportDateTo', 'assigneeEmpId', 'group', 'state'];
-
+                    const fields = ['keyword', 'reportDateFrom', 'reportDateTo', 'group', 'state'];
+                    // alert(fields);
                     fields.forEach(k => {
                         const el = document.querySelector(`[name="${k}"]`);
                         url.searchParams.set(k, el?.value || '');
                     });
+
+                    const assigneeInput = document.getElementById('filter-assigneeInput');
+                    const datalist = document.getElementById('filter-userOptions');
+                    let assigneeId = '';
+
+                    if (assigneeInput?.value && datalist) {
+                        const option = [...datalist.options].find(opt => opt.value === assigneeInput.value);
+                        assigneeId = option?.getAttribute('data-employee-id') || '';
+                    }
+                    url.searchParams.set('assigneeEmpId', assigneeId);
 
                     const equipment = Array.from(document.querySelectorAll('#equipmentTagList .tag'))
                         .map(t => t.dataset.value)
@@ -991,6 +1011,71 @@
                 setupLiveSearch('filter-assigneeInput', 'filter-assigneeSelect', 'filter-userOptions', 'Assignee');
                 setupTagInput('equipmentInput', 'equipmentTagList', 'equipmentTagSearch', 'equipmentSelect', 'equipmentOptions');
 
+                // Rebuild equipment tags from URL on page load (style-consistent)
+                (function restoreEquipmentTagsFromUrl() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const equipmentCodes = urlParams.get('equipmentCode');
+                    const tagList = document.getElementById('equipmentTagList');
+                    const datalist = document.getElementById('equipmentOptions');
+
+                    if (!equipmentCodes || !tagList || !datalist) return;
+
+                    const codes = equipmentCodes.split(',').filter(c => c.trim() !== '');
+                    tagList.innerHTML = '';
+
+                    // Build a lookup map: code → display text
+                    const codeToDisplay = {};
+                    const datalistOptions = datalist.querySelectorAll('option');
+                    datalistOptions.forEach(opt => {
+                        const code = opt.getAttribute('data-code');
+                        const display = opt.getAttribute('value'); // this is the full "Name (CODE)"
+                        if (code) {
+                            codeToDisplay[code] = display;
+                        }
+                    });
+
+                    codes.forEach(code => {
+                        const displayText = codeToDisplay[code] || code; // fallback to code if not found
+
+                        const tag = document.createElement('span');
+                        tag.className = 'tag';
+                        tag.dataset.value = code;
+                        tag.innerHTML = `
+                            ${displayText}
+                            <span class="remove-tag" onclick="this.parentElement.remove();">×</span>`;
+                        tagList.appendChild(tag);
+                    });
+
+                    // Update placeholder
+                    const searchInput = document.getElementById('equipmentTagSearch');
+                    if (searchInput) {
+                        searchInput.placeholder = codes.length > 0 ? '' : 'Add equipment...';
+                    }
+                })();
+
+                // Restore Assignee from URL using filter-userOptions datalist
+                (function restoreAssigneeFromUrl() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const empId = urlParams.get('assigneeEmpId');
+                    const assigneeInput = document.getElementById('filter-assigneeInput');
+                    const datalist = document.getElementById('filter-userOptions');
+
+                    if (!empId || !assigneeInput || !datalist) return;
+
+                    // Build lookup: employeeId → display text
+                    const idToDisplay = {};
+                    datalist.querySelectorAll('option').forEach(opt => {
+                        const id = opt.getAttribute('data-employee-id');
+                        const display = opt.getAttribute('value'); // e.g., "John Doe (EMP123)"
+                        if (id) {
+                            idToDisplay[id] = display;
+                        }
+                    });
+
+                    // Set input value to display name
+                    assigneeInput.value = idToDisplay[empId] || empId;
+                })();
+
                 document.getElementById('applyFilters').addEventListener('click', (e) => {
                     window.location.href = buildFilterUrl();
                 });
@@ -1003,6 +1088,9 @@
                     document.querySelector('[name="assigneeEmpId"]').value = '';
                     document.querySelector('[name="group"]').value = '';
                     document.querySelector('[name="state"]').value = '';
+
+                    const assigneeInput = document.getElementById('filter-assigneeInput');
+                    if (assigneeInput) assigneeInput.value = '';
 
                     const tagList = document.getElementById('equipmentTagList');
                     if (tagList) tagList.innerHTML = '';

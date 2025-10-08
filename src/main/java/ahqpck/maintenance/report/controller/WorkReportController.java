@@ -5,6 +5,7 @@ import ahqpck.maintenance.report.dto.AreaDTO;
 import ahqpck.maintenance.report.dto.EquipmentDTO;
 import ahqpck.maintenance.report.dto.UserDTO;
 import ahqpck.maintenance.report.dto.WorkReportDTO;
+import ahqpck.maintenance.report.entity.Complaint;
 import ahqpck.maintenance.report.entity.WorkReport;
 import ahqpck.maintenance.report.service.AreaService;
 import ahqpck.maintenance.report.service.EquipmentService;
@@ -51,6 +52,7 @@ public class WorkReportController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDateTo,
+            @RequestParam(required = false) WorkReport.Status state,
             @RequestParam(required = false) WorkReport.Category group,
             @RequestParam(required = false) WorkReport.Scope field,
             @RequestParam(required = false) String equipmentCode,
@@ -81,7 +83,7 @@ public class WorkReportController {
                 model.addAttribute("currentUser", currentUser);
             }
 
-            Page<WorkReportDTO> reportPage = workReportService.getAllWorkReports(keyword, from, to,
+            Page<WorkReportDTO> reportPage = workReportService.getAllWorkReports(keyword, from, to, state,
                     group, field, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
             
             model.addAttribute("workReports", reportPage);
@@ -97,6 +99,7 @@ public class WorkReportController {
             model.addAttribute("equipmentCode", equipmentCode);
             model.addAttribute("group", group);
             model.addAttribute("field", field);
+            model.addAttribute("state", state);
 
             model.addAttribute("title", "Work Report");
 
@@ -119,8 +122,8 @@ public class WorkReportController {
     @PostMapping
     public String createWorkReport(
             @Valid @ModelAttribute WorkReportDTO workReportDTO,
-            @RequestParam(required = false) String redirectUrl,
             BindingResult bindingResult,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             RedirectAttributes ra) {
 
         if (workReportDTO.getTechnicianEmpIds() != null && !workReportDTO.getTechnicianEmpIds().isEmpty()) {
@@ -136,30 +139,27 @@ public class WorkReportController {
 
         if (WebUtil.hasErrors(bindingResult)) {
             ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
-            return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
         }
 
         try {
             workReportService.createWorkReport(workReportDTO);
             ra.addFlashAttribute("success", "Work report created successfully.");
-            return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
 
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Failed to create work report: " + e.getMessage());
             ra.addFlashAttribute("workReportDTO", workReportDTO);
-            return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
         }
+
+        return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
     }
 
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'ENGINEER')")
     @PostMapping("/update")
     public String updateWorkReport(
             @Valid @ModelAttribute WorkReportDTO workReportDTO,
-            @RequestParam(required = false) String redirectUrl,
             BindingResult bindingResult,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             RedirectAttributes ra) {
-
-        System.out.println("redirectUrl: " + redirectUrl);
 
         if (workReportDTO.getTechnicianEmpIds() != null && !workReportDTO.getTechnicianEmpIds().isEmpty()) {
             Set<UserDTO> technicianDTOs = workReportDTO.getTechnicianEmpIds().stream()
@@ -174,19 +174,18 @@ public class WorkReportController {
 
         if (WebUtil.hasErrors(bindingResult)) {
             ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
-            return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
         }
 
         try {
             workReportService.updateWorkReport(workReportDTO);
             ra.addFlashAttribute("success", "Work report updated successfully.");
-            return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
 
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Failed to update work report: " + e.getMessage());
             ra.addFlashAttribute("workReportDTO", workReportDTO);
-            return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
         }
+
+        return "redirect:" + (redirectUrl != null ? redirectUrl : "/work-reports");
     }
 
     @PreAuthorize("hasAnyRole('SUPERADMIN')")

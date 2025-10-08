@@ -16,7 +16,7 @@
                 <div class="modal-body p-4">
                     <form th:action="@{/work-reports}" th:object="${workReportDTO}" method="post" id="formAdd">
 
-                        <input type="hidden" name="redirectUrl" id="addRedirectUrl" />
+                        <input type="hidden" name="redirectUrl" id="redirectUrl">
 
                         <div class="form-row">
                             <div class="col-md-6">
@@ -94,6 +94,16 @@
                                         <option th:each="equipment : ${equipments}" th:value="${equipment.code}">
                                             Equipment</option>
                                     </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row mt--3">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <small class="text-muted">
+                                    <i class="fas fa-info-circle"></i> Please select <strong>either an Area or an
+                                        Equipment</strong> (at least one is required).
+                                </small>
                                 </div>
                             </div>
                         </div>
@@ -301,7 +311,7 @@
                 <div class="modal-body p-4">
                     <form th:action="@{/work-reports/update}" method="post" id="formEdit">
                         <input type="hidden" name="id" id="editId">
-                        <input type="hidden" name="redirectUrl" id="addRedirectUrl" />
+                        <input type="hidden" name="redirectUrl" id="redirectUrl">
 
                         <!-- Report Date & Shift -->
                         <div class="form-row">
@@ -1029,16 +1039,11 @@
                     .slice(0, 16);
             }
 
-            // Handle Add form submit
-            document.getElementById('formAdd')?.addEventListener('submit', function () {
-                const input = this.querySelector('[name="redirectUrl"]');
-                if (input) input.value = window.location.href;
-            });
+            // Redirect url
+            const redirectUrlInputs = document.querySelectorAll('input[type="hidden"][name="redirectUrl"]');
 
-            // Handle Edit form submit
-            document.getElementById('formEdit')?.addEventListener('submit', function () {
-                const input = this.querySelector('[name="redirectUrl"]');
-                if (input) input.value = window.location.href;
+            redirectUrlInputs.forEach(input => {
+                input.value = window.location.href;
             });
 
             // Add modal

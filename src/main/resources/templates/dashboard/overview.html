@@ -149,144 +149,225 @@
 				</div>
 			</div>
 
-			<div class="row" sec:authorize="hasAnyRole('ENGINEER')">
-				<div class="col-md-12">
-					<div class="table-responsive">
-						<table id="complaint-table" class="display table table-striped table-hover">
-							<thead class="bg-primary text-white">
-								<tr>
-									<th style="min-width: 50px; cursor: pointer; white-space: nowrap;" data-sort="code">
-										Code <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 135px; cursor: pointer; white-space: nowrap;"
-										data-sort="reportDate">
-										Report Date <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 125px; cursor: pointer; white-space: nowrap;"
-										data-sort="updatedAt">
-										Last Update <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
-										data-sort="reporter">
-										Reporter <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 100px; cursor: pointer; white-space: nowrap;"
-										data-sort="area">
-										Area <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 100px; cursor: pointer; white-space: nowrap;"
-										data-sort="equipment">
-										Equipment <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 100px; cursor: pointer; white-space: nowrap;"
-										data-sort="subject">
-										Subject <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 175px; cursor: pointer; white-space: nowrap;"
-										data-sort="description">
-										Description <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 175px; cursor: pointer; white-space: nowrap;"
-										data-sort="actionTaken">
-										Action Taken <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
-										data-sort="assignee">
-										Assignee <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
-										data-sort="priority">
-										Priority <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
-										data-sort="category">
-										Category <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
-										data-sort="status">
-										Status <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 130px; cursor: pointer; white-space: nowrap;"
-										data-sort="closeTime">
-										Close Time <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-									<th style="min-width: 100px; cursor: pointer; white-space: nowrap;"
-										data-sort="totalTimeMinutes">
-										Total Time <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr th:each="complaint : ${complaints.content}" th:data-id="${complaint.id}">
-									<td data-field="code">
-										<a th:href="@{/complaints/{id}(id=${complaint.id})}"
-											class="font-weight-bold text-dark" th:text="${complaint.code ?: '-'}">-</a>
-									</td>
-									<td data-field="reportDate"
-										th:text="${complaint.reportDate != null ? #temporals.format(complaint.reportDate, 'MMM d, yyyy') : '-'}">
-										-
-									</td>
-									<td data-field="updatedAt"
-										th:text="${complaint.updatedAt != null ? #temporals.format(complaint.updatedAt, 'MMM d, yyyy HH:mm') : '-'}">
-										-
-									</td>
-									<td data-field="reporter" th:data-employee-id="${complaint.reporter?.employeeId}"
-										th:text="${complaint.reporter?.name ?: '-'}">
-										-
-									</td>
-									<td data-field="area" th:data-area-code="${complaint.area?.code}"
-										th:text="${complaint.area?.name ?: '-'}">
-										-
-									</td>
-									<td data-field="equipment" th:data-equipment-code="${complaint.equipment?.code}"
-										th:text="${complaint.equipment?.name ?: '-'}">
-										-
-									</td>
-									<td data-field="subject" th:text="${complaint.subject ?: '-'}">-</td>
-									<td data-field="description" th:text="${complaint.description ?: '-'}">-
-									</td>
-									<td data-field="actionTaken" th:text="${complaint.actionTaken ?: '-'}">-
-									</td>
-									<td data-field="assignee" th:data-employee-id="${complaint.assignee?.employeeId}"
-										th:text="${complaint.assignee?.name ?: '-'}">-
-									</td>
-									<td data-field="priority">
-										<span class="badge badge-pill px-3 py-2" th:classappend="${
+			<!-- <div class="row" sec:authorize="hasAnyRole('ENGINEER')">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center">
+                                <h4 class="card-title">My Tasks</h4>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="complaint-table" class="display table table-striped table-hover">
+                                    <thead class="bg-primary text-white">
+                                        <tr>
+                                            <th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="code">
+                                                Code <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 135px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="reportDate">
+                                                Report Date <i
+                                                    class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 125px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="updatedAt">
+                                                Last Update <i
+                                                    class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="reporter">
+                                                Reporter <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 100px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="area">
+                                                Area <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 100px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="equipment">
+                                                Equipment <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 100px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="subject">
+                                                Subject <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 175px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="description">
+                                                Description <i
+                                                    class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 175px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="actionTaken">
+                                                Action Taken <i
+                                                    class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="assignee">
+                                                Assignee <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="priority">
+                                                Priority <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="category">
+                                                Category <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 50px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="status">
+                                                Status <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 130px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="closeTime">
+                                                Close Time <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                            <th style="min-width: 100px; cursor: pointer; white-space: nowrap;"
+                                                data-sort="totalTimeMinutes">
+                                                Total Time <i class="fas fa-sort text-white-50 ml-1 sort-indicator"></i>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="complaint : ${complaints.content}" th:data-id="${complaint.id}">
+                                            <td data-field="code">
+                                                <a th:href="@{/complaints/{id}(id=${complaint.id})}"
+                                                    class="font-weight-bold text-dark"
+                                                    th:text="${complaint.code ?: '-'}">-</a>
+                                            </td>
+                                            <td data-field="reportDate"
+                                                th:text="${complaint.reportDate != null ? #temporals.format(complaint.reportDate, 'MMM d, yyyy') : '-'}">
+                                                -
+                                            </td>
+                                            <td data-field="updatedAt"
+                                                th:text="${complaint.updatedAt != null ? #temporals.format(complaint.updatedAt, 'MMM d, yyyy HH:mm') : '-'}">
+                                                -
+                                            </td>
+                                            <td data-field="reporter"
+                                                th:data-employee-id="${complaint.reporter?.employeeId}"
+                                                th:text="${complaint.reporter?.name ?: '-'}">
+                                                -
+                                            </td>
+                                            <td data-field="area" th:data-area-code="${complaint.area?.code}"
+                                                th:text="${complaint.area?.name ?: '-'}">
+                                                -
+                                            </td>
+                                            <td data-field="equipment"
+                                                th:data-equipment-code="${complaint.equipment?.code}"
+                                                th:text="${complaint.equipment?.name ?: '-'}">
+                                                -
+                                            </td>
+                                            <td data-field="subject" th:text="${complaint.subject ?: '-'}">-</td>
+                                            <td data-field="description" th:text="${complaint.description ?: '-'}">-
+                                            </td>
+                                            <td data-field="actionTaken" th:text="${complaint.actionTaken ?: '-'}">-
+                                            </td>
+                                            <td data-field="assignee"
+                                                th:data-employee-id="${complaint.assignee?.employeeId}"
+                                                th:text="${complaint.assignee?.name ?: '-'}">-
+                                            </td>
+                                            <td data-field="priority">
+                                                <span class="badge badge-pill px-3 py-2" th:classappend="${
                                                         complaint.priority == complaint.priority.HIGH ? 'badge-danger' :
                                                         complaint.priority == complaint.priority.MEDIUM ? 'badge-warning' :
                                                         'badge-success'
                                                     }" th:text="${complaint.priority ?: '-'}"></span>
-									</td>
-									<td data-field="category">
-										<span class="badge badge-pill px-3 py-2" th:classappend="${
+                                            </td>
+                                            <td data-field="category">
+                                                <span class="badge badge-pill px-3 py-2" th:classappend="${
                                                         complaint.category == complaint.category.MECHANICAL ? 'badge-info' :
                                                         complaint.category == complaint.category.ELECTRICAL ? 'badge-danger' :
                                                         complaint.category == complaint.category.IT ? 'badge-success' :
                                                         'badge-dark'
                                                     }" th:text="${complaint.category ?: '-'}"></span>
-									</td>
-									<td data-field="status">
-										<span class="badge badge-pill px-3 py-2" th:classappend="${
+                                            </td>
+                                            <td data-field="status">
+                                                <span class="badge badge-pill px-3 py-2" th:classappend="${
                                                         complaint.status == complaint.status.OPEN ? 'badge-warning' :
                                                         complaint.status == complaint.status.PENDING ? 'badge-danger' :
                                                         'badge-success'
                                                     }" th:text="${complaint.status ?: '-'}"></span>
-									</td>
-									<td data-field="closeTime"
-										th:text="${complaint.closeTime != null ? #temporals.format(complaint.closeTime, 'MMM d, yyyy HH:mm') : '-'}">
-										-
-									</td>
-									<td data-field="totalTimeMinutes" th:text="${complaint.totalTimeDisplay ?: '-'}">-
-									</td>
-								</tr>
-								<tr th:if="${complaints.totalElements == 0}">
-									<td colspan="15" class="text-center">No complaint found</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
+                                            </td>
+                                            <td data-field="closeTime"
+                                                th:text="${complaint.closeTime != null ? #temporals.format(complaint.closeTime, 'MMM d, yyyy HH:mm') : '-'}">
+                                                -
+                                            </td>
+                                            <td data-field="totalTimeMinutes"
+                                                th:text="${complaint.totalTimeDisplay ?: '-'}">-</td>
+                                        </tr>
+                                        <tr th:if="${complaints.totalElements == 0}">
+                                            <td colspan="15" class="text-center">No complaint found</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="row mt-3 align-items-center">
+                                <div class="col-md-6 col-sm-12">
+                                    <p class="text-muted mb-0">
+                                        Showing
+                                        <span th:text="${complaints.number * complaints.size + 1} ?: 0"></span>
+                                        -
+                                        <span
+                                            th:text="${complaints.number * complaints.size + complaints.numberOfElements} ?: 0"></span>
+                                        of <span th:text="${complaints.totalElements} ?: 0"></span> entries
+                                    </p>
+                                </div>
+                                <div class="col-md-6 col-sm-12">
+                                    <nav class=" d-flex justify-content-end">
+                                        <ul class="pagination mb-0">
+                                            <li class="page-item"
+                                                th:classappend="${!complaints.hasPrevious} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/complaints(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, assigneeEmpId=${param.assigneeEmpId}, equipmentCode=${param.equipmentCode}, hiddenColumns=${hiddenColumns}, group=${param.group}, state=${param.state}, page=${complaints.number}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:if="${complaints.hasPrevious}">Prev</a>
+                                                <span class="page-link" th:if="${!complaints.hasPrevious}">Prev</span>
+                                            </li>
+
+                                            <li class="page-item" th:if="${complaints.number > 0}"
+                                                th:classappend="${!complaints.hasPrevious} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/complaints(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, assigneeEmpId=${param.assigneeEmpId}, equipmentCode=${param.equipmentCode}, hiddenColumns=${hiddenColumns}, group=${param.group}, state=${param.state}, page=1, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">1</a>
+                                            </li>
+
+                                            <li class="page-item"
+                                                th:if="${complaints.totalPages >= 3 and complaints.number > 1}">
+                                                <span class="page-link">...</span>
+                                            </li>
+
+                                            <li class="page-item active">
+                                                <span class="page-link" th:text="${complaints.number + 1}">1</span>
+                                            </li>
+
+                                            <li class="page-item"
+                                                th:if="${complaints.totalPages >= 3 and complaints.number + 1 < complaints.totalPages - 1}">
+                                                <span class="page-link">...</span>
+                                            </li>
+
+                                            <li class="page-item"
+                                                th:if="${complaints.number + 1 < complaints.totalPages}"
+                                                th:classappend="${!complaints.hasNext} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/complaints(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, assigneeEmpId=${param.assigneeEmpId}, equipmentCode=${param.equipmentCode}, hiddenColumns=${hiddenColumns}, group=${param.group}, state=${param.state}, page=${complaints.totalPages}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}">
+                                                    <span th:text="${complaints.totalPages}">20</span>
+                                                </a>
+                                            </li>
+
+                                            <li class="page-item" th:classappend="${!complaints.hasNext} ? 'disabled'">
+                                                <a class="page-link"
+                                                    th:href="@{/complaints(keyword=${param.keyword}, reportDateFrom=${param.reportDateFrom}, reportDateTo=${param.reportDateTo}, assigneeEmpId=${param.assigneeEmpId}, equipmentCode=${param.equipmentCode}, hiddenColumns=${hiddenColumns}, group=${param.group}, state=${param.state}, page=${complaints.number + 2}, size=${pageSize}, sortBy=${sortBy}, asc=${asc})}"
+                                                    th:if="${complaints.hasNext}">Next</a>
+                                                <span class="page-link" th:if="${!complaints.hasNext}">Next</span>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
 
 			<div class="row">
 				<div class="col-md-12">

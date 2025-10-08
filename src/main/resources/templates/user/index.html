@@ -186,16 +186,16 @@
                                                         class="rounded-circle avatar-img" alt="User Avatar" />
                                                 </div>
                                             </td>
-                                            <td data-field="name" th:text="${user.name ?: '-'}"></td>
-                                            <td data-field="employeeId" th:text="${user.employeeId ?: '-'}"></td>
-                                            <td data-field="email" th:text="${user.email ?: '-'}"></td>
-                                            <td data-field="designation" th:text="${user.designation ?: '-'}"></td>
+                                            <td data-field="name" th:text="${user.name ?: ''}"></td>
+                                            <td data-field="employeeId" th:text="${user.employeeId ?: ''}"></td>
+                                            <td data-field="email" th:text="${user.email ?: ''}"></td>
+                                            <td data-field="designation" th:text="${user.designation ?: ''}"></td>
                                             <td data-field="role">
                                                 <th:block
                                                     th:if="${user.roles != null and not #lists.isEmpty(user.roles)}">
                                                     <th:block th:each="role : ${user.roles}">
                                                         <span class="badge badge-secondary"
-                                                            th:text="${role.name ?: '-'}"></span>
+                                                            th:text="${role.name ?: ''}"></span>
                                                     </th:block>
                                                 </th:block>
                                                 <th:block
@@ -203,32 +203,32 @@
                                                     -
                                                 </th:block>
                                             </td>
-                                            <td data-field="nationality" th:text="${user.nationality ?: '-'}"></td>
+                                            <td data-field="nationality" th:text="${user.nationality ?: ''}"></td>
                                             <td data-field="joinDate"
-                                                th:text="${user.joinDate != null ? #temporals.format(user.joinDate, 'yyyy-MM-dd') : '-'}">
+                                                th:text="${user.joinDate != null ? #temporals.format(user.joinDate, 'yyyy-MM-dd') : ''}">
                                             </td>
-                                            <td data-field="phoneNumber" th:text="${user.phoneNumber ?: '-'}"></td>
+                                            <td data-field="phoneNumber" th:text="${user.phoneNumber ?: ''}"></td>
                                             <td data-field="status">
                                                 <span class="badge badge-pill px-3 py-2"
                                                     th:classappend="${user.status == user.status.ACTIVE ? 'badge-success' : 'badge-danger'}"
-                                                    th:text="${user.status != null ? user.status : '-'}"></span>
+                                                    th:text="${user.status != null ? user.status : ''}"></span>
                                             </td>
                                             <td data-field="createdAt"
-                                                th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">
+                                                th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'yyyy-MM-dd HH:mm') : ''}">
                                             </td>
                                             <td data-field="activatedAt"
-                                                th:text="${user.activatedAt != null ? #temporals.format(user.activatedAt, 'yyyy-MM-dd HH:mm') : '-'}">
+                                                th:text="${user.activatedAt != null ? #temporals.format(user.activatedAt, 'yyyy-MM-dd HH:mm') : ''}">
                                             </td>
                                             <td>
                                                 <div class="form-button-action">
                                                     <button type="button"
                                                         class="btn btn-link btn-primary btn-lg edit-row"
-                                                        th:data-id="${user.id}" th:data-name="${user.name ?: '-'}"
+                                                        th:data-id="${user.id}" th:data-name="${user.name ?: ''}"
                                                         sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
                                                         <i class="fa fa-edit"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-link btn-danger delete-row"
-                                                        th:data-id="${user.id}" th:data-name="${user.name ?: '-'}"
+                                                        th:data-id="${user.id}" th:data-name="${user.name ?: ''}"
                                                         sec:authorize="hasAnyRole('SUPERADMIN')">
                                                         <i class="fa fa-times"></i>
                                                     </button>

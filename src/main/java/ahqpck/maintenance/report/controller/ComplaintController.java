@@ -93,7 +93,8 @@ public class ComplaintController {
                 model.addAttribute("currentUser", currentUser);
             }
 
-            Page<ComplaintDTO> complaintPage = complaintService.getAllComplaints(keyword, from, to, closeTime, assigneeEmpId,
+            Page<ComplaintDTO> complaintPage = complaintService.getAllComplaints(keyword, from, to, closeTime,
+                    assigneeEmpId,
                     state, group, equipmentCode, zeroBasedPage, parsedSize, sortBy, asc);
 
             model.addAttribute("complaints", complaintPage);
@@ -142,7 +143,7 @@ public class ComplaintController {
             }
 
             ComplaintDTO complaintDTO = complaintService.getComplaintById(id);
-            
+
             model.addAttribute("complaint", complaintDTO);
             model.addAttribute("title", "Complaint Detail");
 
@@ -167,23 +168,22 @@ public class ComplaintController {
             @Valid @ModelAttribute ComplaintDTO complaintDTO,
             BindingResult bindingResult,
             @RequestParam(value = "imageBeforeFile", required = false) MultipartFile imageBefore,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             RedirectAttributes ra) {
 
         if (WebUtil.hasErrors(bindingResult)) {
             ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
-            return "redirect:/complaints";
         }
 
         try {
             complaintService.createComplaint(complaintDTO, imageBefore);
             ra.addFlashAttribute("success", "Complaint created successfully.");
-            return "redirect:/complaints";
 
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
             ra.addFlashAttribute("complaintDTO", complaintDTO);
-            return "redirect:/complaints";
         }
+        return "redirect:" + (redirectUrl != null ? redirectUrl : "/complaints");
     }
 
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'ENGINEER')")
@@ -195,35 +195,35 @@ public class ComplaintController {
             @RequestParam(value = "imageAfterFile", required = false) MultipartFile imageAfterFile,
             @RequestParam(value = "deleteImageBefore", required = false, defaultValue = "false") Boolean deleteImageBefore,
             @RequestParam(value = "deleteImageAfter", required = false, defaultValue = "false") Boolean deleteImageAfter,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             RedirectAttributes ra) {
 
         if (WebUtil.hasErrors(bindingResult)) {
             ra.addFlashAttribute("error", WebUtil.getErrorMessage(bindingResult));
-            return "redirect:/complaints";
         }
 
         try {
-            complaintService.updateComplaint(complaintDTO, imageBeforeFile, imageAfterFile, deleteImageBefore, deleteImageAfter);
+            complaintService.updateComplaint(complaintDTO, imageBeforeFile, imageAfterFile, deleteImageBefore,
+                    deleteImageAfter);
             ra.addFlashAttribute("success", "Complaint updated successfully.");
-            return "redirect:/complaints";
-
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
             ra.addFlashAttribute("complaintDTO", complaintDTO);
-            return "redirect:/complaints";
         }
+        return "redirect:/complaints/" + complaintDTO.getId();
     }
 
     @PreAuthorize("hasAnyRole('SUPERADMIN')")
     @GetMapping("/delete/{id}")
-    public String deleteComplaint(@PathVariable String id, RedirectAttributes ra) {
+    public String deleteComplaint(@PathVariable String id,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl, RedirectAttributes ra) {
         try {
             complaintService.deleteComplaint(id);
             ra.addFlashAttribute("success", "Complaint deleted successfully.");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/complaints";
+        return "redirect:" + (redirectUrl != null ? redirectUrl : "/complaints");
     }
 
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")

@@ -30,7 +30,8 @@
                 </ul>
 
                 <div class="header-action-group d-flex align-items-center ml-auto">
-                    <button class="btn btn-primary mt-2 mr-2" data-toggle="modal" data-target="#importModal" sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
+                    <button class="btn btn-primary mt-2 mr-2" data-toggle="modal" data-target="#importModal"
+                        sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
                         <i class="fa fa-download mr-1"></i> Import
                     </button>
                     <button class="btn btn-primary dropdown-toggle mt-2 mr-2" type="button" id="exportDropdown"
@@ -45,7 +46,8 @@
                             <i class="fa fa-file-pdf mr-2 text-danger"></i> PDF
                         </a>
                     </div>
-                    <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal" sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
+                    <button class="btn btn-primary ml-auto mt-2" data-toggle="modal" data-target="#addRowModal"
+                        sec:authorize="hasAnyRole('SUPERADMIN', 'ADMIN')">
                         <i class="fa fa-plus-circle mr-2"></i> Add
                     </button>
                 </div>
@@ -131,7 +133,7 @@
                                                 </th:block>
                                             </select>
                                         </div>
-                                        <div class="form-group">
+                                        <div class="form-group pb-0">
                                             <label class="form-label small d-block">Scope</label>
                                             <select name="field" class="form-control form-control-sm w-100">
                                                 <option value="">All Scope</option>
@@ -139,6 +141,18 @@
                                                     th:each="scope : ${T(ahqpck.maintenance.report.entity.WorkReport.Scope).values()}">
                                                     <option th:value="${scope}" th:text="${scope}"
                                                         th:selected="${field == scope}"></option>
+                                                </th:block>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label small d-block">Status</label>
+                                            <select name="state" class="form-control form-control-sm w-100">
+                                                <option value="">All Status</option>
+                                                <th:block
+                                                    th:each="status : ${T(ahqpck.maintenance.report.entity.WorkReport.Status).values()}">
+                                                    <option th:value="${status}" th:text="${status}"
+                                                        th:selected="${state == status}">
+                                                    </option>
                                                 </th:block>
                                             </select>
                                         </div>
@@ -286,10 +300,10 @@
                                     </thead>
                                     <tbody>
                                         <tr th:each="report : ${workReports.content}" th:data-id="${report.id}">
-                                            <td data-field="code" th:text="${report.code ?: '-'}">-</td>
+                                            <td data-field="code" th:text="${report.code ?: ''}"></td>
                                             <td data-field="reportDate"
-                                                th:text="${report.reportDate != null ? #temporals.format(report.reportDate, 'MMM dd, yyyy') : '-'}">
-                                                -
+                                                th:data-full-datetime="${report.reportDate != null ? #temporals.format(report.reportDate, 'yyyy-MM-dd HH:mm') : ''}"
+                                                th:text="${report.reportDate != null ? #temporals.format(report.reportDate, 'MMM dd, yyyy') : ''}">
                                             </td>
                                             <td data-field="shift">
                                                 <span class="badge badge-sm" th:classappend="|badge-${
@@ -297,15 +311,15 @@
                                                     report.shift == report.shift.NIGHT ? 'primary' : 'secondary'
                                                 }|" th:text="${
                                                     report.shift == report.shift.DAY ? 'DAY' :
-                                                    report.shift == report.shift.NIGHT ? 'NIGHT' : '-'
+                                                    report.shift == report.shift.NIGHT ? 'NIGHT' : ''
                                                 }">
                                                 </span>
                                             </td>
                                             <td data-field="area" th:data-area-code="${report.area?.code ?: ''}"
-                                                th:text="${report.area?.name ?: '-'}">-</td>
+                                                th:text="${report.area?.name ?: ''}"></td>
                                             <td data-field="equipment"
                                                 th:data-equipment-code="${report.equipment?.code ?: ''}"
-                                                th:text="${report.equipment?.name ?: '-'}">-</td>
+                                                th:text="${report.equipment?.name ?: ''}"></td>
                                             <td data-field="category">
                                                 <span class="badge badge-sm"
                                                     th:data-enum-value="${report.category != null ? report.category : ''}"
@@ -322,18 +336,18 @@
                                                 }">
                                                 </span>
                                             </td>
-                                            <td data-field="problem" th:text="${report.problem ?: '-'}"></td>
-                                            <td data-field="solution" th:text="${report.solution ?: '-'}"></td>
+                                            <td data-field="problem" th:text="${report.problem ?: ''}"></td>
+                                            <td data-field="solution" th:text="${report.solution ?: ''}"></td>
                                             <td data-field="startTime"
                                                 th:data-full-datetime="${report.startTime != null ? #temporals.format(report.startTime, 'yyyy-MM-dd HH:mm') : ''}"
-                                                th:text="${report.startTime != null ? #temporals.format(report.startTime, 'HH:mm') : '-'}">
+                                                th:text="${report.startTime != null ? #temporals.format(report.startTime, 'HH:mm') : ''}">
                                             </td>
                                             <td data-field="stopTime"
                                                 th:data-full-datetime="${report.stopTime != null ? #temporals.format(report.stopTime, 'yyyy-MM-dd HH:mm') : ''}"
-                                                th:text="${report.stopTime != null ? #temporals.format(report.stopTime, 'HH:mm') : '-'}">
+                                                th:text="${report.stopTime != null ? #temporals.format(report.stopTime, 'HH:mm') : ''}">
                                             </td>
                                             <td data-field="totalTimeMinutes"
-                                                th:text="${report.totalTimeMinutes != null ? report.totalTimeMinutes + ' min' : '-'}">
+                                                th:text="${report.totalTimeMinutes != null ? report.totalTimeMinutes + ' min' : ''}">
                                             </td>
                                             <td data-field="technicians">
                                                 <th:block
@@ -346,18 +360,18 @@
                                                 </th:block>
                                                 <th:block
                                                     th:if="${report.technicians == null or #sets.isEmpty(report.technicians)}">
-                                                    <span class="text-muted">-</span>
+                                                    <span class="text-muted"></span>
                                                 </th:block>
                                             </td>
                                             <td data-field="supervisor"
                                                 th:data-employee-id="${report.supervisor?.employeeId ?: ''}"
-                                                th:text="${report.supervisor?.name ?: '-'}">-</td>
+                                                th:text="${report.supervisor?.name ?: ''}"></td>
                                             <td data-field="status">
                                                 <span class="badge badge-pill px-3 py-2" th:classappend="${
                                                         report.status == report.status.OPEN ? 'badge-warning' :
                                                         report.status == report.status.PENDING ? 'badge-danger' :
                                                         'badge-success'
-                                                    }" th:text="${report.status ?: '-'}">
+                                                    }" th:text="${report.status ?: ''}">
                                                 </span>
                                             </td>
                                             <td data-field="scope">
@@ -374,8 +388,8 @@
                                                 }">
                                                 </span>
                                             </td>
-                                            <td data-field="workType" th:text="${report.workType ?: '-'}"></td>
-                                            <td data-field="remark" th:text="${report.remark ?: '-'}"></td>
+                                            <td data-field="workType" th:text="${report.workType ?: ''}"></td>
+                                            <td data-field="remark" th:text="${report.remark ?: ''}"></td>
                                             <td>
                                                 <div class="form-button-action">
                                                     <span data-field="parts" th:data-parts="${report.partsUsed}"></span>
@@ -391,7 +405,8 @@
                                                         sec:authorize="hasAnyRole('SUPERADMIN')">
                                                         <i class="fa fa-times"></i>
                                                     </button>
-                                                    <span sec:authorize="!hasAnyRole('SUPERADMIN', 'ADMIN')" class="badge badge-danger mr-1">No Access</span>
+                                                    <span sec:authorize="!hasAnyRole('SUPERADMIN', 'ADMIN')"
+                                                        class="badge badge-danger mr-1">No Access</span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -622,7 +637,7 @@
                             return direction === 'asc' ? aVal - bVal : bVal - aVal;
                         }
 
-                        if (['startTime', 'stopTime'].includes(field)) {
+                        if (['startTime', 'stopTime', 'reportDate'].includes(field)) {
                             const aCell = a.querySelector(`[data-field="${field}"]`);
                             const bCell = b.querySelector(`[data-field="${field}"]`);
                             aVal = aCell?.dataset.fullDatetime || '';
@@ -674,7 +689,7 @@
                 // Builds URL with current params and new filters
                 function buildFilterUrl() {
                     const url = new URL(window.location);
-                    const fields = ['keyword', 'reportDateFrom', 'reportDateTo', 'group', 'field'];
+                    const fields = ['keyword', 'reportDateFrom', 'reportDateTo', 'group', 'field', 'state'];
 
                     fields.forEach(k => {
                         const el = document.querySelector(`[name="${k}"]`);
@@ -745,23 +760,23 @@
 
                         // Area (display name + code, store code)
                         const areaCell = row.querySelector('[data-field="area"]');
-                        const areaName = areaCell?.textContent.trim() || '-';
+                        const areaName = areaCell?.textContent.trim() || '';
                         const areaCode = areaCell?.dataset.areaCode || '';
-                        document.getElementById('editAreaInput').value = areaName && areaCode ? `${areaName} (${areaCode})` : '-';
+                        document.getElementById('editAreaInput').value = areaName && areaCode ? `${areaName} (${areaCode})` : '';
                         document.getElementById('editAreaSelect').value = areaCode;
 
                         // Equipment (display name + code, store code)
                         const equipCell = row.querySelector('[data-field="equipment"]');
-                        const equipName = equipCell?.textContent.trim() || '-';
+                        const equipName = equipCell?.textContent.trim() || '';
                         const equipCode = equipCell?.dataset.equipmentCode || '';
-                        document.getElementById('editEquipmentInput').value = equipName && equipCode ? `${equipName} (${equipCode})` : '-';
+                        document.getElementById('editEquipmentInput').value = equipName && equipCode ? `${equipName} (${equipCode})` : '';
                         document.getElementById('editEquipmentSelect').value = equipCode;
 
                         // Supervisor (display name + ID, store ID)
                         const supCell = row.querySelector('[data-field="supervisor"]');
-                        const supName = supCell?.textContent.trim() || '-';
+                        const supName = supCell?.textContent.trim() || '';
                         const supId = supCell?.dataset.employeeId || '';
-                        document.getElementById('editSupervisorInput').value = supName && supId ? `${supName} (${supId})` : '-';
+                        document.getElementById('editSupervisorInput').value = supName && supId ? `${supName} (${supId})` : '';
                         document.getElementById('editSupervisorSelect').value = supId;
 
                         // Technicians (from badge elements)
@@ -782,9 +797,9 @@
                             tr.dataset.partCode = partDto.part.code;
 
                             tr.innerHTML = `
-                            <td><code class="bg-light px-2 py-1 rounded">${partDto.part.code || '-'}</code></td>
-                            <td>${partDto.part.name || '-'}</td>
-                            <td>${partDto.part.category || '-'}</td>
+                            <td><code class="bg-light px-2 py-1 rounded">${partDto.part.code || ''}</code></td>
+                            <td>${partDto.part.name || ''}</td>
+                            <td>${partDto.part.category || ''}</td>
                             <td class="text-center font-weight-bold" contenteditable="true" data-original="${partDto.quantity || 0}">${partDto.quantity || 0}</td>
                             <td class="text-center">
                                 <button class="btn btn-link text-danger btn-sm delete-row" type="button">
@@ -1026,6 +1041,48 @@
                 // Initialize equipment tag input (setupTagInput is defined in modals.html)
                 setupTagInput('equipmentInput', 'equipmentTagList', 'equipmentTagSearch', 'equipmentSelect', 'equipmentOptions');
 
+                // Rebuild equipment tags from URL on page load (style-consistent)
+                (function restoreEquipmentTagsFromUrl() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const equipmentCodes = urlParams.get('equipmentCode');
+                    const tagList = document.getElementById('equipmentTagList');
+                    const datalist = document.getElementById('equipmentOptions');
+
+                    if (!equipmentCodes || !tagList || !datalist) return;
+
+                    const codes = equipmentCodes.split(',').filter(c => c.trim() !== '');
+                    tagList.innerHTML = '';
+
+                    // Build a lookup map: code → display text
+                    const codeToDisplay = {};
+                    const datalistOptions = datalist.querySelectorAll('option');
+                    datalistOptions.forEach(opt => {
+                        const code = opt.getAttribute('data-code');
+                        const display = opt.getAttribute('value'); // this is the full "Name (CODE)"
+                        if (code) {
+                            codeToDisplay[code] = display;
+                        }
+                    });
+
+                    codes.forEach(code => {
+                        const displayText = codeToDisplay[code] || code; // fallback to code if not found
+
+                        const tag = document.createElement('span');
+                        tag.className = 'tag';
+                        tag.dataset.value = code;
+                        tag.innerHTML = `
+                            ${displayText}
+                            <span class="remove-tag" onclick="this.parentElement.remove();">×</span>`;
+                        tagList.appendChild(tag);
+                    });
+
+                    // Update placeholder
+                    const searchInput = document.getElementById('equipmentTagSearch');
+                    if (searchInput) {
+                        searchInput.placeholder = codes.length > 0 ? '' : 'Add equipment...';
+                    }
+                })();
+
                 document.getElementById('applyFilters').addEventListener('click', (e) => {
                     window.location.href = buildFilterUrl();
                 });
@@ -1037,6 +1094,7 @@
                     document.querySelector('[name="reportDateTo"]').value = '';
                     document.querySelector('[name="group"]').value = '';
                     document.querySelector('[name="field"]').value = '';
+                    document.querySelector('[name="state"]').value = '';
 
                     const tagList = document.getElementById('equipmentTagList');
                     if (tagList) tagList.innerHTML = '';

@@ -20,6 +20,7 @@ import ahqpck.maintenance.report.repository.AreaRepository;
 import ahqpck.maintenance.report.repository.EquipmentRepository;
 import ahqpck.maintenance.report.repository.PartRepository;
 import ahqpck.maintenance.report.repository.UserRepository;
+import ahqpck.maintenance.report.specification.ComplaintSpecification;
 import ahqpck.maintenance.report.specification.WorkReportSpecification;
 import ahqpck.maintenance.report.exception.NotFoundException;
 import ahqpck.maintenance.report.util.ImportUtil;
@@ -62,7 +63,7 @@ public class WorkReportService {
 
     @Transactional
     public Page<WorkReportDTO> getAllWorkReports(String keyword, LocalDateTime reportDateFrom,
-            LocalDateTime reportDateTo, WorkReport.Category category, WorkReport.Scope scope, String equipmentCode,
+            LocalDateTime reportDateTo, WorkReport.Status status, WorkReport.Category category, WorkReport.Scope scope, String equipmentCode,
             int page, int size,
             String sortBy, boolean asc) {
         Sort sort = asc ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
@@ -70,6 +71,7 @@ public class WorkReportService {
 
         Specification<WorkReport> spec = WorkReportSpecification.search(keyword)
                 .and(WorkReportSpecification.withReportDateRange(reportDateFrom, reportDateTo))
+                .and(WorkReportSpecification.withStatus(status))
                 .and(WorkReportSpecification.withCategory(category))
                 .and(WorkReportSpecification.withScope(scope))
                 .and(WorkReportSpecification.withEquipment(equipmentCode));
