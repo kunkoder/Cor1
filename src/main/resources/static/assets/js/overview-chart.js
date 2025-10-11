@@ -645,7 +645,7 @@ function fetchEngineerData(from = null, to = null) {
                             tr.appendChild(createStatusCell(assignee.dailyData.pending[i] || 0, 'PENDING', pendingUrl));
 
                             // Closed
-                            const closedUrl = `/complaints?assigneeEmpId=${assignee.empId}&closeDateTime=${data.dates[i]}&state=CLOSED`;
+                            const closedUrl = `/complaints?assigneeEmpId=${assignee.empId}&closeDate=${data.dates[i]}&state=CLOSED`;
                             tr.appendChild(createStatusCell(assignee.dailyData.closed[i] || 0, 'CLOSED', closedUrl));
                         });
                     } else {
@@ -1259,14 +1259,25 @@ function updateBreakdownWeekNav(fromDate, toDate) {
     document.getElementById('breakdown-nextWeekBtn').disabled = end >= today;
 }
 
-
 // Equipment Repaired
 function formatNumber(num) {
     return num.toLocaleString();
 }
 
-function formatMinutes(minutes) {
-    return `${formatNumber(minutes)} min`;
+function formatMinutesToDH(minutes) {
+    if (!minutes || minutes <= 0) return '0 hr';
+    
+    // Round minutes to nearest hour (30+ minutes rounds up)
+    const totalHours = Math.round(minutes / 60);
+    
+    const days = Math.floor(totalHours / 24);
+    const hours = totalHours % 24;
+    
+    const parts = [];
+    if (days > 0) parts.push(`${days} Day${days > 1 ? 's' : ''}`);
+    if (hours > 0) parts.push(`${hours} Hour${hours > 1 ? 's' : ''}`);
+    
+    return parts.length > 0 ? parts.join(' ') : '0 hr';
 }
 
 async function initEquipmentWorkList() {
@@ -1363,35 +1374,32 @@ function renderPage(allData, page) {
 
     pageData.forEach((item, index) => {
         const rank = start + index + 1;
-        const avatarBg = 'bg-primary';
         const timeColor = rank === 1 ? 'text-danger' : rank === 2 ? 'text-warning' : rank === 3 ? 'text-success' : 'text-dark';
 
         const row = document.createElement('div');
         row.className = `d-flex align-items-center ${index < pageData.length - 1 ? 'mb-3' : ''}`;
         row.innerHTML = `
-            <div class="avatar ${avatarBg} text-white rounded-circle d-flex align-items-center justify-content-center"
-                 style="width: 40px; height: 40px; font-weight: bold;">
-                ${rank}
-            </div>
-            <div class="flex-1 pt-1 ml-3">
-                <h6 class="fw-bold mb-0">${item.equipmentName}</h6>
+            <div class="flex-1 pt-1">
+                <h6 class="mb-0">
+                    <span class="text-muted me-2 fw-bold">#${rank}</span>
+                    ${item.equipmentName}
+                </h6>
+                <div class="mt-1">
+                    <span class="fw-bold small ${timeColor}">${formatMinutesToDH(item.totalTime)}</span>
+                </div>
                 <small class="text-muted">Code: ${item.equipmentCode}</small>
                 <div class="mt-1">
                     <span class="badge bg-info ms-1">
                         <a href="/work-reports?equipmentCode=${item.equipmentCode}" class="text-dark text-decoration-none">
-                            Work Reports: ${item.totalWorkReports}
+                            WR: ${item.totalWorkReports}
                         </a>
                     </span>
                     <span class="badge bg-warning ms-1">
                         <a href="/complaints?equipmentCode=${item.equipmentCode}" class="text-dark text-decoration-none">
-                            Complaints: ${item.totalComplaints}
+                            CP: ${item.totalComplaints}
                         </a>
                     </span>
                 </div>
-            </div>
-            <div class="text-end ml-2">
-                <h5 class="fw-bold ${timeColor}">${formatMinutes(item.totalTime)}</h5>
-                <small class="text-muted d-block">Occurrences: <strong>${formatNumber(item.totalOccurrences)}</strong></small>
             </div>
         `;
         container.appendChild(row);

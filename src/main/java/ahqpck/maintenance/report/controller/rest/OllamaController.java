@@ -18,6 +18,6 @@ public class OllamaController {
     public String getSuggestion(@RequestBody Map<String, String> request) {
         String description = request.get("description");
         String prompt = "Based on this complaint description, suggest a solution:\n\n" + description;
-        return ollamaService.generateResponse("deepseek-r1:8b", prompt);
+        return ollamaService.generateResponse("llama3", prompt);
     }
 }

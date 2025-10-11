@@ -306,6 +306,7 @@
                                             <td data-field="code">
                                                 <a th:href="@{/complaints/{id}(id=${complaint.id})}"
                                                     class="font-weight-bold text-dark"
+                                                    target="_blank"
                                                     th:text="${complaint.code ?: ''}"></a>
                                             </td>
                                             <td data-field="reportDate"
@@ -902,17 +903,17 @@
                     { key: "code", label: "Code", visible: true },
                     { key: "reportDate", label: "Report Date", visible: true },
                     { key: "updatedAt", label: "Last Update", visible: false },
-                    { key: "reporter", label: "Reporter", visible: false },
+                    { key: "reporter", label: "Reporter", visible: true },
                     { key: "area", label: "Area", visible: false },
                     { key: "equipment", label: "Equipment", visible: true },
                     { key: "subject", label: "Subject", visible: false },
                     { key: "description", label: "Description", visible: true },
-                    { key: "actionTaken", label: "Action Taken", visible: false },
+                    { key: "actionTaken", label: "Action Taken", visible: true },
                     { key: "assignee", label: "Assignee", visible: true },
-                    { key: "priority", label: "Priority", visible: false },
+                    { key: "priority", label: "Priority", visible: true },
                     { key: "category", label: "Category", visible: false },
                     { key: "status", label: "Status", visible: true },
-                    { key: "closeTime", label: "Close Time", visible: true },
+                    { key: "closeTime", label: "Close Time", visible: false },
                     { key: "totalTimeMinutes", label: "Total Time", visible: true }
                 ];
 

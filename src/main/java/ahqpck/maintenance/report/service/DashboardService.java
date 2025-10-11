@@ -68,7 +68,7 @@ public class DashboardService {
 
         if (from == null || to == null) {
             to = LocalDateTime.now().with(LocalTime.MAX);
-            from = to.minusDays(2);
+            from = to.minusDays(4);
         }
 
         LocalDate fromDate = from.toLocalDate();
